@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CAQI Gauge - Hazardous</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .gauge { position: relative; width: 300px; height: 150px; margin: 30px auto; }
+        .gauge-bg { position: absolute; width: 100%; height: 100%; background: linear-gradient(to right, #96c480, #f1f1f0, #f1f7f8, #ff9999, #873f97, #7e9023); border-radius: 150px 150px 0 0; }
+        .gauge-value { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 48px; font-weight: bold; color: #333; }
+        .gauge-label { position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); font-size: 20px; font-weight: bold; width: 100%; text-align: center; color: #7e9023; }
+        .info { text-align: center; margin-top: 60px; }
+        .level { font-size: 24px; font-weight: bold; color: #7e9023; margin: 20px 0; }
+        .advice { font-size: 16px; color: #666; line-height: 1.6; margin: 20px 0; }
+        .pollutants { margin-top: 40px; padding-top: 20px; border-top: 2px solid #eee; }
+        .pollutant-bar { margin: 15px 0; }
+        .pollutant-label { font-weight: bold; font-size: 14px; margin-bottom: 5px; }
+        .pollutant-meter { width: 100%; height: 20px; background: #eee; border-radius: 10px; overflow: hidden; }
+        .pollutant-fill { height: 100%; background: linear-gradient(to right, #96c480, #ff9999); transition: width 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center; color: #333;">Code Air Quality Index</h1>
+
+        <div class="gauge">
+            <div class="gauge-bg"></div>
+            <div class="gauge-value">454</div>
+            <div class="gauge-label">Hazardous</div>
+        </div>
+
+        <div class="info">
+            <p class="advice">Health warning of emergency conditions. Do not deploy.</p>
+        </div>
+
+        <div class="pollutants">
+            <h3>Pollution Breakdown</h3>
+            <div class="pollutant-bar">
+                <div class="pollutant-label">Complexity: 0</div>
+                <div class="pollutant-meter">
+                    <div class="pollutant-fill" style="width: 0.0%"></div>
+                </div>
+            </div>
+            <div class="pollutant-bar">
+                <div class="pollutant-label">Security: 100</div>
+                <div class="pollutant-meter">
+                    <div class="pollutant-fill" style="width: 100.0%"></div>
+                </div>
+            </div>
+            <div class="pollutant-bar">
+                <div class="pollutant-label">Code Smells: 100</div>
+                <div class="pollutant-meter">
+                    <div class="pollutant-fill" style="width: 100.0%"></div>
+                </div>
+            </div>
+            <div class="pollutant-bar">
+                <div class="pollutant-label">Documentation: 9</div>
+                <div class="pollutant-meter">
+                    <div class="pollutant-fill" style="width: 8.888888888888891%"></div>
+                </div>
+            </div>
+            <div class="pollutant-bar">
+                <div class="pollutant-label">Duplication: 0</div>
+                <div class="pollutant-meter">
+                    <div class="pollutant-fill" style="width: 0.0%"></div>
+                </div>
+            </div>
+            <div class="pollutant-bar">
+                <div class="pollutant-label">Coupling: 6</div>
+                <div class="pollutant-meter">
+                    <div class="pollutant-fill" style="width: 6.0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,306 @@
+.trend-timeline-container {
+  width: 100%;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.trend-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.trend-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.trend-summary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.trend-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 24px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.trend-indicator.improving {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.trend-indicator.stable {
+  background: #FFF3E0;
+  color: #E65100;
+}
+
+.trend-indicator.declining {
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+.trend-arrow {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.trend-label {
+  text-transform: capitalize;
+}
+
+.change-percent {
+  padding: 8px 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.percent-value {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.percent-value.improving {
+  color: #2E7D32;
+}
+
+.percent-value.stable {
+  color: #E65100;
+}
+
+.percent-value.declining {
+  color: #C62828;
+}
+
+.month-snapshots {
+  margin-top: 32px;
+  padding-top: 32px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.month-snapshots h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.snapshot-card {
+  padding: 16px;
+  background: #f9f9f9;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.snapshot-card:hover {
+  background: #f5f5f5;
+  border-color: #ddd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.snapshot-month {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.snapshot-archetype {
+  font-size: 13px;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 12px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.snapshot-caqi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.snapshot-caqi .caqi-label {
+  font-size: 11px;
+  color: #999;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.snapshot-caqi .caqi-score {
+  font-size: 20px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.caqi-excellent {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.caqi-good {
+  background: #E3F2FD;
+  color: #1565C0;
+}
+
+.caqi-fair {
+  background: #FFF3E0;
+  color: #E65100;
+}
+
+.caqi-poor {
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+.trend-insights {
+  margin-top: 32px;
+  padding-top: 32px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.trend-insights h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.insight-card {
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+
+.insight-label {
+  font-size: 12px;
+  color: #999;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.insight-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.trend-interpretation {
+  margin-top: 24px;
+  padding: 16px;
+  background: #f9f9f9;
+  border-left: 4px solid #4ECDC4;
+  border-radius: 4px;
+  color: #666;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.trend-interpretation p {
+  margin: 0;
+}
+
+.loading,
+.error,
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  font-size: 16px;
+  color: #666;
+}
+
+.error {
+  color: #d32f2f;
+  background: #ffebee;
+  border-radius: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .trend-timeline-container {
+    padding: 16px;
+  }
+
+  .trend-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .trend-summary {
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .trend-header h2 {
+    font-size: 20px;
+  }
+
+  .snapshot-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .insights-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .trend-timeline-container {
+    padding: 12px;
+  }
+
+  .trend-header h2 {
+    font-size: 18px;
+  }
+
+  .snapshot-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .insights-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trend-interpretation {
+    font-size: 13px;
+  }
+}

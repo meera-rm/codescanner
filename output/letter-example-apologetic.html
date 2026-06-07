@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inheritance Letter - Apologetic</title>
+    <style>
+        * {margin: 0; padding: 0; box-sizing: border-box;}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #e63946 0%, #a4161a 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #e63946 0%, #a4161a 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        .header h1 {font-size: 40px; margin-bottom: 15px; font-weight: 700;}
+        .header .tone {font-size: 18px; opacity: 0.95; font-weight: 500;}
+        .content {padding: 50px 40px;}
+        .section {margin-bottom: 50px;}
+        .section h2 {
+            font-size: 22px;
+            color: #a4161a;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #e63946;
+        }
+        ul {list-style: none;}
+        li {padding: 15px 0; border-bottom: 1px solid #eee; color: #555; line-height: 1.6;}
+        li:last-child {border-bottom: none;}
+        .file-name {font-weight: 600; color: #a4161a;}
+        .metric {color: #e63946; font-weight: 600;}
+        .secrets-section {
+            background: #f8d7da;
+            padding: 25px;
+            border-left: 5px solid #e63946;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .secret-item {padding: 12px 0; color: #333; line-height: 1.6;}
+        .secret-item:not(:last-child) {border-bottom: 1px solid rgba(0,0,0,0.1);}
+        .tips-list {counter-reset: tip-counter; list-style: none;}
+        .tips-list li {counter-increment: tip-counter; padding: 15px 0 15px 40px; position: relative;}
+        .tips-list li:before {
+            content: counter(tip-counter);
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 28px;
+            height: 28px;
+            background: #e63946;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .empty-section {padding: 20px; background: #f9f9f9; border-radius: 4px; color: #999; font-style: italic;}
+        .footer {
+            background: #f5f5f5;
+            padding: 30px 40px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            border-top: 1px solid #eee;
+        }
+        .sign-off {margin-top: 30px; font-weight: 500; color: #a4161a; font-size: 14px;}
+        @media (max-width: 768px) {
+            .header {padding: 40px 20px;}
+            .header h1 {font-size: 28px;}
+            .content {padding: 30px 20px;}
+            .section h2 {font-size: 18px;}
+        }
+        @media print {
+            body {background: white; padding: 0;}
+            .container {box-shadow: none; border-radius: 0;}
+            .header {padding: 40px;}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Inheritance Letter</h1>
+            <div class="tone">Tone: <span style="text-transform: capitalize;">apologetic</span></div>
+        </div>
+        <div class="content">
+            <div class="section">
+                <h2>What I'm Proud Of</h2>
+                <ul>
+                    <li><span class="file-name">error_handling.py</span>: Quality score: 100.0/100</li>
+                    <li><span class="file-name">utils.py</span>: Quality score: 100.0/100</li>
+                    <li><span class="file-name">insecure.py</span>: Quality score: 46.666666666666664/100</li>
+                </ul>
+            </div>
+            <div class="section">
+                <h2>What I'm Not Proud Of</h2>
+                <ul>
+                    <li><span class="file-name">insecure.py</span>: Low quality</li>
+                    <li><span class="file-name">error_handling.py</span>: Low quality</li>
+                    <li><span class="file-name">utils.py</span>: Low quality</li>
+                </ul>
+            </div>
+            <div class="section">
+                <h2>Secrets I've Been Keeping</h2>
+                <div class="secrets-section">
+                    <div class="secret-item">I left a issue in insecure.py (line 0). I'm sorry.</div>
+                </div>
+            </div>
+            <div class="section">
+                <h2>Where to Start Instead</h2>
+                <ul>
+                    <li><span class="file-name">error_handling.py</span>: Safe entry point: low complexity, clean</li>
+                    <li><span class="file-name">utils.py</span>: Safe entry point: low complexity, clean</li>
+                </ul>
+            </div>
+            <div class="section">
+                <h2>How to Survive Your First Week</h2>
+                <ul class="tips-list">
+                    <li>Enable pre-commit security gate to catch secrets before commit</li>
+                    <li>Review and fix all hardcoded secrets and injection risks first</li>
+                    <li>Schedule a security audit with your team</li>
+                </ul>
+            </div>
+            <div class="sign-off">
+                Yours apologetically,<br>
+                A codebase that knows too much about itself
+            </div>
+        </div>
+        <div class="footer">
+            Generated by Code Scanner - Inheritance Letter (Creative Path H)
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,34 @@
+- id: python-scanner
+  name: Python Code Scanner
+  entry: python3 scanner.py . --python
+  language: system
+  types: [python]
+  stages: [commit]
+  pass_filenames: false
+  description: Scan Python files for secrets, unused imports, complexity
+
+- id: javascript-scanner
+  name: JavaScript Code Scanner
+  entry: python3 scanner.py . --js
+  language: system
+  types: [javascript]
+  stages: [commit]
+  pass_filenames: false
+  description: Scan JS/React files for secrets, console statements, nesting, error handling
+
+- id: sql-scanner
+  name: SQL Code Scanner
+  entry: python3 scanner.py . --sql
+  language: system
+  types: [sql]
+  stages: [commit]
+  pass_filenames: false
+  description: Scan SQL for hardcoded credentials, unprotected deletes, SQL injection risks
+
+- id: multi-language-scanner
+  name: Multi-Language Code Scanner
+  entry: python3 scanner.py .
+  language: system
+  stages: [commit]
+  pass_filenames: false
+  description: Scan all supported languages (Python, JS, SQL) for issues

@@ -1,0 +1,62 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.2, pytest-9.0.3, pluggy-1.6.0 -- /Users/meera/.pyenv/versions/3.12.2/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/meera/Documents/codescanner
+configfile: pytest.ini
+plugins: cov-7.1.0, asyncio-1.4.0, anyio-3.7.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 51 items
+
+tests/test_agents.py::test_agent_a_returns_suggestion PASSED             [  1%]
+tests/test_agents.py::test_agent_a_suggestion_format PASSED              [  3%]
+tests/test_agents.py::test_agent_a_low_risk PASSED                       [  5%]
+tests/test_agents.py::test_agent_a_no_issues PASSED                      [  7%]
+tests/test_agents.py::test_agent_b_returns_suggestion PASSED             [  9%]
+tests/test_agents.py::test_agent_b_higher_complexity_reduction PASSED    [ 11%]
+tests/test_agents.py::test_agent_b_varying_risk PASSED                   [ 13%]
+tests/test_agents.py::test_agent_c_returns_suggestion PASSED             [ 15%]
+tests/test_agents.py::test_agent_c_low_risk PASSED                       [ 17%]
+tests/test_agents.py::test_evaluator_picks_best PASSED                   [ 19%]
+tests/test_agents.py::test_evaluator_risk_scoring PASSED                 [ 21%]
+tests/test_agents.py::test_evaluator_clarity_scoring PASSED              [ 23%]
+tests/test_agents.py::test_evaluator_time_scoring PASSED                 [ 25%]
+tests/test_agents.py::test_evaluator_score_all PASSED                    [ 27%]
+tests/test_agents.py::test_evaluator_weights_sum_to_one PASSED           [ 29%]
+tests/test_agents.py::test_all_agents_work PASSED                        [ 31%]
+tests/test_agents.py::test_evaluation_workflow PASSED                    [ 33%]
+tests/test_iteration_service.py::test_validator_validates_good_suggestion PASSED [ 35%]
+tests/test_iteration_service.py::test_validator_check_names PASSED       [ 37%]
+tests/test_iteration_service.py::test_validator_detects_syntax_error PASSED [ 39%]
+tests/test_iteration_service.py::test_validator_detects_missing_imports PASSED [ 41%]
+tests/test_iteration_service.py::test_validator_summary_format PASSED    [ 43%]
+tests/test_iteration_service.py::test_iteration_service_init PASSED      [ 45%]
+tests/test_iteration_service.py::test_grade_value_conversion PASSED      [ 47%]
+tests/test_iteration_service.py::test_grade_value_with_suffix PASSED     [ 49%]
+tests/test_iteration_service.py::test_scan_codebase_placeholder PASSED   [ 50%]
+tests/test_iteration_service.py::test_get_suggestions_with_issues PASSED [ 52%]
+tests/test_iteration_service.py::test_calculate_metrics_empty_history PASSED [ 54%]
+tests/test_iteration_service.py::test_calculate_metrics_with_history PASSED [ 56%]
+tests/test_iteration_service.py::test_fix_until_clean_returns_result PASSED [ 58%]
+tests/test_iteration_service.py::test_fix_until_clean_respects_max_iterations PASSED [ 60%]
+tests/test_iteration_service.py::test_fix_until_clean_has_timestamps PASSED [ 62%]
+tests/test_iteration_service.py::test_iteration_step_creation PASSED     [ 64%]
+tests/test_iteration_service.py::test_full_workflow_validator_service PASSED [ 66%]
+tests/test_iteration_api.py::test_start_fix_until_clean_success PASSED   [ 68%]
+tests/test_iteration_api.py::test_start_fix_until_clean_default_grade PASSED [ 70%]
+tests/test_iteration_api.py::test_start_fix_until_clean_creates_db_record PASSED [ 72%]
+tests/test_iteration_api.py::test_start_fix_until_clean_invalid_grade PASSED [ 74%]
+tests/test_iteration_api.py::test_start_fix_until_clean_max_iterations_too_high PASSED [ 76%]
+tests/test_iteration_api.py::test_get_iteration_status_success PASSED    [ 78%]
+tests/test_iteration_api.py::test_get_iteration_status_not_found PASSED  [ 80%]
+tests/test_iteration_api.py::test_get_iteration_status_with_history PASSED [ 82%]
+tests/test_iteration_api.py::test_get_iteration_progress_success PASSED  [ 84%]
+tests/test_iteration_api.py::test_get_iteration_history_empty PASSED     [ 86%]
+tests/test_iteration_api.py::test_get_iteration_history_with_steps PASSED [ 88%]
+tests/test_iteration_api.py::test_cancel_iteration_success PASSED        [ 90%]
+tests/test_iteration_api.py::test_cancel_iteration_already_complete PASSED [ 92%]
+tests/test_iteration_api.py::test_cancel_iteration_not_found PASSED      [ 94%]
+tests/test_iteration_api.py::test_delete_iteration_success PASSED        [ 96%]
+tests/test_iteration_api.py::test_delete_iteration_with_history PASSED   [ 98%]
+tests/test_iteration_api.py::test_delete_iteration_processing_fails PASSED [100%]
+
+======================= 51 passed, 105 warnings in 0.75s =======================

@@ -1,0 +1,242 @@
+"""Shared pytest fixtures for all tests."""
+
+import tempfile
+from pathlib import Path
+import pytest
+import sys
+
+# Add scanner to path
+sys.path.insert(0, str(Path(__file__).parent.parent / "scanner"))
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Lazy import RepoMetrics to avoid circular imports
+# (metrics_aggregator → scanner → creative_suite → caqi → metrics_aggregator)
+RepoMetrics = None
+
+
+@pytest.fixture
+def temp_dir():
+    """Provide a temporary directory that's cleaned up after test."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        yield tmpdir
+
+
+@pytest.fixture
+def sample_clean_file():
+    """Sample clean Python file with good practices."""
+    return '''
+"""Module with clean code."""
+
+def calculate_sum(a, b):
+    """Calculate sum of two numbers."""
+    return a + b
+
+
+def calculate_product(x, y):
+    """Calculate product of two numbers."""
+    return x * y
+
+
+class Calculator:
+    """Simple calculator class."""
+
+    def __init__(self):
+        """Initialize calculator."""
+        self.result = 0
+
+    def add(self, x):
+        """Add value to result."""
+        self.result += x
+        return self.result
+
+    def multiply(self, x):
+        """Multiply result by value."""
+        self.result *= x
+        return self.result
+'''
+
+
+@pytest.fixture
+def sample_smelly_file():
+    """Sample Python file with code smells."""
+    return '''
+def long_function_with_many_lines(a, b, c, d, e, f, g):
+    """This function is too long and has too many parameters."""
+    x = a + b
+    y = c + d
+    z = e + f
+    result = g
+    for i in range(10):
+        x += i
+    for j in range(10):
+        y += j
+    for k in range(10):
+        z += k
+    if result > 0:
+        if x > 0:
+            if y > 0:
+                if z > 0:
+                    if result > 100:
+                        return x + y + z
+    return 0
+'''
+
+
+@pytest.fixture
+def sample_insecure_file():
+    """Sample Python file with security issues."""
+    return '''
+"""File with security vulnerabilities."""
+
+api_key = "sk_live_1234567890abcdef"
+password = "MyPassword123"
+db_user = "admin"
+db_password = "admin123"
+aws_secret = "AKIAIOSFODNN7EXAMPLE"
+
+def connect_database():
+    """Connect to database with hardcoded credentials."""
+    # User: admin, Password: password123
+    return None
+'''
+
+
+@pytest.fixture
+def sample_undocumented_file():
+    """Sample Python file with missing documentation."""
+    return '''
+def calculate(x, y):
+    return x + y
+
+def process_data(data):
+    result = []
+    for item in data:
+        result.append(item * 2)
+    return result
+
+class DataProcessor:
+    def __init__(self):
+        self.data = []
+
+    def add(self, item):
+        self.data.append(item)
+
+    def get_all(self):
+        return self.data
+'''
+
+
+@pytest.fixture
+def sample_duplicated_code():
+    """Sample Python with duplicated functions."""
+    code = '''
+def process_list_a(items):
+    """Process a list."""
+    result = []
+    for item in items:
+        result.append(item * 2)
+    return result
+
+def process_list_b(items):
+    """Process another list."""
+    result = []
+    for item in items:
+        result.append(item * 2)
+    return result
+
+def process_list_c(items):
+    """Process yet another list."""
+    result = []
+    for item in items:
+        result.append(item * 2)
+    return result
+'''
+    return code
+
+
+@pytest.fixture
+def sample_coupled_files():
+    """Fixture providing two coupled Python files."""
+    return {
+        "module_a.py": '''
+"""Module A - depends on B."""
+import module_b
+
+def func_a():
+    """Use module B."""
+    return module_b.func_b()
+''',
+        "module_b.py": '''
+"""Module B - depends on A."""
+import module_a
+
+def func_b():
+    """Use module A."""
+    return module_a.func_a()
+''',
+    }
+
+
+@pytest.fixture
+def sample_repo_metrics():
+    """Sample RepoMetrics for testing CAQI calculation."""
+    # Lazy import to avoid circular import issues
+    from metrics_aggregator import RepoMetrics
+
+    return RepoMetrics(
+        avg_complexity=5.0,
+        max_complexity=12.0,
+        security_high_count=2,
+        security_medium_count=3,
+        smell_count=4,
+        doc_coverage_ratio=0.80,
+        duplication_percentage=5.0,
+        avg_imports_per_file=2.5,
+        has_circular_deps=False,
+        files_analyzed=10,
+        total_lines=500,
+        per_file_metrics={
+            "app.py": {
+                "lines": 100,
+                "security_issues": 1,
+                "smells": 2,
+                "doc_coverage": 0.75,
+                "functions": 8,
+                "documented_functions": 6,
+            },
+            "utils.py": {
+                "lines": 80,
+                "security_issues": 0,
+                "smells": 1,
+                "doc_coverage": 0.90,
+                "functions": 5,
+                "documented_functions": 5,
+            },
+        },
+    )
+
+
+@pytest.fixture
+def create_python_file(temp_dir):
+    """Factory fixture to create Python files in temp directory."""
+    def _create_file(filename, content):
+        path = Path(temp_dir) / filename
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+        return str(path)
+    return _create_file
+
+
+@pytest.fixture
+def create_project(temp_dir):
+    """Factory fixture to create a complete project structure."""
+    def _create_project(files_dict):
+        """Create multiple files from dict: {filename: content}."""
+        paths = {}
+        for filename, content in files_dict.items():
+            path = Path(temp_dir) / filename
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content)
+            paths[filename] = str(path)
+        return temp_dir, paths
+    return _create_project

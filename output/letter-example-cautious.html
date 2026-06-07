@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inheritance Letter - Confident</title>
+    <style>
+        * {margin: 0; padding: 0; box-sizing: border-box;}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #06d6a0 0%, #028a61 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #06d6a0 0%, #028a61 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        .header h1 {font-size: 40px; margin-bottom: 15px; font-weight: 700;}
+        .header .tone {font-size: 18px; opacity: 0.95; font-weight: 500;}
+        .content {padding: 50px 40px;}
+        .section {margin-bottom: 50px;}
+        .section h2 {
+            font-size: 22px;
+            color: #028a61;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #06d6a0;
+        }
+        ul {list-style: none;}
+        li {padding: 15px 0; border-bottom: 1px solid #eee; color: #555; line-height: 1.6;}
+        li:last-child {border-bottom: none;}
+        .file-name {font-weight: 600; color: #028a61;}
+        .metric {color: #06d6a0; font-weight: 600;}
+        .secrets-section {
+            background: #d4f4e8;
+            padding: 25px;
+            border-left: 5px solid #06d6a0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .secret-item {padding: 12px 0; color: #333; line-height: 1.6;}
+        .secret-item:not(:last-child) {border-bottom: 1px solid rgba(0,0,0,0.1);}
+        .tips-list {counter-reset: tip-counter; list-style: none;}
+        .tips-list li {counter-increment: tip-counter; padding: 15px 0 15px 40px; position: relative;}
+        .tips-list li:before {
+            content: counter(tip-counter);
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 28px;
+            height: 28px;
+            background: #06d6a0;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .empty-section {padding: 20px; background: #f9f9f9; border-radius: 4px; color: #999; font-style: italic;}
+        .footer {
+            background: #f5f5f5;
+            padding: 30px 40px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            border-top: 1px solid #eee;
+        }
+        .sign-off {margin-top: 30px; font-weight: 500; color: #028a61; font-size: 14px;}
+        @media (max-width: 768px) {
+            .header {padding: 40px 20px;}
+            .header h1 {font-size: 28px;}
+            .content {padding: 30px 20px;}
+            .section h2 {font-size: 18px;}
+        }
+        @media print {
+            body {background: white; padding: 0;}
+            .container {box-shadow: none; border-radius: 0;}
+            .header {padding: 40px;}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Inheritance Letter</h1>
+            <div class="tone">Tone: <span style="text-transform: capitalize;">confident</span></div>
+        </div>
+        <div class="content">
+            <div class="section">
+                <h2>What I'm Proud Of</h2>
+                <ul>
+                    <li><span class="file-name">realistic_app.py</span>: Quality score: 88.33333333333333/100</li>
+                    <li><span class="file-name">utils.py</span>: Quality score: 80.0/100</li>
+                </ul>
+            </div>
+            <div class="section">
+                <h2>What I'm Not Proud Of</h2>
+                <ul>
+                    <li><span class="file-name">utils.py</span>: Low quality</li>
+                    <li><span class="file-name">realistic_app.py</span>: 1 code smells</li>
+                </ul>
+            </div>
+            <div class="section">
+                <h2>Secrets I've Been Keeping</h2>
+                <div class="empty-section">I have no secrets I'm aware of.</div>
+            </div>
+            <div class="section">
+                <h2>Where to Start Instead</h2>
+                <ul>
+                    <li><span class="file-name">utils.py</span>: Safe entry point: low complexity, clean</li>
+                    <li><span class="file-name">realistic_app.py</span>: Safe entry point: low complexity, clean</li>
+                </ul>
+            </div>
+            <div class="section">
+                <h2>How to Survive Your First Week</h2>
+                <ul class="tips-list">
+                    <li>Set up pre-commit hooks locally for automated quality checks</li>
+                    <li>Review architecture patterns in high-quality files</li>
+                    <li>Contribute by writing tests for untested hotspots</li>
+                </ul>
+            </div>
+            <div class="sign-off">
+                Yours confidently,<br>
+                A codebase that knows too much about itself
+            </div>
+        </div>
+        <div class="footer">
+            Generated by Code Scanner - Inheritance Letter (Creative Path H)
+        </div>
+    </div>
+</body>
+</html>

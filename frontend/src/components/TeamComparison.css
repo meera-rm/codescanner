@@ -1,0 +1,330 @@
+.team-comparison-container {
+  width: 100%;
+  padding: 32px;
+  background: #fafafa;
+  min-height: 100vh;
+}
+
+.team-comparison-container h1 {
+  margin: 0 0 32px 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.team-selector {
+  margin-bottom: 32px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.selector-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.team-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.team-pill {
+  padding: 10px 16px;
+  background: #f5f5f5;
+  border: 2px solid #e8e8e8;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.team-pill:hover {
+  background: #efefef;
+  border-color: #ddd;
+}
+
+.team-pill.active {
+  background: #4ECDC4;
+  border-color: #4ECDC4;
+  color: white;
+}
+
+.caqi-badge {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.team-pill.active .caqi-badge {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.selected-team-detail {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.team-metadata {
+  padding: 20px 24px;
+  background: #f9f9f9;
+  border-top: 1px solid #e8e8e8;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.metadata-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metadata-item .label {
+  font-size: 12px;
+  color: #999;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.metadata-item .value {
+  font-size: 16px;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.comparison-table-container {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: auto;
+}
+
+.comparison-table-container h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.comparison-table thead {
+  background: #f5f5f5;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.comparison-table th {
+  padding: 12px 8px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.comparison-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s ease;
+  cursor: pointer;
+}
+
+.comparison-table tbody tr:hover {
+  background: #f9f9f9;
+}
+
+.comparison-table tbody tr.active {
+  background: #f0f9f8;
+}
+
+.comparison-table td {
+  padding: 12px 8px;
+  font-size: 13px;
+  color: #333;
+}
+
+.team-name-cell {
+  font-weight: 600;
+}
+
+.archetype-cell {
+  font-size: 12px;
+  color: #666;
+}
+
+.caqi-cell {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.caqi-score {
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.caqi-excellent {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.caqi-good {
+  background: #E3F2FD;
+  color: #1565C0;
+}
+
+.caqi-fair {
+  background: #FFF3E0;
+  color: #E65100;
+}
+
+.caqi-poor {
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+.dimension-cell {
+  text-align: center;
+}
+
+.dimension-score {
+  display: inline-block;
+  padding: 4px 8px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.member-cell {
+  text-align: center;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #999;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.loading,
+.error,
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  font-size: 16px;
+  color: #666;
+}
+
+.error {
+  color: #d32f2f;
+  background: #ffebee;
+  border-radius: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .team-comparison-container {
+    padding: 16px;
+  }
+
+  .team-comparison-container h1 {
+    font-size: 24px;
+  }
+
+  .comparison-table-container {
+    overflow-x: auto;
+  }
+
+  .comparison-table {
+    min-width: 600px;
+  }
+
+  .summary-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .team-comparison-container {
+    padding: 12px;
+  }
+
+  .team-selector {
+    padding: 16px;
+  }
+
+  .team-pills {
+    gap: 8px;
+  }
+
+  .team-pill {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .summary-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-value {
+    font-size: 24px;
+  }
+}

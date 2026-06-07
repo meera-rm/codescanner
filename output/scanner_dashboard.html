@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Scanner Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #667eea;
+        }
+
+        .card h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .card .stat {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .card .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status.pass {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status.warn {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status.fail {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .section-title {
+            font-size: 28px;
+            margin-top: 50px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            color: #333;
+        }
+
+        .personality-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .personality-card .emoji {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .personality-card h2 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .personality-card p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+
+        .personality-card .button {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 12px 30px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+
+        .personality-card .button:hover {
+            background: #f0f0f0;
+        }
+
+        .features {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .features h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .features ul {
+            list-style: none;
+        }
+
+        .features li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .features li:last-child {
+            border-bottom: none;
+        }
+
+        .features li:before {
+            content: "✓ ";
+            color: #4caf50;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .code-block {
+            background: #f5f5f5;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+            font-size: 12px;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 50px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .section-title {
+                font-size: 22px;
+            }
+
+            .personality-card {
+                padding: 30px 20px;
+            }
+
+            .personality-card .emoji {
+                font-size: 60px;
+            }
+
+            .personality-card h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Code Scanner Dashboard</h1>
+        <p>Multi-dimensional code quality analysis</p>
+    </div>
+
+    <div class="container">
+        <h2 class="section-title">Scanner Features</h2>
+
+        <div class="grid">
+            <div class="card">
+                <h2>🔍 Security Scanning</h2>
+                <p>Detect hardcoded secrets, SQL injection risks, and security vulnerabilities</p>
+                <span class="status pass">Active</span>
+            </div>
+
+            <div class="card">
+                <h2>📏 Code Complexity</h2>
+                <p>Cyclomatic complexity analysis and function-level metrics</p>
+                <span class="status pass">Active</span>
+            </div>
+
+            <div class="card">
+                <h2>👃 Code Smells</h2>
+                <p>Long functions, large classes, deep nesting, long parameter lists</p>
+                <span class="status pass">Active</span>
+            </div>
+
+            <div class="card">
+                <h2>📝 Documentation</h2>
+                <p>Docstring coverage analysis and module documentation tracking</p>
+                <span class="status pass">Active</span>
+            </div>
+
+            <div class="card">
+                <h2>🔄 Duplication Detection</h2>
+                <p>Find exact and near-duplicate code blocks</p>
+                <span class="status pass">Active</span>
+            </div>
+
+            <div class="card">
+                <h2>🔗 Coupling Analysis</h2>
+                <p>Module imports, circular dependencies, coupling metrics</p>
+                <span class="status pass">Active</span>
+            </div>
+        </div>
+
+        <h2 class="section-title">Creative Path G: Personality Profiler</h2>
+
+        <div class="personality-card">
+            <div class="emoji">🤔</div>
+            <h2>Codebase Personality Profiler</h2>
+            <p>Transform code metrics into memorable, actionable personality archetypes</p>
+            <p style="font-size: 14px; opacity: 0.9;">
+                Your codebase is more than numbers. Discover its character with the Personality Profiler.
+            </p>
+        </div>
+
+        <div style="background: white; border-radius: 8px; padding: 30px; margin-top: 30px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+            <h3 style="color: #667eea; margin-bottom: 20px;">🎯 How It Works</h3>
+
+            <p style="margin-bottom: 20px;">
+                The Personality Profiler analyzes your codebase across six dimensions and assigns it one of six memorable archetypes:
+            </p>
+
+            <ul style="list-style: none; margin-bottom: 20px;">
+                <li style="margin-bottom: 12px;"><strong>🤔 The Anxious Overthinker</strong> — High complexity + extensive logging</li>
+                <li style="margin-bottom: 12px;"><strong>🚀 The Reckless Optimist</strong> — Security findings + low error handling</li>
+                <li style="margin-bottom: 12px;"><strong>📋 The Copy-Paste Artist</strong> — High code duplication</li>
+                <li style="margin-bottom: 12px;"><strong>🔀 The Chaotic Connector</strong> — Circular dependencies + high coupling</li>
+                <li style="margin-bottom: 12px;"><strong>✅ The Cautious Perfectionist</strong> — High quality + excellent docs</li>
+                <li style="margin-bottom: 12px;"><strong>🤐 The Quiet Newcomer</strong> — Small codebase with neutral scores</li>
+            </ul>
+
+            <h3 style="color: #667eea; margin-top: 30px; margin-bottom: 20px;">📋 Generate Your Personality Card</h3>
+
+            <p style="margin-bottom: 15px;">Run the scanner with the <code>--personality</code> flag to get personality insights:</p>
+
+            <div class="code-block">python -m scanner ./your-project \
+  --personality \
+  --quality-score \
+  --code-smells \
+  --doc-coverage \
+  --security \
+  --personality-html output/personality_card.html</div>
+
+            <p style="margin-top: 20px; font-size: 14px; color: #666;">
+                The personality card will be generated as a beautiful, interactive HTML file that you can share with your team.
+            </p>
+
+            <h3 style="color: #667eea; margin-top: 30px; margin-bottom: 20px;">✨ Features</h3>
+
+            <div class="features">
+                <ul>
+                    <li>Rule-based personality matching (no AI/ML required)</li>
+                    <li>6 memorable archetypes with emojis and taglines</li>
+                    <li>Trait scores across 6 dimensions (0-100 scale)</li>
+                    <li>Evidence citations with supporting metrics</li>
+                    <li>Strengths and blind spots analysis</li>
+                    <li>3 actionable relationship tips per archetype</li>
+                    <li>Beautiful, responsive HTML card</li>
+                    <li>Markdown section for integration into reports</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="background: white; border-radius: 8px; padding: 30px; margin-top: 30px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+            <h3 style="color: #667eea; margin-bottom: 20px;">📚 Integration with CAQI & Reports</h3>
+
+            <p style="margin-bottom: 15px;">
+                The Personality Profiler works seamlessly with the Code Air Quality Index (CAQI) and all reporting formats:
+            </p>
+
+            <ul style="list-style: none;">
+                <li style="margin-bottom: 10px;"><strong>JSON Output:</strong> Complete personality profile in structured format</li>
+                <li style="margin-bottom: 10px;"><strong>Markdown:</strong> Personality section for reports and documentation</li>
+                <li style="margin-bottom: 10px;"><strong>HTML Card:</strong> Standalone personality card for presentations</li>
+                <li style="margin-bottom: 10px;"><strong>Dashboard:</strong> Personality insights alongside other metrics</li>
+            </ul>
+        </div>
+
+        <h2 class="section-title">Creative Path H: Inheritance Letter</h2>
+
+        <div class="personality-card">
+            <div class="emoji">📬</div>
+            <h2>Inheritance Letter</h2>
+            <p>Your codebase writes you a confession letter confessing its issues, warning about dangers, and guiding where to start.</p>
+            <p style="font-size: 14px; opacity: 0.9;">
+                Code metrics are boring. First-person confessions are unforgettable.
+            </p>
+        </div>
+
+        <div style="background: white; border-radius: 8px; padding: 30px; margin-top: 30px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+            <h3 style="color: #667eea; margin-bottom: 20px;">💌 How It Works</h3>
+
+            <p style="margin-bottom: 20px;">
+                The Inheritance Letter generates three distinct tones based on code health, creating a narrative that helps developers understand the codebase at a human level:
+            </p>
+
+            <ul style="list-style: none; margin-bottom: 20px;">
+                <li style="margin-bottom: 12px;"><strong>🔴 Apologetic (Red)</strong> — High security debt or poor quality. "I left an API key in insecure.py. I'm sorry."</li>
+                <li style="margin-bottom: 12px;"><strong>🟡 Cautious (Amber)</strong> — Moderate issues. "I'm fairly complex in places. Let's talk about refactoring."</li>
+                <li style="margin-bottom: 12px;"><strong>🟢 Confident (Green)</strong> — Clean, well-maintained code. "I'm well-documented and maintainable. Ready to contribute?"</li>
+            </ul>
+
+            <h3 style="color: #667eea; margin-top: 30px; margin-bottom: 20px;">📝 Letter Structure</h3>
+
+            <p style="margin-bottom: 15px;">Each letter contains 6 sections that guide the next maintainer:</p>
+
+            <div style="background: #f9f9f9; padding: 20px; border-radius: 6px; margin-bottom: 20px;">
+                <ol style="margin-left: 20px;">
+                    <li><strong>What I'm Proud Of</strong> — Top 3 files with highest quality</li>
+                    <li><strong>What I'm Not Proud Of</strong> — Bottom 3 files with most issues</li>
+                    <li><strong>Secrets I've Been Keeping</strong> — First-person confessions of security findings</li>
+                    <li><strong>Rooms You Should Avoid First</strong> — Top 3 complex functions to skip initially</li>
+                    <li><strong>Where to Start Instead</strong> — Safe, low-complexity entry points</li>
+                    <li><strong>How to Survive Your First Week</strong> — Tone-specific actionable tips</li>
+                </ol>
+            </div>
+
+            <h3 style="color: #667eea; margin-top: 30px; margin-bottom: 20px;">🚀 Generate Your Letter</h3>
+
+            <p style="margin-bottom: 15px;">Run the scanner with the <code>--inheritance-letter</code> flag:</p>
+
+            <div class="code-block">python -m scanner ./your-project \
+  --inheritance-letter \
+  --security \
+  --quality-score \
+  --code-smells \
+  --doc-coverage \
+  --inheritance-html output/letter.html
+            </div>
+
+            <p style="margin-top: 20px; font-size: 14px; color: #666;">
+                The inheritance letter will be generated as a beautiful, tone-matched HTML file ready for browser viewing or printing to PDF.
+            </p>
+
+            <h3 style="color: #667eea; margin-top: 30px; margin-bottom: 20px;">✨ Features</h3>
+
+            <div class="features">
+                <ul>
+                    <li>3 distinct tones (apologetic, cautious, confident) based on code health</li>
+                    <li>First-person narrative from the codebase perspective</li>
+                    <li>6 sections guiding new developers where to start</li>
+                    <li>Tone-matched color scheme (red/amber/green) for visual clarity</li>
+                    <li>Self-contained HTML (email-ready, offline-ready)</li>
+                    <li>Professional styling with responsive design</li>
+                    <li>Print-friendly for team presentations</li>
+                    <li>Large fonts (18px+) readable from 10 feet away</li>
+                </ul>
+            </div>
+
+            <h3 style="color: #667eea; margin-top: 30px; margin-bottom: 20px;">📚 Example Letters</h3>
+
+            <p style="margin-bottom: 15px;">
+                View example letters generated from real code patterns:
+            </p>
+
+            <ul style="list-style: none;">
+                <li style="margin-bottom: 10px;"><a href="letter-example-apologetic.html" style="color: #e63946; text-decoration: none; font-weight: 500;">🔴 Apologetic Example</a> — Security issues & low quality</li>
+                <li style="margin-bottom: 10px;"><a href="letter-example-cautious.html" style="color: #f77f00; text-decoration: none; font-weight: 500;">🟡 Cautious Example</a> — Moderate issues & medium quality</li>
+                <li style="margin-bottom: 10px;"><a href="letter-example-confident.html" style="color: #06d6a0; text-decoration: none; font-weight: 500;">🟢 Confident Example</a> — Clean code & high quality</li>
+            </ul>
+        </div>
+
+        <div style="background: white; border-radius: 8px; padding: 30px; margin-top: 30px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+            <h3 style="color: #667eea; margin-bottom: 20px;">📊 Integration with Personality & CAQI</h3>
+
+            <p style="margin-bottom: 15px;">
+                The Inheritance Letter works seamlessly with the Personality Profiler and CAQI. Generate all three together for a complete picture:
+            </p>
+
+            <div class="code-block">python -m scanner ./your-project \
+  --personality --personality-html output/personality.html \
+  --inheritance-letter --inheritance-html output/letter.html \
+  --caqi --caqi-html output/caqi.html \
+  --security --quality-score --code-smells --doc-coverage \
+  --output output/report.json</div>
+
+            <p style="margin-top: 20px; font-size: 14px; color: #666;">
+                This creates three complementary outputs: Personality (archetype), Inheritance Letter (narrative), and CAQI (health score).
+            </p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Code Scanner — Multi-dimensional code quality analysis</p>
+        <p>Creative Suite: Personality Profiler (G) • Inheritance Letter (H) • CAQI (I)</p>
+    </div>
+</body>
+</html>

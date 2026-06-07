@@ -1,0 +1,146 @@
+.caqi-radar-chart-container {
+  width: 100%;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.radar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.team-name {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+  flex: 1;
+  min-width: 200px;
+}
+
+.archetype-badge {
+  padding: 8px 16px;
+  border-radius: 24px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.overall-caqi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 20px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  min-width: 120px;
+}
+
+.caqi-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.caqi-score {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.dimension-breakdown {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.dimension-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dimension-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  text-transform: capitalize;
+}
+
+.dimension-bar {
+  width: 100%;
+  height: 24px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.dimension-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.dimension-value {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .caqi-radar-chart-container {
+    padding: 16px;
+  }
+
+  .radar-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .team-name {
+    font-size: 20px;
+  }
+
+  .overall-caqi {
+    width: 100%;
+    align-items: center;
+  }
+
+  .breakdown-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .caqi-radar-chart-container {
+    padding: 12px;
+  }
+
+  .team-name {
+    font-size: 18px;
+  }
+
+  .breakdown-grid {
+    grid-template-columns: 1fr;
+  }
+}
