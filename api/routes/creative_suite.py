@@ -24,8 +24,27 @@ async def creative_suite_analyze(request: CreativeSuiteRequest, background_tasks
     key_id = getattr(req.state, "key_id", None)
 
     path = Path(request.directory_path)
+
+    # Try exact path first
     if not path.exists():
-        raise HTTPException(status_code=400, detail=f"Path does not exist: {request.directory_path}")
+        # If it's just a directory name, try common locations
+        if '/' not in request.directory_path:
+            common_locations = [
+                Path.home() / 'Documents' / request.directory_path,
+                Path.home() / 'Documents' / 'assignments' / 'pursuit' / request.directory_path,
+                Path.home() / 'Documents' / 'codescanner' / request.directory_path,
+                Path.cwd() / request.directory_path,
+            ]
+            for candidate in common_locations:
+                if candidate.exists():
+                    path = candidate
+                    break
+
+        if not path.exists():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Path not found: {request.directory_path}. Try using the full absolute path (e.g., /Users/meera/Documents/assignments/pursuit/catfacts)"
+            )
 
     job_id = f"creative_{uuid.uuid4().hex[:8]}"
     jobs[job_id] = {

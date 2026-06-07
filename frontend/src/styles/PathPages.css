@@ -68,13 +68,48 @@
   font-size: 0.95rem;
 }
 
+.input-with-button {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .input-section input {
-  width: 100%;
+  flex: 1;
   padding: 10px 15px;
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 0.95rem;
   transition: border-color 0.3s ease;
+  min-width: 200px;
+}
+
+.input-with-button input {
+  flex: 1;
+}
+
+.browse-btn {
+  padding: 10px 16px;
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.browse-btn:hover:not(:disabled) {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.browse-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .input-section input:focus {

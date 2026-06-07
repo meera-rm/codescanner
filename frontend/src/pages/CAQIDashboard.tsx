@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/CAQIDashboard.css';
 
 // Lazy load heavy components to reduce initial bundle size
@@ -51,6 +52,7 @@ interface Team {
 
 
 export const CAQIDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [activeView, setActiveView] = useState<ViewMode>('comparison');
   const [teams, setTeams] = useState<Team[]>([]);
   const [trendData, setTrendData] = useState<TrendData[]>([]);
@@ -196,6 +198,7 @@ export const CAQIDashboard: React.FC = () => {
   return (
     <div className="caqi-dashboard">
       <header className="dashboard-header">
+        <button className="back-btn" onClick={() => navigate('/caqi')}>← Back</button>
         <div className="header-content">
           <h1>Engineering Culture Dashboard</h1>
           <p className="subtitle">

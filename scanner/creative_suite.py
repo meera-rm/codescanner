@@ -5,6 +5,7 @@ Coordinates all three analyses on the same codebase and provides unified output.
 """
 
 import json
+import signal
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, asdict
@@ -12,8 +13,17 @@ from datetime import datetime
 
 from personality import profile_codebase, generate_personality_html
 from inheritance import generate_letter, render_letter_html
-from caqi import calculate_caqi_score, render_caqi_html
+from caqi import Pollutants, CAQICalculator, CAQIFormatter
 from metrics_aggregator import MetricsAggregator
+
+
+class TimeoutError(Exception):
+    """Raised when analysis exceeds time limit."""
+    pass
+
+
+def timeout_handler(signum, frame):
+    raise TimeoutError("Analysis timeout: exceeded 30 seconds")
 
 
 @dataclass
@@ -53,45 +63,67 @@ class CreativeSuiteOrchestrator:
         Returns:
             CreativeSuiteResult with all three analyses
         """
-        # Step 1: Aggregate metrics
-        print(f"[{job_id}] Aggregating metrics...")
-        metrics = self.aggregator.aggregate(codebase_path)
+        # Set a 30-second timeout for the entire analysis
+        signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(30)
 
-        # Step 2: Personality Profile
-        print(f"[{job_id}] Analyzing personality...")
-        personality = self._analyze_personality(metrics)
+        try:
+            # Step 1: Aggregate metrics
+            print(f"[{job_id}] Aggregating metrics...")
+            metrics = self.aggregator.aggregate(codebase_path)
 
-        # Step 3: Inheritance Letter
-        print(f"[{job_id}] Generating inheritance letter...")
-        letter = self._analyze_letter(metrics)
+            # Step 2: Personality Profile
+            print(f"[{job_id}] Analyzing personality...")
+            personality = self._analyze_personality(metrics)
 
-        # Step 4: CAQI Score
-        print(f"[{job_id}] Calculating CAQI score...")
-        caqi = self._analyze_caqi(metrics)
+            # Step 3: Inheritance Letter
+            print(f"[{job_id}] Generating inheritance letter...")
+            letter = self._analyze_letter(metrics)
 
-        # Step 5: Generate HTML files
-        print(f"[{job_id}] Generating HTML outputs...")
-        html_files = self._generate_html_outputs(personality, letter, caqi)
+            # Step 4: CAQI Score
+            print(f"[{job_id}] Calculating CAQI score...")
+            caqi = self._analyze_caqi(metrics)
 
-        # Step 6: Generate markdown report
-        print(f"[{job_id}] Generating markdown report...")
-        markdown_report = self._generate_markdown_report(personality, letter, caqi)
+            # Step 5: Generate HTML files
+            print(f"[{job_id}] Generating HTML outputs...")
+            html_files = self._generate_html_outputs(personality, letter, caqi)
 
-        # Step 7: Create result
-        result = CreativeSuiteResult(
-            job_id=job_id,
-            timestamp=datetime.now().isoformat(),
-            codebase_path=str(codebase_path),
-            status="completed",
-            personality=personality,
-            letter=letter,
-            caqi=caqi,
-            html_files=html_files,
-            markdown_report=markdown_report
-        )
+            # Step 6: Generate markdown report
+            print(f"[{job_id}] Generating markdown report...")
+            markdown_report = self._generate_markdown_report(personality, letter, caqi)
 
-        print(f"[{job_id}] ✅ Complete Creative Suite analysis finished!")
-        return result
+            # Step 7: Create result
+            result = CreativeSuiteResult(
+                job_id=job_id,
+                timestamp=datetime.now().isoformat(),
+                codebase_path=str(codebase_path),
+                status="completed",
+                personality=personality,
+                letter=letter,
+                caqi=caqi,
+                html_files=html_files,
+                markdown_report=markdown_report
+            )
+
+            print(f"[{job_id}] ✅ Complete Creative Suite analysis finished!")
+            return result
+        except TimeoutError as e:
+            print(f"[{job_id}] ⏱️ {str(e)}")
+            # Return a partial result on timeout
+            return CreativeSuiteResult(
+                job_id=job_id,
+                timestamp=datetime.now().isoformat(),
+                codebase_path=str(codebase_path),
+                status="timeout",
+                personality={"error": "Analysis timeout after 30 seconds"},
+                letter={"error": "Analysis timeout after 30 seconds"},
+                caqi={"error": "Analysis timeout after 30 seconds"},
+                html_files={},
+                markdown_report="Analysis timed out after 30 seconds"
+            )
+        finally:
+            # Cancel the alarm
+            signal.alarm(0)
 
     def _analyze_personality(self, metrics) -> Dict[str, Any]:
         """Generate personality profile."""
@@ -113,38 +145,116 @@ class CreativeSuiteOrchestrator:
         return profile_codebase(metrics_dict)
 
     def _analyze_letter(self, metrics) -> Dict[str, Any]:
-        """Generate inheritance letter."""
-        # Build metrics list for letter generation
-        metrics_list = []
-        for filepath, file_metrics in metrics.per_file_metrics.items():
-            security_penalty = file_metrics.get("security_issues", 0) * 20
-            smell_penalty = file_metrics.get("smells", 0) * 5
-            doc_penalty = (1 - file_metrics.get("doc_coverage", 0.5)) * 20
+        """Generate inheritance letter using aggregate metrics."""
+        # If we have per-file metrics, use them
+        if metrics.per_file_metrics:
+            metrics_list = []
+            for filepath, file_metrics in metrics.per_file_metrics.items():
+                security_penalty = file_metrics.get("security_issues", 0) * 20
+                smell_penalty = file_metrics.get("smells", 0) * 5
+                doc_penalty = (1 - file_metrics.get("doc_coverage", 0.5)) * 20
+                quality = max(0, 100 - security_penalty - smell_penalty - doc_penalty)
+
+                metrics_list.append({
+                    "filepath": filepath,
+                    "quality_score": quality,
+                    "complexity_average": 1.0,
+                    "security_findings": {"high": [{"type": "issue", "line": 0}] if file_metrics.get("security_issues", 0) > 0 else []},
+                    "smells_count": file_metrics.get("smells", 0),
+                    "doc_coverage": file_metrics.get("doc_coverage", 0.5),
+                })
+        else:
+            # Use aggregate metrics to create synthetic per-file metrics for letter generation
+            # This gives us realistic-looking metrics even when per-file data isn't available
+            security_penalty = metrics.security_high_count * 20
+            smell_penalty = metrics.smell_count * 5
+            doc_penalty = (1 - metrics.doc_coverage_ratio) * 20
             quality = max(0, 100 - security_penalty - smell_penalty - doc_penalty)
 
-            metrics_list.append({
-                "filepath": filepath,
+            metrics_list = [{
+                "filepath": "codebase",
                 "quality_score": quality,
-                "complexity_average": 1.0,
-                "security_findings": {"high": [{"type": "issue", "line": 0}] if file_metrics.get("security_issues", 0) > 0 else []},
-                "smells_count": file_metrics.get("smells", 0),
-            })
+                "complexity_average": metrics.avg_complexity,
+                "security_findings": {"high": [{"type": "issue"}] * metrics.security_high_count if metrics.security_high_count > 0 else []},
+                "smells_count": metrics.smell_count,
+                "doc_coverage": metrics.doc_coverage_ratio,
+            }]
 
         return generate_letter(metrics_list)
 
     def _analyze_caqi(self, metrics) -> Dict[str, Any]:
         """Calculate CAQI score."""
-        return calculate_caqi_score(metrics)
+        try:
+            # Calculate scores from metrics (0-100 scale)
+            complexity_score = min(100, metrics.avg_complexity * 10)  # 0-100
+            security_score = min(100, (metrics.security_high_count + metrics.security_medium_count) * 5)  # 0-100
+            smells_score = min(100, metrics.smell_count * 3)  # 0-100
+            docs_score = (1 - metrics.doc_coverage_ratio) * 100  # 0-100 (lower is better)
+            duplication_score = metrics.duplication_percentage  # Already 0-100
+            coupling_score = min(100, metrics.avg_imports_per_file * 10)  # 0-100
+
+            # Create Pollutants object from metrics
+            pollutants = Pollutants(
+                complexity=complexity_score,
+                security=security_score,
+                smells=smells_score,
+                docs=docs_score,
+                duplication=duplication_score,
+                coupling=coupling_score
+            )
+
+            return {
+                "score": pollutants.caqi_score(),
+                "level": pollutants.level(),
+                "color": pollutants.color(),
+                "primary_pollutant": pollutants.primary_pollutant(),
+                "pollutants": pollutants.as_dict()
+            }
+        except Exception as e:
+            # Return default CAQI if calculation fails
+            return {
+                "score": 350,
+                "level": "Unhealthy",
+                "color": "#ff9999",
+                "primary_pollutant": "unknown",
+                "error": str(e)
+            }
 
     def _generate_html_outputs(self, personality: Dict, letter: Dict, caqi: Dict) -> Dict[str, str]:
         """Generate all HTML files."""
         html_files = {
             "personality.html": generate_personality_html(personality),
             "letter.html": render_letter_html(letter),
-            "caqi.html": render_caqi_html(caqi),
+            "caqi.html": self._generate_caqi_html(caqi),
             "dashboard.html": self._generate_unified_dashboard(personality, letter, caqi)
         }
         return html_files
+
+    def _generate_caqi_html(self, caqi: Dict) -> str:
+        """Generate CAQI HTML visualization."""
+        score = caqi.get('score', 0)
+        level = caqi.get('level', 'Unknown')
+        color = caqi.get('color', '#000000')
+
+        return f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CAQI Analysis</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; padding: 20px; }}
+        .caqi-score {{ font-size: 48px; font-weight: bold; color: {color}; }}
+        .caqi-level {{ font-size: 24px; color: {color}; }}
+    </style>
+</head>
+<body>
+    <h1>Code Air Quality Index</h1>
+    <div class="caqi-score">{score}</div>
+    <div class="caqi-level">{level}</div>
+    <pre>{json.dumps(caqi, indent=2)}</pre>
+</body>
+</html>
+"""
 
     def _generate_unified_dashboard(self, personality: Dict, letter: Dict, caqi: Dict) -> str:
         """Generate unified Creative Suite dashboard."""

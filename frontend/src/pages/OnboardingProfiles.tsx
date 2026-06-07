@@ -9,6 +9,21 @@ export const OnboardingProfiles: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState('');
   const [error, setError] = useState('');
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleBrowse = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleDirectorySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const firstFile = files[0];
+      const path = (firstFile as any).webkitRelativePath || firstFile.name;
+      const directoryName = path.split('/')[0] || path;
+      setDirectoryPath(directoryName);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!directoryPath.trim()) {
@@ -50,14 +65,32 @@ export const OnboardingProfiles: React.FC = () => {
         <div className="input-section">
           <div className="input-group">
             <label htmlFor="path">Directory Path:</label>
-            <input
-              id="path"
-              type="text"
-              placeholder="e.g., /path/to/your/project"
-              value={directoryPath}
-              onChange={(e) => setDirectoryPath(e.target.value)}
-              disabled={loading}
-            />
+            <div className="input-with-button">
+              <input
+                id="path"
+                type="text"
+                placeholder="e.g., /path/to/your/project or browse folder"
+                value={directoryPath}
+                onChange={(e) => setDirectoryPath(e.target.value)}
+                disabled={loading}
+              />
+              <button
+                onClick={handleBrowse}
+                disabled={loading}
+                className="browse-btn"
+                title="Browse for directory"
+              >
+                📁 Browse
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                style={{ display: 'none' }}
+                onChange={handleDirectorySelect}
+                {...({ webkitdirectory: '', mozdirectory: '' } as any)}
+              />
+            </div>
           </div>
           <div className="input-group">
             <label htmlFor="team">Team Name (optional):</label>

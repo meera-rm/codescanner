@@ -235,10 +235,11 @@ def build_start_here_section(metrics_list: List[Dict[str, Any]]) -> List[Dict[st
 
 def build_first_week_tips(metrics_list: List[Dict[str, Any]], tone: str) -> List[str]:
     """
-    Generate actionable first-week tips based on tone and dominant issues.
+    Generate actionable first-week tips based on tone and actual codebase metrics.
+    Tips are personalized to this specific codebase's dominant issues.
 
     Args:
-        metrics_list: List of metrics
+        metrics_list: List of metrics (can be per-file or aggregate)
         tone: "apologetic", "cautious", or "confident"
 
     Returns:
@@ -246,26 +247,98 @@ def build_first_week_tips(metrics_list: List[Dict[str, Any]], tone: str) -> List
     """
     tips = []
 
-    if tone == "apologetic":
-        tips = [
-            "Enable pre-commit security gate to catch secrets before commit",
-            "Review and fix all hardcoded secrets and injection risks first",
-            "Schedule a security audit with your team"
-        ]
-    elif tone == "cautious":
-        tips = [
-            "Read CLAUDE.md for project ground rules and conventions",
-            "Refactor the most complex functions to < 10 cyclomatic complexity",
-            "Add docstrings to undocumented functions"
-        ]
-    elif tone == "confident":
-        tips = [
-            "Set up pre-commit hooks locally for automated quality checks",
-            "Review architecture patterns in high-quality files",
-            "Contribute by writing tests for untested hotspots"
+    if not metrics_list:
+        # Fallback generic tips
+        return [
+            "Start by reading documentation and setup guides",
+            "Run tests to understand the codebase behavior",
+            "Ask team members about key components"
         ]
 
-    return tips
+    # Analyze metrics to find dominant issues
+    total_files = len(metrics_list)
+    avg_quality = sum(f.get("quality_score", 50) for f in metrics_list) / total_files if total_files > 0 else 50
+    total_smells = sum(f.get("smells_count", 0) for f in metrics_list)
+    avg_complexity = sum(f.get("complexity_average", 1.0) for f in metrics_list) / total_files if total_files > 0 else 1.0
+    doc_coverage = sum(f.get("doc_coverage", 0.5) for f in metrics_list) / total_files if total_files > 0 else 0.5
+    security_issues = sum(len(f.get("security_findings", {}).get("high", [])) for f in metrics_list)
+
+    # Determine primary issues
+    has_high_complexity = avg_complexity > 8
+    has_low_docs = doc_coverage < 0.5
+    has_smells = total_smells > 5
+    has_security = security_issues > 0
+    has_low_quality = avg_quality < 60
+
+    if tone == "apologetic":
+        # High priority: security and critical issues
+        if has_security:
+            tips.append(f"🚨 Fix {security_issues} security issue(s) immediately - audit your code")
+        elif has_low_quality:
+            tips.append("Start with critical fixes in the lowest-quality code sections")
+        else:
+            tips.append("Enable pre-commit hooks to catch issues before they spread")
+
+        if has_smells:
+            tips.append(f"Address {total_smells} code smells via systematic refactoring")
+        elif has_high_complexity:
+            tips.append("Break down complex functions to improve maintainability")
+        else:
+            tips.append("Improve test coverage for fragile areas")
+
+        if has_low_docs:
+            tips.append("Document critical functions - this code needs clarity")
+        else:
+            tips.append("Pair program with the team on risky areas")
+
+    elif tone == "cautious":
+        # Medium priority: improvements and careful refactoring
+        if has_high_complexity:
+            tips.append(f"Refactor complex functions (avg complexity: {avg_complexity:.1f} - target <10)")
+        elif has_low_docs:
+            tips.append(f"Add docstrings - {int((1-doc_coverage)*100)}% of code lacks documentation")
+        else:
+            tips.append("Understand patterns in high-quality files before making changes")
+
+        if has_smells:
+            tips.append(f"Fix {total_smells} code smells to improve quality")
+        elif has_low_quality:
+            tips.append("Incrementally improve code quality with small refactors")
+        else:
+            tips.append("Run tests frequently - they catch subtle regressions")
+
+        if has_low_docs and not has_high_complexity:
+            tips.append("Document the main entry points first")
+        elif has_high_complexity and not has_low_docs:
+            tips.append("Extract smaller functions from the complex ones")
+        else:
+            tips.append("Study existing patterns before writing new code")
+
+    elif tone == "confident":
+        # Low priority: growth and optimization
+        if avg_complexity > 5:
+            tips.append(f"Optimize high-complexity areas (avg: {avg_complexity:.1f})")
+        else:
+            tips.append("Review architecture - identify patterns to reinforce")
+
+        if total_smells > 0:
+            tips.append(f"Eliminate {total_smells} code smells to reach A grade")
+        elif doc_coverage < 1.0:
+            tips.append("Complete documentation coverage - add examples")
+        else:
+            tips.append("Write integration tests - this code is solid")
+
+        tips.append("Share knowledge - mentor others on your patterns")
+
+    # Ensure we have exactly 3 tips (fallback if something went wrong)
+    if len(tips) < 3:
+        tips.extend([
+            "Read documentation thoroughly",
+            "Understand the test suite first",
+            "Ask team members for context"
+        ])
+
+    return tips[:3]  # Return first 3 tips
 
 
 def generate_letter(metrics_list: List[Dict[str, Any]]) -> Dict[str, Any]:
