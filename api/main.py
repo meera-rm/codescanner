@@ -28,9 +28,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "scanner"))
 
-from api.services.auth_service import AuthService
-from api.middleware.auth_middleware import AuthMiddleware
-from api.middleware.https_middleware import HTTPSMiddleware
+# Auth disabled for local development
 from api.routes import health, auth, scanner, onboarding, config, creative_suite, metrics, webhooks, analysis, iteration, caqi_enhanced, advanced_analytics
 from api.db.database import engine, Base
 
@@ -47,7 +45,7 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
-# CORS Middleware
+# CORS Middleware (allow all for local dev)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -55,20 +53,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# HTTPS Middleware (security headers + redirect)
-app.add_middleware(HTTPSMiddleware)
-
-# ============================================================================
-# Authentication & Authorization
-# ============================================================================
-
-auth_service = AuthService()
-
-# Auth Middleware (set to False to disable for testing)
-ENABLE_AUTH = True
-if ENABLE_AUTH:
-    app.add_middleware(AuthMiddleware, auth_service=auth_service)
 
 # ============================================================================
 # Database Initialization

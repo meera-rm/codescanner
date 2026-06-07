@@ -22,6 +22,15 @@ const LoadingFallback = () => (
   </div>
 );
 
+type ViewMode = 'radar' | 'comparison' | 'trend';
+
+interface TrendData {
+  month: string;
+  caqi: number;
+  archetype: string;
+  recorded_at?: string;
+}
+
 interface Team {
   team_id: string;
   team_name: string;
@@ -39,14 +48,7 @@ interface Team {
   calculated_at: string;
 }
 
-interface TrendData {
-  month: string;
-  caqi: number;
-  archetype: string;
-  recorded_at?: string;
-}
 
-type ViewMode = 'radar' | 'comparison' | 'trend';
 
 export const CAQIDashboard: React.FC = () => {
   const [activeView, setActiveView] = useState<ViewMode>('comparison');
@@ -172,6 +174,23 @@ export const CAQIDashboard: React.FC = () => {
     fetchTrendData();
   }, [selectedTeamId]);
 
+  const getTrendDirection = (data: TrendData[]): 'improving' | 'stable' | 'declining' => {
+    if (data.length < 2) return 'stable';
+    const first = data[0].caqi;
+    const last = data[data.length - 1].caqi;
+    const changePercent = ((last - first) / first) * 100;
+    if (changePercent > 5) return 'improving';
+    if (changePercent < -5) return 'declining';
+    return 'stable';
+  };
+
+  const calculateChange = (data: TrendData[]): number => {
+    if (data.length < 2) return 0;
+    const first = data[0].caqi;
+    const last = data[data.length - 1].caqi;
+    return Math.round(((last - first) / first) * 100);
+  };
+
   const selectedTeam = teams.find((t) => t.team_id === selectedTeamId);
 
   return (
@@ -246,22 +265,5 @@ export const CAQIDashboard: React.FC = () => {
     </div>
   );
 };
-
-function getTrendDirection(data: TrendData[]): 'improving' | 'stable' | 'declining' {
-  if (data.length < 2) return 'stable';
-  const first = data[0].caqi;
-  const last = data[data.length - 1].caqi;
-  const change = ((last - first) / first) * 100;
-  if (change > 5) return 'improving';
-  if (change < -5) return 'declining';
-  return 'stable';
-}
-
-function calculateChange(data: TrendData[]): number {
-  if (data.length < 2) return 0;
-  const first = data[0].caqi;
-  const last = data[data.length - 1].caqi;
-  return ((last - first) / first) * 100;
-}
 
 export default CAQIDashboard;
