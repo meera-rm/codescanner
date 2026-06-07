@@ -240,3 +240,182 @@ def create_project(temp_dir):
             paths[filename] = str(path)
         return temp_dir, paths
     return _create_project
+
+
+# Phase I+1 Test Fixtures
+
+class MockMetric:
+    """Mock Metric for developer drill-down testing."""
+    def __init__(self, developer_id, team_id, security, complexity, documentation,
+                 testing, dependencies, maintainability, recorded_at):
+        self.developer_id = developer_id
+        self.team_id = team_id
+        self.security = security
+        self.complexity = complexity
+        self.documentation = documentation
+        self.testing = testing
+        self.dependencies = dependencies
+        self.maintainability = maintainability
+        self.recorded_at = recorded_at
+
+
+class MockTeamMember:
+    """Mock TeamMember for testing."""
+    def __init__(self, team_id, developer_id):
+        self.team_id = team_id
+        self.developer_id = developer_id
+
+
+class MockTeamScore:
+    """Mock TeamScore for testing."""
+    def __init__(self, team_id, team_name, overall_caqi, security, complexity,
+                 documentation, testing, dependencies, maintainability, calculated_at):
+        self.team_id = team_id
+        self.team_name = team_name
+        self.overall_caqi = overall_caqi
+        self.security = security
+        self.complexity = complexity
+        self.documentation = documentation
+        self.testing = testing
+        self.dependencies = dependencies
+        self.maintainability = maintainability
+        self.calculated_at = calculated_at
+
+
+class MockDatabase:
+    """Mock database for testing without real database."""
+    def __init__(self):
+        self.teams = {}
+        self.members = {}
+        self.metrics = {}
+        self.anomalies = {}
+        self.peer_groups = {}
+        self.benchmarks = {}
+        self.query_results = {}
+
+    def query(self, model_class):
+        """Mock query interface."""
+        return MockQuery(self, model_class)
+
+    def add(self, obj):
+        """Mock add."""
+        pass
+
+    def add_all(self, objs):
+        """Mock add_all."""
+        pass
+
+    def commit(self):
+        """Mock commit."""
+        pass
+
+    def close(self):
+        """Mock close."""
+        pass
+
+
+class MockQuery:
+    """Mock query builder for testing."""
+    def __init__(self, db, model_class):
+        self.db = db
+        self.model_class = model_class
+        self._filter_conditions = []
+        self._results = []
+        self._filters = {}
+
+    def filter(self, condition):
+        """Mock filter - store condition for later evaluation."""
+        self._filter_conditions.append(condition)
+        return self
+
+    def all(self):
+        """Return all results based on filters."""
+        return self._results
+
+    def first(self):
+        """Return first result based on filters."""
+        return self._results[0] if self._results else None
+
+    def order_by(self, field):
+        """Mock order_by."""
+        return self
+
+    def in_(self, values):
+        """Mock in_ for WHERE IN clauses."""
+        return self
+
+    def __iter__(self):
+        """Allow iteration over query results."""
+        return iter(self._results)
+
+
+@pytest.fixture
+def mock_db():
+    """Create a mock database for testing."""
+    return MockDatabase()
+
+
+@pytest.fixture
+def team_with_developers(mock_db):
+    """Create sample team with members and metrics."""
+    from datetime import datetime, timedelta
+
+    # Create team
+    team = MockTeamScore(
+        team_id="test-team",
+        team_name="Test Team",
+        overall_caqi=350,
+        security=75,
+        complexity=70,
+        documentation=65,
+        testing=80,
+        dependencies=60,
+        maintainability=75,
+        calculated_at=datetime.utcnow()
+    )
+    mock_db.teams["test-team"] = team
+
+    # Create members
+    members = [
+        MockTeamMember("test-team", "dev-1"),
+        MockTeamMember("test-team", "dev-2"),
+        MockTeamMember("test-team", "dev-3"),
+    ]
+    mock_db.members["test-team"] = members
+
+    # Create metrics - setup for MockQuery to return them
+    today = datetime.utcnow()
+    metrics = []
+    for i in range(3):  # 3 days of data
+        for j, dev_id in enumerate(["dev-1", "dev-2", "dev-3"]):
+            metric = MockMetric(
+                developer_id=dev_id,
+                team_id="test-team",
+                security=75 + (j * 5),
+                complexity=70 + (j * 3),
+                documentation=65 + (j * 4),
+                testing=80 + (j * 2),
+                dependencies=60 + (j * 6),
+                maintainability=75 + (j * 3),
+                recorded_at=today - timedelta(days=i)
+            )
+            metrics.append(metric)
+
+    mock_db.metrics["test-team"] = metrics
+
+    # Setup MockDatabase to return proper query results
+    original_query = mock_db.query
+
+    def query_with_results(model_class):
+        q = original_query(model_class)
+        if model_class.__name__ == 'TeamMember':
+            q._results = members
+        elif model_class.__name__ == 'Metric':
+            q._results = metrics
+        elif model_class.__name__ == 'TeamScore':
+            q._results = [team]
+        return q
+
+    mock_db.query = query_with_results
+
+    return team, members, metrics
