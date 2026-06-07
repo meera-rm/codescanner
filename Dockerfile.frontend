@@ -6,13 +6,13 @@ FROM node:18-alpine as builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files first (rarely changes)
 COPY frontend/package*.json ./
 
-# Install dependencies
+# Install dependencies (expensive operation - cached separately)
 RUN npm ci --frozen-lockfile
 
-# Copy source code
+# Copy source code last (changes frequently)
 COPY frontend/ .
 
 # Build application with runtime API URL resolution

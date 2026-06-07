@@ -2,6 +2,8 @@
  * API Client - handles all communication with backend API
  */
 
+import { logger } from './logger';
+
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
 
 export interface TeamCAQI {
@@ -106,11 +108,14 @@ class APIClient {
 
   private async executeRequest<T>(endpoint: string, options?: RequestInit, retries: number = 3): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
+    const method = options?.method || 'GET';
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+        logger.debug(`API request`, { method, endpoint, attempt, url });
 
         const response = await fetch(url, {
           ...options,
@@ -127,7 +132,9 @@ class APIClient {
           throw new Error(`API error: ${response.status} ${response.statusText}`);
         }
 
-        return response.json();
+        const data = await response.json();
+        logger.debug(`API response`, { method, endpoint, status: response.status });
+        return data;
       } catch (error) {
         clearTimeout(0);
 
@@ -138,14 +145,21 @@ class APIClient {
         if (isRetryable && !isLastAttempt) {
           // Exponential backoff: 1s, 2s, 4s
           const delay = Math.pow(2, attempt - 1) * 1000;
-          if (process.env.NODE_ENV === 'development') {
-            console.debug(`[API] Retry attempt ${attempt}/${retries} after ${delay}ms for ${endpoint}`);
-          }
+          logger.warn(`API retry`, {
+            endpoint,
+            attempt: `${attempt}/${retries}`,
+            delayMs: delay,
+            error: error instanceof Error ? error.message : String(error),
+          });
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
 
-        console.error(`API request failed: ${endpoint} (attempt ${attempt}/${retries})`, error);
+        logger.error(
+          `API request failed: ${endpoint} (attempt ${attempt}/${retries})`,
+          error instanceof Error ? error : new Error(String(error)),
+          { method, endpoint, attempt, retries }
+        );
         throw error;
       }
     }

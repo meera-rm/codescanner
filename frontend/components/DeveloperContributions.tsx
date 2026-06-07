@@ -81,13 +81,13 @@ export const DeveloperContributions: React.FC<DeveloperContributionsProps> = ({
   }, [handleDeveloperClick]);
 
   return (
-    <div className="developer-contributions" data-testid="developer-contributions">
+    <section className="developer-contributions" data-testid="developer-contributions" aria-label="Developer contributions">
       <div className="component-header">
-        <h2>{teamId} - Developer Contributions</h2>
-        <span className="period-label">({period} days)</span>
+        <h2 id="dev-contrib-heading">{teamId} - Developer Contributions</h2>
+        <span className="period-label" aria-label={`Last ${period} days`}>({period} days)</span>
       </div>
 
-      <div className="developers-list">
+      <div className="developers-list" role="region" aria-labelledby="dev-contrib-heading" aria-label="List of developer contributions sorted by impact">
         {sortedDevelopers.length === 0 ? (
           <div className="no-data">No developer data available</div>
         ) : (
@@ -134,7 +134,14 @@ export const DeveloperContributions: React.FC<DeveloperContributionsProps> = ({
                               {contrib.developerScore.toFixed(1)} (team avg: {contrib.teamAvg.toFixed(1)})
                             </span>
                           </div>
-                          <div className="contribution-bar">
+                          <div
+                            className="contribution-bar"
+                            role="progressbar"
+                            aria-valuenow={Math.abs(contrib.contribution)}
+                            aria-valuemin={0}
+                            aria-valuemax={Math.max(10, Math.abs(contrib.contribution))}
+                            aria-label={`${DIMENSION_LABELS[dim]} contribution: ${contrib.contribution > 0 ? '+' : ''}${contrib.contribution.toFixed(2)}`}
+                          >
                             <div
                               className="contribution-fill"
                               style={{
@@ -143,9 +150,10 @@ export const DeveloperContributions: React.FC<DeveloperContributionsProps> = ({
                                 marginLeft: contrib.contribution < 0 ? 'auto' : '0',
                               }}
                               data-testid={`contrib-bar-${dim}`}
+                              aria-hidden="true"
                             />
                           </div>
-                          <span className="contribution-value">
+                          <span className="contribution-value" aria-hidden="true">
                             {contrib.contribution > 0 ? '+' : ''}{contrib.contribution.toFixed(2)}
                           </span>
                         </div>
@@ -158,7 +166,7 @@ export const DeveloperContributions: React.FC<DeveloperContributionsProps> = ({
           ))
         )}
       </div>
-    </div>
+    </section>
   );
 };
 

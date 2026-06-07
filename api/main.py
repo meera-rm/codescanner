@@ -30,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "scanner"))
 
 from api.services.auth_service import AuthService
 from api.middleware.auth_middleware import AuthMiddleware
+from api.middleware.https_middleware import HTTPSMiddleware
 from api.routes import health, auth, scanner, onboarding, config, creative_suite, metrics, webhooks, analysis, iteration, caqi_enhanced, advanced_analytics
 from api.db.database import engine, Base
 
@@ -54,6 +55,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# HTTPS Middleware (security headers + redirect)
+app.add_middleware(HTTPSMiddleware)
 
 # ============================================================================
 # Authentication & Authorization

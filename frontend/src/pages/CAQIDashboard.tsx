@@ -7,11 +7,20 @@
  * - Trend timeline analysis
  */
 
-import React, { useState, useEffect } from 'react';
-import CAQIRadarChart from '../components/CAQIRadarChart';
-import TeamComparison from '../components/TeamComparison';
-import TrendTimeline from '../components/TrendTimeline';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import '../styles/CAQIDashboard.css';
+
+// Lazy load heavy components to reduce initial bundle size
+const CAQIRadarChart = lazy(() => import('../components/CAQIRadarChart'));
+const TeamComparison = lazy(() => import('../components/TeamComparison'));
+const TrendTimeline = lazy(() => import('../components/TrendTimeline'));
+
+// Loading fallback
+const LoadingFallback = () => (
+  <div style={{ padding: '20px', textAlign: 'center' }}>
+    <p>Loading visualization...</p>
+  </div>
+);
 
 interface Team {
   team_id: string;
@@ -198,32 +207,34 @@ export const CAQIDashboard: React.FC = () => {
       </nav>
 
       <main className="dashboard-content">
-        {activeView === 'comparison' && (
-          <TeamComparison teams={teams} loading={loading} />
-        )}
+        <Suspense fallback={<LoadingFallback />}>
+          {activeView === 'comparison' && (
+            <TeamComparison teams={teams} loading={loading} />
+          )}
 
-        {activeView === 'radar' && selectedTeam && (
-          <div className="detail-view">
-            <CAQIRadarChart
-              teamName={selectedTeam.team_name}
-              archetype={selectedTeam.personality_archetype}
-              dimensions={selectedTeam.dimensions}
-              overallCAQI={selectedTeam.overall_caqi}
-            />
-          </div>
-        )}
+          {activeView === 'radar' && selectedTeam && (
+            <div className="detail-view">
+              <CAQIRadarChart
+                teamName={selectedTeam.team_name}
+                archetype={selectedTeam.personality_archetype}
+                dimensions={selectedTeam.dimensions}
+                overallCAQI={selectedTeam.overall_caqi}
+              />
+            </div>
+          )}
 
-        {activeView === 'trend' && selectedTeam && (
-          <div className="trend-view">
-            <TrendTimeline
-              teamName={selectedTeam.team_name}
-              data={trendData}
-              trendDirection={getTrendDirection(trendData)}
-              changePercent={calculateChange(trendData)}
-              loading={loading}
-            />
-          </div>
-        )}
+          {activeView === 'trend' && selectedTeam && (
+            <div className="trend-view">
+              <TrendTimeline
+                teamName={selectedTeam.team_name}
+                data={trendData}
+                trendDirection={getTrendDirection(trendData)}
+                changePercent={calculateChange(trendData)}
+                loading={loading}
+              />
+            </div>
+          )}
+        </Suspense>
       </main>
 
       <footer className="dashboard-footer">

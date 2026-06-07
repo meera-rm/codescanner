@@ -119,14 +119,19 @@ export const AnomaliesTable: React.FC<AnomaliesTableProps> = ({
   }, [onReviewAnomaly]);
 
   return (
-    <div className="anomalies-table" data-testid="anomalies-table">
+    <section className="anomalies-table" data-testid="anomalies-table" aria-label="Code anomalies">
       <div className="table-header">
-        <h2>{teamId} - Anomalies</h2>
-        <div className="filter-controls">
+        <h2 id="anomalies-heading">{teamId} - Anomalies</h2>
+        <div className="filter-controls" role="group" aria-labelledby="anomalies-heading">
+          <label htmlFor="severity-filter" style={{ display: 'inline-block', marginRight: '10px' }}>
+            Filter by Severity:
+          </label>
           <select
+            id="severity-filter"
             value={severityFilter || ''}
             onChange={(e) => handleFilterChange((e.target.value as SeverityLevel) || undefined)}
             data-testid="severity-filter"
+            aria-label="Filter anomalies by severity level"
           >
             <option value="">All Severities</option>
             <option value="low">Low</option>
@@ -135,7 +140,11 @@ export const AnomaliesTable: React.FC<AnomaliesTableProps> = ({
             <option value="critical">Critical</option>
           </select>
 
+          <label htmlFor="reviewed-filter" style={{ display: 'inline-block', marginRight: '10px', marginLeft: '20px' }}>
+            Filter by Status:
+          </label>
           <select
+            id="reviewed-filter"
             value={reviewedFilter === undefined ? '' : reviewedFilter ? 'reviewed' : 'unreviewed'}
             onChange={(e) => {
               if (e.target.value === '') handleFilterChange(severityFilter, undefined);
@@ -143,6 +152,7 @@ export const AnomaliesTable: React.FC<AnomaliesTableProps> = ({
               else handleFilterChange(severityFilter, false);
             }}
             data-testid="reviewed-filter"
+            aria-label="Filter anomalies by review status"
           >
             <option value="">All Status</option>
             <option value="unreviewed">Unreviewed</option>
@@ -151,8 +161,8 @@ export const AnomaliesTable: React.FC<AnomaliesTableProps> = ({
         </div>
       </div>
 
-      <div className="table-wrapper">
-        <table data-testid="anomalies-data-table">
+      <div className="table-wrapper" role="region" aria-label="Anomalies data">
+        <table data-testid="anomalies-data-table" aria-label="Table of detected code anomalies">
           <thead>
             <tr>
               <th
@@ -245,7 +255,7 @@ export const AnomaliesTable: React.FC<AnomaliesTableProps> = ({
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 };
 

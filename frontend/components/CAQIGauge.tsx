@@ -87,24 +87,24 @@ export const CAQIGauge: React.FC<CAQIGaugeProps> = ({
   }, [onDimensionClick]);
 
   return (
-    <div className="caqi-gauge" data-testid="caqi-gauge">
-      <div className="gauge-container">
+    <section className="caqi-gauge" data-testid="caqi-gauge" aria-label="CAQI Score Card">
+      <div className="gauge-container" role="region" aria-labelledby="gauge-heading">
         <div className="gauge-header">
-          <h2>{teamId}</h2>
-          {formattedDate && <span className="timestamp">{formattedDate}</span>}
+          <h2 id="gauge-heading" aria-level={2}>{teamId}</h2>
+          {formattedDate && <span className="timestamp" aria-label={`Last calculated: ${formattedDate}`}>{formattedDate}</span>}
         </div>
 
-        <div className="gauge-display">
-          <div className="gauge-circle" style={{ background: `conic-gradient(${gauge.color} 0% ${gauge.percentage}%, #e5e7eb ${gauge.percentage}% 100%)` }}>
-            <div className="gauge-inner">
-              <div className="gauge-value">{overallCaqi}</div>
-              <div className="gauge-max">/{CAQI_MAX}</div>
-              <div className="gauge-grade">{gauge.grade}</div>
+        <div className="gauge-display" role="progressbar" aria-valuenow={overallCaqi} aria-valuemin={0} aria-valuemax={CAQI_MAX} aria-label={`Overall CAQI score: ${overallCaqi} out of ${CAQI_MAX}`}>
+          <div className="gauge-circle" style={{ background: `conic-gradient(${gauge.color} 0% ${gauge.percentage}%, #e5e7eb ${gauge.percentage}% 100%)` }} aria-hidden="true">
+            <div className="gauge-inner" aria-hidden="true">
+              <div className="gauge-value" aria-hidden="true">{overallCaqi}</div>
+              <div className="gauge-max" aria-hidden="true">/{CAQI_MAX}</div>
+              <div className="gauge-grade" aria-label={`Grade: ${gauge.grade}`}>{gauge.grade}</div>
             </div>
           </div>
         </div>
 
-        <div className="dimensions-grid">
+        <div className="dimensions-grid" role="grid" aria-label="Dimension scores">
           {dimensionArray.map((dim) => (
             <div
               key={dim.key}
@@ -131,7 +131,7 @@ export const CAQIGauge: React.FC<CAQIGaugeProps> = ({
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
