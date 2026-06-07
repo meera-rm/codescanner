@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 type Theme = 'dark' | 'light';
 type TabType = 'overview' | 'complexity' | 'smells' | 'duplication' | 'security' | 'docs' | 'dependencies' | 'files' | 'refactor';
-type DetailTab = 'heatmap' | 'suggestions' | 'radar';
+type DetailTab = 'analysis' | 'refactor';
 
 interface ScannedFile {
   name: string;
@@ -44,8 +44,7 @@ export const CodeScanner: React.FC = () => {
   const [error, setError] = useState('');
   const [theme, setTheme] = useState<Theme>('light');
   const [activeTab, setActiveTab] = useState<TabType>('files');
-  const [detailTab, setDetailTab] = useState<DetailTab>('heatmap');
-  const [refactorLoading, setRefactorLoading] = useState(false);
+  const [detailTab, setDetailTab] = useState<DetailTab>('analysis');
   const [selectedFile, setSelectedFile] = useState<ScannedFile | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [scannedFiles, setScannedFiles] = useState<ScannedFile[]>([]);
@@ -61,6 +60,8 @@ export const CodeScanner: React.FC = () => {
   const [collapsedSections, setCollapsedSections] = useState<{[key: string]: boolean}>({});
   const [selectedFunction, setSelectedFunction] = useState<{name: string; complexity: number; description: string} | null>(null);
   const [showFunctionModal, setShowFunctionModal] = useState(false);
+  const [refactoredCode, setRefactoredCode] = useState<{original: string; refactored: string} | null>(null);
+  const [refactorLoading, setRefactorLoading] = useState(false);
   const [metrics, setMetrics] = useState({
     grade: 'B',
     loc: 0,
@@ -343,7 +344,133 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
       complexity,
       description: `Function ${name} has a cyclomatic complexity of ${complexity}. Consider refactoring if complexity exceeds 10.`
     });
-    setShowFunctionModal(true);
+  };
+
+  const handleRefactorClick = async () => {
+    if (!selectedFile) return;
+
+    setRefactorLoading(true);
+
+    try {
+      // Use selected function code if available, otherwise use file-level code
+      let originalCode = '';
+      let refactoredCodeText = '';
+
+      if (selectedFunction) {
+        // Generate code for the selected function
+        originalCode = `def ${selectedFunction.name.replace('()', '')}(self, data, config):
+    result = []
+    for item in data:
+        if item['status'] == 'active':
+            if item['priority'] == 'high':
+                if item['assigned'] == True:
+                    result.append({
+                        'id': item['id'],
+                        'name': item['name'],
+                        'priority': item['priority'],
+                        'status': item['status'],
+                        'updated': item['timestamp']
+                    })
+                else:
+                    if item['requested'] == True:
+                        result.append({
+                            'id': item['id'],
+                            'name': item['name'],
+                            'status': 'pending'
+                        })
+            else:
+                result.append({
+                    'id': item['id'],
+                    'name': item['name']
+                })
+    return result`;
+
+        refactoredCodeText = `def ${selectedFunction.name.replace('()', '')}(self, data: List[Dict]) -> List[Dict]:
+    """Extract active items, prioritizing by status and assignment."""
+    def is_high_priority(item: Dict) -> bool:
+        return item['priority'] == 'high' and item['status'] == 'active'
+
+    def format_item(item: Dict, include_timestamp: bool = False) -> Dict:
+        result = {'id': item['id'], 'name': item['name']}
+        if include_timestamp:
+            result['updated'] = item['timestamp']
+        return result
+
+    def should_include(item: Dict) -> bool:
+        if not is_high_priority(item):
+            return item['status'] == 'active'
+        return item['assigned'] or item['requested']
+
+    return [format_item(item, is_high_priority(item))
+            for item in data if should_include(item)]`;
+      } else {
+        // File-level refactoring
+        originalCode = `def process_data(data, config):
+    result = []
+    for item in data:
+        if item['status'] == 'active':
+            if item['priority'] == 'high':
+                if item['assigned'] == True:
+                    result.append({
+                        'id': item['id'],
+                        'name': item['name'],
+                        'priority': item['priority'],
+                        'status': item['status'],
+                        'updated': item['timestamp']
+                    })
+                else:
+                    if item['requested'] == True:
+                        result.append({
+                            'id': item['id'],
+                            'name': item['name'],
+                            'status': 'pending'
+                        })
+            else:
+                result.append({
+                    'id': item['id'],
+                    'name': item['name']
+                })
+    return result`;
+
+        refactoredCodeText = `def process_data(data: List[Dict], config: Dict) -> List[Dict]:
+    """Extract active items, prioritizing by status and assignment."""
+    def is_high_priority_item(item: Dict) -> bool:
+        return item['priority'] == 'high' and item['status'] == 'active'
+
+    def format_item(item: Dict, include_timestamp: bool = False) -> Dict:
+        result = {'id': item['id'], 'name': item['name']}
+        if include_timestamp:
+            result['updated'] = item['timestamp']
+        return result
+
+    def should_include(item: Dict) -> bool:
+        if not is_high_priority_item(item):
+            return item['status'] == 'active'
+        return item['assigned'] or item['requested']
+
+    result = []
+    for item in data:
+        if should_include(item):
+            if is_high_priority_item(item):
+                result.append({**format_item(item, True), 'priority': item['priority'], 'status': item['status']})
+            else:
+                result.append(format_item(item))
+
+    return result`;
+      }
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      setRefactoredCode({
+        original: originalCode,
+        refactored: refactoredCodeText
+      });
+    } catch (err) {
+      setError(`Refactor failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setRefactorLoading(false);
+    }
   };
 
   const getThemeStyles = () => theme === 'light' ? lightTheme : darkTheme;
@@ -644,127 +771,212 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
                 <div style={ts.detail}>
                   <div style={ts.detailTabs}>
                     <button
-                      style={{...ts.dtab, ...(detailTab === 'heatmap' ? ts.dtabOn : {})}}
-                      onClick={() => setDetailTab('heatmap')}
+                      style={{...ts.dtab, ...(detailTab === 'analysis' ? ts.dtabOn : {})}}
+                      onClick={() => setDetailTab('analysis')}
                     >
-                      Heatmap
+                      Analysis
                     </button>
                     <span style={{color: '#cccccc', fontSize: '10px', margin: '0 8px'}}>·</span>
                     <button
-                      style={{...ts.dtab, ...(detailTab === 'suggestions' ? ts.dtabOn : {})}}
-                      onClick={() => setDetailTab('suggestions')}
+                      style={{...ts.dtab, ...(detailTab === 'refactor' ? ts.dtabOn : {}), ...(detailTab === 'refactor' ? {background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#ffffff'} : {})}}
+                      onClick={() => {
+                        setDetailTab('refactor');
+                        if (!refactoredCode) handleRefactorClick();
+                      }}
+                      disabled={!selectedFile}
                     >
-                      Suggestions
-                    </button>
-                    <span style={{color: '#cccccc', fontSize: '10px', margin: '0 8px'}}>·</span>
-                    <button
-                      style={{...ts.dtab, ...(detailTab === 'radar' ? ts.dtabOn : {})}}
-                      onClick={() => setDetailTab('radar')}
-                    >
-                      Radar
-                    </button>
-                    <span style={{marginLeft: 'auto'}}></span>
-                    <button
-                      style={{...ts.dtab, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#ffffff', cursor: refactorLoading ? 'not-allowed' : 'pointer', opacity: refactorLoading ? 0.6 : 1}}
-                      onClick={() => setRefactorLoading(true)}
-                      disabled={refactorLoading}
-                    >
-                      + {refactorLoading ? 'Refactoring...' : 'Claude Refactor'}
+                      ✨ Refactor
                     </button>
                   </div>
-                  <div style={ts.detailBody}>
-                    {detailTab === 'heatmap' && (
-                      <div style={ts.dHsr}>
-                        <div style={ts.dCol}>
-                          <div style={ts.dColTitle}>Function Complexity Heatmap</div>
-                          <div style={ts.fnl}>
-                            {[
-                              { name: 'process_data()', cx: 18, p: 95 },
-                              { name: 'validate_input()', cx: 12, p: 75 },
-                              { name: 'format_output()', cx: 6, p: 38 },
-                              { name: 'init()', cx: 2, p: 15 }
-                            ].map((fn) => (
-                              <div key={fn.name} style={{...ts.fnR, cursor: 'pointer'}} onClick={() => handleFunctionClick(fn.name, fn.cx)}>
-                                <span style={{...ts.fnNm, textDecoration: 'underline', color: '#667eea'}}>{fn.name}</span>
-                                <span style={ts.fnCx}>{fn.cx}</span>
-                                <div style={ts.fnB}>
-                                  <div style={{...ts.fnBf, width: `${fn.p}%`, background: fn.p > 70 ? '#ff6b6b' : fn.p > 40 ? '#f5c842' : '#6dde9a'}}></div>
-                                </div>
-                              </div>
-                            ))}
+                  <div style={{...ts.detailBody, display: 'flex', flexDirection: 'column'}}>
+                    {/* TOP SECTION - Analysis or Refactor */}
+                    {detailTab === 'analysis' && (
+                      <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0', flex: selectedFunction ? '0 0 auto' : 1, height: selectedFunction ? 'auto' : '100%', borderBottom: selectedFunction ? `2px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}` : 'none', maxHeight: selectedFunction ? '350px' : '100%'}}>
+                        {/* Column 1: Heatmap */}
+                        <div style={{display: 'flex', flexDirection: 'column', borderRight: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`}}>
+                          <div style={{padding: '12px 16px', background: theme === 'light' ? '#f9f9f9' : '#2a2a2a', borderBottom: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`, fontSize: '11px', fontWeight: 500, color: theme === 'light' ? '#666666' : '#aaaaaa'}}>
+                            🔥 Heatmap
                           </div>
-                        </div>
-                      </div>
-                    )}
-                    {detailTab === 'suggestions' && (
-                      <div style={ts.dHsr}>
-                        <div style={ts.dCol}>
-                          <div style={ts.dColTitle}>Suggestions</div>
-                          <div style={ts.sugl}>
-                            {allFindings.filter(f => f.file.includes(selectedFile.name)).length > 0 ? (
-                              allFindings.filter(f => f.file.includes(selectedFile.name)).map((issue, idx) => (
-                                <div key={idx} style={ts.sugi}>
-                                  <span style={ts.sugiIc}>
-                                    {issue.severity === 'CRITICAL' ? '🔴' : issue.severity === 'ERROR' ? '🟠' : '🟡'}
-                                  </span>
-                                  <span style={ts.sugiTx}>
-                                    <strong>{issue.type}</strong> at line {issue.line}: {issue.message}
-                                  </span>
+                          <div style={{flex: 1, overflow: 'auto', padding: '12px'}}>
+                            <div style={ts.fnl}>
+                              {[
+                                { name: 'process_data()', cx: 18, p: 95 },
+                                { name: 'validate_input()', cx: 12, p: 75 },
+                                { name: 'format_output()', cx: 6, p: 38 },
+                                { name: 'init()', cx: 2, p: 15 }
+                              ].map((fn) => (
+                                <div key={fn.name} style={{...ts.fnR, cursor: 'pointer'}} onClick={() => handleFunctionClick(fn.name, fn.cx)}>
+                                  <span style={{...ts.fnNm, textDecoration: 'underline', color: '#667eea'}}>{fn.name}</span>
+                                  <span style={ts.fnCx}>{fn.cx}</span>
+                                  <div style={ts.fnB}>
+                                    <div style={{...ts.fnBf, width: `${fn.p}%`, background: fn.p > 70 ? '#ff6b6b' : fn.p > 40 ? '#f5c842' : '#6dde9a'}}></div>
+                                  </div>
                                 </div>
-                              ))
-                            ) : (
-                              <>
-                                <div style={ts.sugi}>
-                                  <span style={ts.sugiIc}>✓</span>
-                                  <span style={ts.sugiTx}>Well-structured code with good documentation</span>
-                                </div>
-                                <div style={ts.sugi}>
-                                  <span style={ts.sugiIc}>💡</span>
-                                  <span style={ts.sugiTx}>Consider adding type hints for better IDE support</span>
-                                </div>
-                                <div style={ts.sugi}>
-                                  <span style={ts.sugiIc}>✓</span>
-                                  <span style={ts.sugiTx}>Functions are well-named and easy to understand</span>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {detailTab === 'radar' && (
-                      <div style={ts.dHsr}>
-                        <div style={ts.dCol}>
-                          <div style={ts.dColTitle}>Code Quality Radar</div>
-                          <div style={{padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                            <svg width="200" height="200" viewBox="0 0 200 200" style={{margin: '20px'}}>
-                              {/* Background grid */}
-                              {[1, 2, 3, 4, 5].map((i) => (
-                                <circle key={`grid-${i}`} cx="100" cy="100" r={i * 30} fill="none" stroke="#e0e0e0" strokeWidth="1" opacity="0.5" />
                               ))}
-                              {/* Axes */}
-                              <line x1="100" y1="100" x2="100" y2="20" stroke="#999999" strokeWidth="1" opacity="0.5" />
-                              <line x1="100" y1="100" x2="163" y2="65" stroke="#999999" strokeWidth="1" opacity="0.5" />
-                              <line x1="100" y1="100" x2="153" y2="163" stroke="#999999" strokeWidth="1" opacity="0.5" />
-                              <line x1="100" y1="100" x2="47" y2="163" stroke="#999999" strokeWidth="1" opacity="0.5" />
-                              <line x1="100" y1="100" x2="37" y2="65" stroke="#999999" strokeWidth="1" opacity="0.5" />
+                            </div>
+                          </div>
+                        </div>
 
-                              {/* Data polygon */}
-                              <polygon
-                                points="100,40 155,75 145,150 55,150 45,75"
-                                fill="#667eea"
-                                fillOpacity="0.3"
-                                stroke="#667eea"
-                                strokeWidth="2"
-                              />
+                        {/* Column 2: Suggestions */}
+                        <div style={{display: 'flex', flexDirection: 'column', borderRight: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`}}>
+                          <div style={{padding: '12px 16px', background: theme === 'light' ? '#f9f9f9' : '#2a2a2a', borderBottom: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`, fontSize: '11px', fontWeight: 500, color: theme === 'light' ? '#666666' : '#aaaaaa'}}>
+                            💡 Suggestions
+                          </div>
+                          <div style={{flex: 1, overflow: 'auto', padding: '12px'}}>
+                            <div style={ts.sugl}>
+                              {allFindings.filter(f => f.file.includes(selectedFile.name)).length > 0 ? (
+                                allFindings.filter(f => f.file.includes(selectedFile.name)).map((issue, idx) => (
+                                  <div key={idx} style={{...ts.sugi, padding: '8px', marginBottom: '4px', fontSize: '9px'}}>
+                                    <span style={{...ts.sugiIc, marginRight: '4px'}}>
+                                      {issue.severity === 'CRITICAL' ? '🔴' : issue.severity === 'ERROR' ? '🟠' : '🟡'}
+                                    </span>
+                                    <span style={{...ts.sugiTx, fontSize: '9px'}}>
+                                      <strong>{issue.type}</strong> at line {issue.line}
+                                    </span>
+                                  </div>
+                                ))
+                              ) : (
+                                <>
+                                  <div style={{...ts.sugi, fontSize: '9px', marginBottom: '6px'}}>
+                                    <span style={{...ts.sugiIc}}>✓</span>
+                                    <span style={{...ts.sugiTx, fontSize: '9px'}}>Well-structured code</span>
+                                  </div>
+                                  <div style={{...ts.sugi, fontSize: '9px', marginBottom: '6px'}}>
+                                    <span style={{...ts.sugiIc}}>💡</span>
+                                    <span style={{...ts.sugiTx, fontSize: '9px'}}>Add type hints</span>
+                                  </div>
+                                  <div style={{...ts.sugi, fontSize: '9px'}}>
+                                    <span style={{...ts.sugiIc}}>✓</span>
+                                    <span style={{...ts.sugiTx, fontSize: '9px'}}>Good naming</span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
 
-                              {/* Labels */}
-                              <text x="100" y="15" textAnchor="middle" fontSize="10" fill="#666666">Maintainability</text>
-                              <text x="170" y="80" textAnchor="start" fontSize="10" fill="#666666">Performance</text>
-                              <text x="160" y="170" textAnchor="middle" fontSize="10" fill="#666666">Reliability</text>
-                              <text x="40" y="170" textAnchor="middle" fontSize="10" fill="#666666">Security</text>
-                              <text x="20" y="80" textAnchor="end" fontSize="10" fill="#666666">Coverage</text>
+                        {/* Column 3: Radar */}
+                        <div style={{display: 'flex', flexDirection: 'column'}}>
+                          <div style={{padding: '12px 16px', background: theme === 'light' ? '#f9f9f9' : '#2a2a2a', borderBottom: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`, fontSize: '11px', fontWeight: 500, color: theme === 'light' ? '#666666' : '#aaaaaa'}}>
+                            📊 Radar
+                          </div>
+                          <div style={{flex: 1, overflow: 'auto', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                            <svg width="120" height="120" viewBox="0 0 200 200">
+                              {[1, 2, 3, 4, 5].map((i) => (
+                                <circle key={`grid-${i}`} cx="100" cy="100" r={i * 30} fill="none" stroke="#e0e0e0" strokeWidth="1" opacity="0.3" />
+                              ))}
+                              <line x1="100" y1="100" x2="100" y2="20" stroke="#999999" strokeWidth="1" opacity="0.3" />
+                              <line x1="100" y1="100" x2="163" y2="65" stroke="#999999" strokeWidth="1" opacity="0.3" />
+                              <line x1="100" y1="100" x2="153" y2="163" stroke="#999999" strokeWidth="1" opacity="0.3" />
+                              <line x1="100" y1="100" x2="47" y2="163" stroke="#999999" strokeWidth="1" opacity="0.3" />
+                              <line x1="100" y1="100" x2="37" y2="65" stroke="#999999" strokeWidth="1" opacity="0.3" />
+                              <polygon points="100,40 155,75 145,150 55,150 45,75" fill="#667eea" fillOpacity="0.3" stroke="#667eea" strokeWidth="2" />
                             </svg>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {detailTab === 'refactor' && (
+                      <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', flex: 1, height: '100%', borderBottom: selectedFunction ? `2px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}` : 'none'}}>
+                        {/* Original Code */}
+                        <div style={{display: 'flex', flexDirection: 'column', borderRight: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`}}>
+                          <div style={{padding: '12px 16px', background: theme === 'light' ? '#f9f9f9' : '#2a2a2a', borderBottom: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`, fontSize: '11px', fontWeight: 500, color: theme === 'light' ? '#666666' : '#aaaaaa'}}>
+                            📄 Original Code
+                          </div>
+                          <div style={{flex: 1, overflow: 'auto', padding: '12px', background: theme === 'light' ? '#ffffff' : '#1f1f1f', fontFamily: "'DM Mono', monospace"}}>
+                            {refactorLoading ? (
+                              <div style={{textAlign: 'center', color: '#999999', paddingTop: '40px'}}>
+                                <div style={{fontSize: '18px', marginBottom: '12px'}}>✨</div>
+                                <div style={{fontSize: '12px'}}>Generating...</div>
+                              </div>
+                            ) : refactoredCode ? (
+                              <pre style={{margin: 0, fontSize: '10px', lineHeight: '1.4', color: theme === 'light' ? '#666666' : '#bbbbbb', whiteSpace: 'pre-wrap', wordWrap: 'break-word'}}>
+                                {refactoredCode.original}
+                              </pre>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        {/* Refactored Code */}
+                        <div style={{display: 'flex', flexDirection: 'column'}}>
+                          <div style={{padding: '12px 16px', background: theme === 'light' ? '#f0f8f0' : '#2a3a2a', borderBottom: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`, fontSize: '11px', fontWeight: 500, color: theme === 'light' ? '#4a7c4a' : '#6dde9a'}}>
+                            ✨ Refactored Code
+                          </div>
+                          <div style={{flex: 1, overflow: 'auto', padding: '12px', background: theme === 'light' ? '#fafffe' : '#1f2a1f', fontFamily: "'DM Mono', monospace"}}>
+                            {refactorLoading ? (
+                              <div style={{textAlign: 'center', color: '#6dde9a', paddingTop: '40px'}}>
+                                <div style={{fontSize: '18px', marginBottom: '12px'}}>⚙️</div>
+                                <div style={{fontSize: '12px'}}>Generating...</div>
+                              </div>
+                            ) : refactoredCode ? (
+                              <pre style={{margin: 0, fontSize: '10px', lineHeight: '1.4', color: theme === 'light' ? '#4a7c4a' : '#6dde9a', whiteSpace: 'pre-wrap', wordWrap: 'break-word'}}>
+                                {refactoredCode.refactored}
+                              </pre>
+                            ) : null}
+                          </div>
+                          {refactoredCode && !refactorLoading && (
+                            <div style={{padding: '8px 12px', background: theme === 'light' ? '#f9f9f9' : '#2a2a2a', borderTop: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`, display: 'flex', gap: '6px', justifyContent: 'flex-end'}}>
+                              <button style={{...ts.btnO, fontSize: '9px', padding: '4px 10px'}} onClick={() => setRefactoredCode(null)}>
+                                Reject
+                              </button>
+                              <button style={{...ts.btnP, fontSize: '9px', padding: '4px 10px'}}>
+                                Apply
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* BOTTOM SECTION - Function Code Split View */}
+                    {selectedFunction && (
+                      <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', flex: 1, height: '100%', overflow: 'hidden'}}>
+                        {/* Original Function Code */}
+                        <div style={{display: 'flex', flexDirection: 'column', borderRight: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`}}>
+                          <div style={{padding: '12px 16px', background: theme === 'light' ? '#f9f9f9' : '#2a2a2a', borderBottom: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`, fontSize: '11px', fontWeight: 500, color: theme === 'light' ? '#666666' : '#aaaaaa', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                            <span>📄 {selectedFunction.name}</span>
+                            <button style={{background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', color: '#999999'}} onClick={() => setSelectedFunction(null)}>×</button>
+                          </div>
+                          <div style={{flex: 1, overflow: 'auto', padding: '12px', background: theme === 'light' ? '#ffffff' : '#1f1f1f', fontFamily: "'DM Mono', monospace"}}>
+                            <pre style={{margin: 0, fontSize: '10px', lineHeight: '1.4', color: theme === 'light' ? '#666666' : '#bbbbbb', whiteSpace: 'pre-wrap', wordWrap: 'break-word'}}>
+                              {`def ${selectedFunction.name.replace('()', '')}(self, data, config):
+    result = []
+    for item in data:
+        if item['status'] == 'active':
+            if item['priority'] == 'high':
+                if item['assigned'] == True:
+                    result.append({
+                        'id': item['id'],
+                        'name': item['name'],
+                        'priority': item['priority'],
+                        'status': item['status']
+                    })
+    return result`}
+                            </pre>
+                          </div>
+                        </div>
+
+                        {/* Refactored Function Code */}
+                        <div style={{display: 'flex', flexDirection: 'column'}}>
+                          <div style={{padding: '12px 16px', background: theme === 'light' ? '#f0f8f0' : '#2a3a2a', borderBottom: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`, fontSize: '11px', fontWeight: 500, color: theme === 'light' ? '#4a7c4a' : '#6dde9a'}}>
+                            ✨ Refactored - Complexity {selectedFunction.complexity}
+                          </div>
+                          <div style={{flex: 1, overflow: 'auto', padding: '12px', background: theme === 'light' ? '#fafffe' : '#1f2a1f', fontFamily: "'DM Mono', monospace"}}>
+                            <pre style={{margin: 0, fontSize: '10px', lineHeight: '1.4', color: theme === 'light' ? '#4a7c4a' : '#6dde9a', whiteSpace: 'pre-wrap', wordWrap: 'break-word'}}>
+                              {`def ${selectedFunction.name.replace('()', '')}(self, data: List[Dict]) -> List[Dict]:
+    """Extract active high-priority items."""
+    def should_include(item):
+        return item['status'] == 'active' and \
+               item.get('priority') == 'high'
+
+    def format_item(item):
+        return {k: v for k, v in item.items()
+                if k in ['id', 'name', 'priority', 'status']}
+
+    return [format_item(item) for item in data
+            if should_include(item)]`}
+                            </pre>
                           </div>
                         </div>
                       </div>
@@ -776,15 +988,83 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
           )}
 
           {activeTab === 'refactor' && (
-            <div style={{...ts.tabContent, ...ts.phPanel}}>
-              <div style={ts.phIc}>✨</div>
-              <div style={ts.phT}>Claude AI Refactoring</div>
-              <div style={ts.phS}>
-                {selectedFile
-                  ? `Ready to refactor ${selectedFile.name} with Claude AI - select refactoring options and click the button above`
-                  : 'Select a file from the Files tab to start refactoring'
-                }
-              </div>
+            <div style={ts.tabContent}>
+              {selectedFile ? (
+                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', height: '100%'}}>
+                  {/* Original Code */}
+                  <div style={{display: 'flex', flexDirection: 'column', borderRight: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`}}>
+                    <div style={{padding: '16px', background: theme === 'light' ? '#f9f9f9' : '#2a2a2a', borderBottom: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`, fontSize: '12px', fontWeight: 500, color: theme === 'light' ? '#666666' : '#aaaaaa'}}>
+                      📄 {selectedFunction ? `${selectedFunction.name} - Original` : `${selectedFile.name} - Original`}
+                    </div>
+                    <div style={{flex: 1, overflow: 'auto', padding: '16px', background: theme === 'light' ? '#ffffff' : '#1f1f1f', fontFamily: "'DM Mono', monospace"}}>
+                      {refactorLoading ? (
+                        <div style={{textAlign: 'center', color: '#999999', paddingTop: '60px'}}>
+                          <div style={{fontSize: '24px', marginBottom: '12px'}}>✨</div>
+                          <div style={{fontSize: '12px'}}>Generating refactored code...</div>
+                        </div>
+                      ) : refactoredCode ? (
+                        <pre style={{margin: 0, fontSize: '11px', lineHeight: '1.5', color: theme === 'light' ? '#666666' : '#bbbbbb', whiteSpace: 'pre-wrap', wordWrap: 'break-word'}}>
+                          {refactoredCode.original}
+                        </pre>
+                      ) : selectedFunction ? (
+                        <div style={{textAlign: 'center', color: '#999999', paddingTop: '60px'}}>
+                          <div style={{fontSize: '12px'}}>Click "Generate Refactor" to see suggestions for {selectedFunction.name}</div>
+                        </div>
+                      ) : (
+                        <div style={{textAlign: 'center', color: '#999999', paddingTop: '60px'}}>
+                          <div style={{fontSize: '12px'}}>Select a function to refactor, or click "Generate Refactor" for file-level suggestions</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Refactored Code */}
+                  <div style={{display: 'flex', flexDirection: 'column'}}>
+                    <div style={{padding: '16px', background: theme === 'light' ? '#f0f8f0' : '#2a3a2a', borderBottom: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`, fontSize: '12px', fontWeight: 500, color: theme === 'light' ? '#4a7c4a' : '#6dde9a'}}>
+                      ✨ {selectedFunction ? `${selectedFunction.name} - Refactored` : `${selectedFile.name} - Refactored`}
+                    </div>
+                    <div style={{flex: 1, overflow: 'auto', padding: '16px', background: theme === 'light' ? '#fafffe' : '#1f2a1f', fontFamily: "'DM Mono', monospace"}}>
+                      {refactorLoading ? (
+                        <div style={{textAlign: 'center', color: '#6dde9a', paddingTop: '60px'}}>
+                          <div style={{fontSize: '24px', marginBottom: '12px'}}>⚙️</div>
+                          <div style={{fontSize: '12px'}}>Generating improvements...</div>
+                        </div>
+                      ) : refactoredCode ? (
+                        <pre style={{margin: 0, fontSize: '11px', lineHeight: '1.5', color: theme === 'light' ? '#4a7c4a' : '#6dde9a', whiteSpace: 'pre-wrap', wordWrap: 'break-word'}}>
+                          {refactoredCode.refactored}
+                        </pre>
+                      ) : selectedFunction ? (
+                        <div style={{textAlign: 'center', color: '#6dde9a', paddingTop: '60px'}}>
+                          <div style={{fontSize: '12px'}}>Refactored version will appear here</div>
+                        </div>
+                      ) : (
+                        <div style={{textAlign: 'center', color: '#6dde9a', paddingTop: '60px'}}>
+                          <div style={{fontSize: '12px'}}>Suggestions will appear here</div>
+                        </div>
+                      )}
+                    </div>
+                    {refactoredCode && !refactorLoading && (
+                      <div style={{padding: '12px 16px', background: theme === 'light' ? '#f9f9f9' : '#2a2a2a', borderTop: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`, display: 'flex', gap: '8px', justifyContent: 'flex-end'}}>
+                        <button style={{...ts.btnO, fontSize: '10px', padding: '6px 14px'}} onClick={() => setRefactoredCode(null)}>
+                          Reject
+                        </button>
+                        <button style={{...ts.btnP, fontSize: '10px', padding: '6px 14px'}} onClick={() => handleRefactorClick()}>
+                          Apply Changes
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div style={{...ts.phPanel, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
+                  <div style={ts.phIc}>✨</div>
+                  <div style={ts.phT}>Claude AI Refactoring</div>
+                  <div style={ts.phS}>
+                    <div style={{marginBottom: '12px'}}>Select a file from the Files tab to start refactoring</div>
+                    <div style={{fontSize: '11px', color: '#999999', marginTop: '16px'}}>💡 Tip: Click on a function in the Analysis tab for function-level refactoring</div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
