@@ -2,7 +2,6 @@
  * Tests for AnomaliesTable Component
  */
 
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AnomaliesTable from '../AnomaliesTable';
@@ -123,7 +122,8 @@ describe('AnomaliesTable', () => {
 
     it('should show unreviewed status for unreviewed anomalies', () => {
       render(<AnomaliesTable {...defaultProps} />);
-      expect(screen.getAllByText('Unreviewed')).toHaveLength(2);
+      const unreviewedSpans = screen.getAllByText('Unreviewed').filter((el) => el.className === 'status-unreviewed');
+      expect(unreviewedSpans).toHaveLength(2);
     });
 
     it('should show review button for unreviewed anomalies', () => {

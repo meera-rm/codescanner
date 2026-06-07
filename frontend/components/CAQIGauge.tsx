@@ -18,6 +18,7 @@ import {
   validateCaqiScore,
   validateDimensionScore,
 } from '../constants/caqi';
+import './caqi-components.css';
 
 interface CAQIDimensions {
   security: number;
@@ -130,129 +131,6 @@ export const CAQIGauge: React.FC<CAQIGaugeProps> = ({
           ))}
         </div>
       </div>
-
-      <style jsx>{`
-        .caqi-gauge {
-          width: 100%;
-          max-width: 600px;
-          padding: 24px;
-          background: white;
-          border-radius: 12px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .gauge-container {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-        }
-
-        .gauge-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .gauge-header h2 {
-          margin: 0;
-          font-size: 20px;
-          font-weight: 600;
-        }
-
-        .timestamp {
-          font-size: 12px;
-          color: #6b7280;
-        }
-
-        .gauge-display {
-          display: flex;
-          justify-content: center;
-        }
-
-        .gauge-circle {
-          width: 200px;
-          height: 200px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-        }
-
-        .gauge-inner {
-          width: 160px;
-          height: 160px;
-          background: white;
-          border-radius: 50%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 4px;
-        }
-
-        .gauge-value {
-          font-size: 32px;
-          font-weight: 700;
-          color: #1f2937;
-        }
-
-        .gauge-max {
-          font-size: 12px;
-          color: #6b7280;
-        }
-
-        .gauge-grade {
-          font-size: 24px;
-          font-weight: 600;
-          color: #3b82f6;
-        }
-
-        .dimensions-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-          gap: 12px;
-        }
-
-        .dimension-card {
-          padding: 12px;
-          background: #f9fafb;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: background-color 200ms;
-        }
-
-        .dimension-card:hover {
-          background: #f3f4f6;
-        }
-
-        .dimension-label {
-          font-size: 12px;
-          font-weight: 500;
-          color: #6b7280;
-          margin-bottom: 4px;
-        }
-
-        .dimension-value {
-          font-size: 18px;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 8px;
-        }
-
-        .dimension-bar {
-          width: 100%;
-          height: 6px;
-          background: #e5e7eb;
-          border-radius: 3px;
-          overflow: hidden;
-        }
-
-        .dimension-fill {
-          height: 100%;
-          transition: width 300ms ease;
-        }
-      `}</style>
     </div>
   );
 };

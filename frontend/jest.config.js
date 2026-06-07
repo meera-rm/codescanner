@@ -1,7 +1,7 @@
 export default {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
-  roots: ['<rootDir>/src'],
+  roots: ['<rootDir>/src', '<rootDir>/components'],
   testMatch: ['**/__tests__/**/*.test.tsx', '**/__tests__/**/*.test.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   transform: {
@@ -9,9 +9,11 @@ export default {
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
+    'components/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
     '!src/index.tsx',
-    '!src/**/*.css'
+    '!src/**/*.css',
+    '!components/**/*.test.tsx'
   ],
   coveragePathIgnorePatterns: [
     '/node_modules/',

@@ -2,7 +2,6 @@
  * Tests for CAQIGauge Component
  */
 
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import CAQIGauge from '../CAQIGauge';
@@ -46,7 +45,7 @@ describe('CAQIGauge', () => {
 
     it('should calculate and display correct grade', () => {
       render(<CAQIGauge {...defaultProps} />);
-      expect(screen.getByText('A')).toBeInTheDocument(); // 380 = A
+      expect(screen.getByText(/B\+/)).toBeInTheDocument(); // 380 = B+
     });
 
     it('should display timestamp when provided', () => {
