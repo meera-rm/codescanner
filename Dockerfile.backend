@@ -1,0 +1,55 @@
+# Backend Dockerfile - FastAPI
+# Multi-stage build for production optimization
+
+# Stage 1: Build
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY api/requirements.txt .
+
+# Install Python dependencies
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# Stage 2: Runtime
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN addgroup --system app && adduser --system --group app
+
+# Copy Python dependencies from builder
+COPY --from=builder /root/.local /home/app/.local
+
+# Copy application code
+COPY --chown=app:app api/ ./
+
+# Set environment variables
+ENV PATH=/home/app/.local/bin:$PATH
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Switch to non-root user
+USER app
+
+# Health check
+HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=5 \
+    CMD curl -f http://localhost:8000/api/v1/analytics/health || exit 1
+
+# Expose port
+EXPOSE 8000
+
+# Run application with workers for better performance
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]

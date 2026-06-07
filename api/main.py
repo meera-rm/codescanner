@@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "scanner"))
 
 from api.services.auth_service import AuthService
 from api.middleware.auth_middleware import AuthMiddleware
-from api.routes import health, auth, scanner, onboarding, config, creative_suite, metrics, webhooks, analysis, iteration, caqi_enhanced
+from api.routes import health, auth, scanner, onboarding, config, creative_suite, metrics, webhooks, analysis, iteration, caqi_enhanced, advanced_analytics
 from api.db.database import engine, Base
 
 
@@ -87,6 +87,7 @@ app.include_router(webhooks.router)
 app.include_router(analysis.router)
 app.include_router(iteration.router)
 app.include_router(caqi_enhanced.router)  # Path I: CAQI Team Analytics
+app.include_router(advanced_analytics.router)  # Path I+1: Advanced Analytics
 
 # ============================================================================
 # Root & Documentation Endpoints
