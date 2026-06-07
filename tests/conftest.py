@@ -321,23 +321,24 @@ class MockQuery:
         self.model_class = model_class
         self._filter_conditions = []
         self._results = []
-        self._filters = {}
 
-    def filter(self, condition):
-        """Mock filter - store condition for later evaluation."""
-        self._filter_conditions.append(condition)
+    def filter(self, *conditions):
+        """Mock filter - just store conditions, don't try to parse them."""
+        self._filter_conditions.extend(conditions)
         return self
 
     def all(self):
-        """Return all results based on filters."""
+        """Return all results."""
         return self._results
 
     def first(self):
-        """Return first result based on filters."""
+        """Return first result."""
         return self._results[0] if self._results else None
 
     def order_by(self, field):
-        """Mock order_by."""
+        """Mock order_by - sort by field if it exists."""
+        if self._results and hasattr(self._results[0], 'recorded_at'):
+            self._results = sorted(self._results, key=lambda x: x.recorded_at)
         return self
 
     def in_(self, values):
@@ -373,7 +374,6 @@ def team_with_developers(mock_db):
         maintainability=75,
         calculated_at=datetime.utcnow()
     )
-    mock_db.teams["test-team"] = team
 
     # Create members
     members = [
@@ -381,7 +381,6 @@ def team_with_developers(mock_db):
         MockTeamMember("test-team", "dev-2"),
         MockTeamMember("test-team", "dev-3"),
     ]
-    mock_db.members["test-team"] = members
 
     # Create metrics - setup for MockQuery to return them
     today = datetime.utcnow()
@@ -401,7 +400,10 @@ def team_with_developers(mock_db):
             )
             metrics.append(metric)
 
-    mock_db.metrics["test-team"] = metrics
+    # Store data on the mock_db for later access
+    mock_db._team = team
+    mock_db._members = members
+    mock_db._metrics = metrics
 
     # Setup MockDatabase to return proper query results
     original_query = mock_db.query
