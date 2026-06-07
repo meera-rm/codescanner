@@ -19,6 +19,29 @@ class OnboardingService:
         self.onboarding_jobs: Dict[str, Dict[str, Any]] = {}
         self.orchestrator = CreativeSuiteOrchestrator() if CreativeSuiteOrchestrator else None
 
+    def _resolve_path(self, path_input: str) -> str:
+        """Resolve path: try exact path first, then search common locations."""
+        path = Path(path_input)
+
+        # Try exact path first
+        if path.exists():
+            return str(path.resolve())
+
+        # If it's just a directory name, search common locations
+        if '/' not in path_input and '\\' not in path_input:
+            common_locations = [
+                Path.home() / 'Documents' / path_input,
+                Path.home() / 'Documents' / 'assignments' / 'pursuit' / path_input,
+                Path.home() / 'Documents' / 'codescanner' / path_input,
+                Path.cwd() / path_input,
+            ]
+            for candidate in common_locations:
+                if candidate.exists():
+                    return str(candidate.resolve())
+
+        # Path not found
+        raise ValueError(f"Path not found: {path_input}. Try using the full absolute path (e.g., /Users/meera/Documents/investorlif-recos)")
+
     def generate_profile(
         self,
         directory_path: str,
@@ -30,19 +53,22 @@ class OnboardingService:
         start_time = datetime.utcnow()
 
         try:
+            # Resolve path first
+            resolved_path = self._resolve_path(directory_path)
+
             profile = {
-                "overview": self._generate_overview(directory_path),
-                "architecture": self._generate_architecture(directory_path),
-                "getting_started": self._generate_getting_started(directory_path),
-                "important_files": self._generate_important_files(directory_path),
-                "learning_path": self._generate_learning_path(directory_path),
-                "common_tasks": self._generate_common_tasks(directory_path),
-                "troubleshooting": self._generate_troubleshooting(directory_path),
+                "overview": self._generate_overview(resolved_path),
+                "architecture": self._generate_architecture(resolved_path),
+                "getting_started": self._generate_getting_started(resolved_path),
+                "important_files": self._generate_important_files(resolved_path),
+                "learning_path": self._generate_learning_path(resolved_path),
+                "common_tasks": self._generate_common_tasks(resolved_path),
+                "troubleshooting": self._generate_troubleshooting(resolved_path),
             }
 
             if include_creative_suite and self.orchestrator:
                 try:
-                    creative_result = self.orchestrator.analyze(directory_path)
+                    creative_result = self.orchestrator.analyze(resolved_path)
                     profile["creative_suite"] = {
                         "personality": creative_result.personality,
                         "letter": creative_result.letter,

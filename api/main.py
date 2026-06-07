@@ -19,19 +19,24 @@ Phases:
 """
 
 import sys
+import os
 from pathlib import Path
 from datetime import datetime
+
+# Set up path for imports
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(project_root / "scanner"))
+os.chdir(str(project_root))
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "scanner"))
-
 # Auth disabled for local development
-from api.routes import health, auth, creative_suite, config, caqi_enhanced
+from api.routes import health, auth, creative_suite, config, caqi_enhanced, scanner, onboarding
 # Temporarily disabled routes - will fix one by one
-# from api.routes import scanner, onboarding, metrics, webhooks, analysis, iteration, advanced_analytics
+# from api.routes import metrics, webhooks, analysis, iteration, advanced_analytics
 from api.db.database import engine, Base
 
 
@@ -70,9 +75,9 @@ app.include_router(health.router)
 app.include_router(creative_suite.router)
 app.include_router(auth.router)
 app.include_router(caqi_enhanced.router)  # Path I: CAQI Team Analytics
+app.include_router(scanner.router)  # Path K: Code Scanner
+app.include_router(onboarding.router)  # Path J: Onboarding Profiles
 # Temporarily disabled - fixing one by one
-# app.include_router(scanner.router)
-# app.include_router(onboarding.router)
 app.include_router(config.router)
 # app.include_router(metrics.router)
 # app.include_router(webhooks.router)

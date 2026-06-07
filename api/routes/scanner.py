@@ -7,9 +7,34 @@ router = APIRouter(prefix="/api/v1/scan", tags=["scanning"])
 scanner_service = ScannerService()
 
 
-@router.post("/sync", response_model=ScanResponse)
+@router.post("/sync")
 async def scan_sync(request: ScanRequest, req: Request):
+    from pathlib import Path
+
     key_id = getattr(req.state, "key_id", None)
+
+    # Validate directory exists if provided
+    if request.directory_path:
+        path = Path(request.directory_path)
+        # Check exact path
+        if not path.exists():
+            # Check common locations
+            common_locations = [
+                Path.home() / 'Documents' / request.directory_path,
+                Path.home() / 'Documents' / 'assignments' / 'pursuit' / request.directory_path,
+                Path.home() / 'Documents' / 'codescanner' / request.directory_path,
+                Path.cwd() / request.directory_path,
+            ]
+            found = False
+            for candidate in common_locations:
+                if candidate.exists():
+                    found = True
+                    break
+            if not found:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Path not found: {request.directory_path}. Try using the full absolute path (e.g., /Users/meera/Documents/codescanner)"
+                )
 
     result = scanner_service.scan(
         code=request.code,
@@ -20,6 +45,10 @@ async def scan_sync(request: ScanRequest, req: Request):
 
     if result["status"] == "error":
         raise HTTPException(status_code=400, detail=result["error"])
+
+    # Debug: Log findings count
+    findings_count = len(result.get("findings", []))
+    print(f"[DEBUG] Scan result: status={result['status']}, findings={findings_count}, language={request.language}", file=__import__('sys').stderr)
 
     return result
 

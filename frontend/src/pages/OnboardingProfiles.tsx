@@ -19,15 +19,16 @@ export const OnboardingProfiles: React.FC = () => {
     const files = e.target.files;
     if (files && files.length > 0) {
       const firstFile = files[0];
-      const path = (firstFile as any).webkitRelativePath || firstFile.name;
-      const directoryName = path.split('/')[0] || path;
+      const relativePath = (firstFile as any).webkitRelativePath || firstFile.name;
+      const directoryName = relativePath.split('/')[0] || relativePath;
       setDirectoryPath(directoryName);
+      setError(`📁 Directory detected: "${directoryName}"`);
     }
   };
 
   const handleGenerate = async () => {
     if (!directoryPath.trim()) {
-      setError('Please enter a directory path');
+      setError('Please enter a directory path or browse for a folder');
       return;
     }
 
@@ -38,16 +39,45 @@ export const OnboardingProfiles: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          path: directoryPath,
-          team_name: teamName || 'Engineering Team'
+          directory_path: directoryPath,
+          tone: 'neutral',
+          include_creative_suite: true,
+          format: 'json'
         })
       });
 
-      if (!response.ok) throw new Error('Profile generation failed');
+      let errorMessage = '';
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        errorMessage = errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+        throw new Error(errorMessage);
+      }
       const data = await response.json();
-      setProfile(data.profile || data.content || JSON.stringify(data, null, 2));
+
+      // Handle the profile response
+      if (data.status === 'error') {
+        throw new Error(data.error || 'Profile generation failed');
+      }
+
+      // Always convert to JSON string for display
+      let profileStr = '';
+      if (data.profile) {
+        profileStr = typeof data.profile === 'string'
+          ? data.profile
+          : JSON.stringify(data.profile, null, 2);
+      } else if (data.content && typeof data.content === 'string') {
+        profileStr = data.content;
+      } else if (data.markdown && typeof data.markdown === 'string') {
+        profileStr = data.markdown;
+      } else {
+        profileStr = JSON.stringify(data, null, 2);
+      }
+
+      setProfile(profileStr || JSON.stringify(data, null, 2));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      const message = err instanceof Error ? err.message : 'Unknown error occurred';
+      console.error('Onboarding error:', err);
+      setError(`Generation failed: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -114,11 +144,11 @@ export const OnboardingProfiles: React.FC = () => {
 
         {error && <div className="error-message">{error}</div>}
 
-        {profile && (
+        {profile && typeof profile === 'string' && profile.trim() && (
           <div className="result-section">
             <h2>Onboarding Profile</h2>
             <div className="profile-content">
-              <pre>{profile}</pre>
+              <pre>{String(profile)}</pre>
             </div>
             <button
               onClick={() => {

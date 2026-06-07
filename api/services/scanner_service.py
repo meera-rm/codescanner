@@ -17,6 +17,51 @@ class ScannerService:
         self.sql_scanner = SQLScanner()
         self.scan_jobs: Dict[str, Dict[str, Any]] = {}
 
+    def _convert_findings(self, findings: list, language: str) -> list:
+        """Convert Finding objects to dictionaries."""
+        converted = []
+        for finding in findings:
+            # Check if it's a Finding object or dictionary
+            if hasattr(finding, '__dict__'):
+                # It's a Finding object
+                finding_dict = {
+                    "file": getattr(finding, 'file', ''),
+                    "line": getattr(finding, 'line', 0),
+                    "column": getattr(finding, 'column', 0),
+                    "type": getattr(finding, 'rule', ''),
+                    "message": getattr(finding, 'message', ''),
+                    "severity": getattr(finding, 'severity', 'INFO'),
+                    "language": language
+                }
+            else:
+                # It's already a dictionary
+                finding_dict = finding
+            converted.append(finding_dict)
+        return converted
+
+    def _resolve_path(self, path_input: str) -> str:
+        """Resolve path: try exact path first, then search common locations."""
+        path = Path(path_input)
+
+        # Try exact path first
+        if path.exists():
+            return str(path.resolve())
+
+        # If it's just a directory name, search common locations
+        if '/' not in path_input and '\\' not in path_input:
+            common_locations = [
+                Path.home() / 'Documents' / path_input,
+                Path.home() / 'Documents' / 'assignments' / 'pursuit' / path_input,
+                Path.home() / 'Documents' / 'codescanner' / path_input,
+                Path.cwd() / path_input,
+            ]
+            for candidate in common_locations:
+                if candidate.exists():
+                    return str(candidate.resolve())
+
+        # Not found
+        return str(path.resolve())  # Return as-is, let scanners handle the error
+
     def scan(
         self,
         code: Optional[str] = None,
@@ -40,23 +85,33 @@ class ScannerService:
         metrics = {}
 
         try:
+            # Resolve directory path if provided
+            if directory_path:
+                directory_path = self._resolve_path(directory_path)
+
             if language == "python" or language == "all":
                 if code:
-                    findings.extend(self.python_scanner.scan_code(code))
+                    python_findings = self.python_scanner.scan_code(code)
+                    findings.extend(self._convert_findings(python_findings, "python"))
                 elif directory_path:
-                    findings.extend(self.python_scanner.scan_directory(directory_path))
+                    python_findings = self.python_scanner.scan_directory(directory_path)
+                    findings.extend(self._convert_findings(python_findings, "python"))
 
             if language == "javascript" or language == "all":
                 if code:
-                    findings.extend(self.js_scanner.scan_code(code))
+                    js_findings = self.js_scanner.scan_code(code)
+                    findings.extend(self._convert_findings(js_findings, "javascript"))
                 elif directory_path:
-                    findings.extend(self.js_scanner.scan_directory(directory_path))
+                    js_findings = self.js_scanner.scan_directory(directory_path)
+                    findings.extend(self._convert_findings(js_findings, "javascript"))
 
             if language == "sql" or language == "all":
                 if code:
-                    findings.extend(self.sql_scanner.scan_code(code))
+                    sql_findings = self.sql_scanner.scan_code(code)
+                    findings.extend(self._convert_findings(sql_findings, "sql"))
                 elif directory_path:
-                    findings.extend(self.sql_scanner.scan_directory(directory_path))
+                    sql_findings = self.sql_scanner.scan_directory(directory_path)
+                    findings.extend(self._convert_findings(sql_findings, "sql"))
 
             if options.get("quality_score"):
                 metrics["quality_score"] = self._calculate_quality_score(findings)
@@ -67,6 +122,9 @@ class ScannerService:
             end_time = datetime.utcnow()
             duration_ms = int((end_time - start_time).total_seconds() * 1000)
 
+            # Get list of scanned files
+            scanned_files = self._get_scanned_files(directory_path, language)
+
             result = {
                 "job_id": job_id,
                 "status": "completed",
@@ -74,6 +132,7 @@ class ScannerService:
                 "metrics": metrics,
                 "duration_ms": duration_ms,
                 "timestamp": start_time.isoformat(),
+                "scanned_files": scanned_files,
             }
 
             self.scan_jobs[job_id] = result
@@ -87,6 +146,50 @@ class ScannerService:
                 "findings": [],
                 "metrics": {},
             }
+
+    def _get_scanned_files(self, directory_path: str, language: str) -> list:
+        """Get list of scanned files by type with LOC count."""
+        files = []
+        if not directory_path:
+            return files
+
+        path = Path(directory_path)
+        if not path.exists():
+            return files
+
+        if language == "python" or language == "all":
+            for py_file in path.rglob("*.py"):
+                if any(pattern in str(py_file) for pattern in ["__pycache__", ".venv", "node_modules", "venv", ".git"]):
+                    continue
+                loc = self._count_lines(py_file)
+                files.append({
+                    "name": py_file.name,
+                    "path": str(py_file),
+                    "language": "python",
+                    "loc": loc
+                })
+
+        if language == "javascript" or language == "all":
+            for js_file in path.rglob("*.js"):
+                if any(pattern in str(js_file) for pattern in ["node_modules", ".git"]):
+                    continue
+                loc = self._count_lines(js_file)
+                files.append({
+                    "name": js_file.name,
+                    "path": str(js_file),
+                    "language": "javascript",
+                    "loc": loc
+                })
+
+        return files[:50]  # Return first 50 files
+
+    def _count_lines(self, file_path: Path) -> int:
+        """Count lines of code in a file."""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return len(f.readlines())
+        except (UnicodeDecodeError, IOError):
+            return 0
 
     def get_scan_result(self, job_id: str) -> Optional[Dict[str, Any]]:
         return self.scan_jobs.get(job_id)

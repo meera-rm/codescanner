@@ -27,7 +27,7 @@ class PythonScanner:
     def __init__(self, ignore_patterns: List[str] = None):
         self.ignore_patterns = ignore_patterns or [
             "__pycache__", ".venv", "node_modules", "venv", ".git",
-            "site-packages", "test", "tests", "fixtures", "codescanner",
+            "site-packages", "/test/", "/tests/", "fixtures",
             "agentic-ai", "claudeassisted", "MyVault", "Bronze_to_silver"
         ]
         self.findings: List[Finding] = []
