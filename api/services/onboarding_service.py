@@ -33,6 +33,8 @@ class OnboardingService:
                 Path.home() / 'Documents' / path_input,
                 Path.home() / 'Documents' / 'assignments' / 'pursuit' / path_input,
                 Path.home() / 'Documents' / 'codescanner' / path_input,
+                Path.home() / 'Documents' / 'claudeassisted' / path_input,
+                Path.home() / 'Documents' / 'Bronze_to_silver' / path_input,
                 Path.cwd() / path_input,
             ]
             for candidate in common_locations:
@@ -40,7 +42,7 @@ class OnboardingService:
                     return str(candidate.resolve())
 
         # Path not found
-        raise ValueError(f"Path not found: {path_input}. Try using the full absolute path (e.g., /Users/meera/Documents/investorlif-recos)")
+        raise ValueError(f"Path not found: {path_input}. Try using the full absolute path (e.g., /Users/meera/Documents/claudeassisted/nba-etl-pipeline)")
 
     def generate_profile(
         self,

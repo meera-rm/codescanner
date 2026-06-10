@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useUploadManager } from '../hooks/useUploadManager';
 
 type Theme = 'dark' | 'light';
 type TabType = 'overview' | 'complexity' | 'smells' | 'duplication' | 'security' | 'docs' | 'dependencies' | 'files' | 'refactor';
@@ -6,6 +7,7 @@ type DetailTab = 'analysis' | 'refactor';
 
 interface ScannedFile {
   name: string;
+  path?: string;
   language: string;
   loc: number;
   functions: number;
@@ -36,17 +38,42 @@ interface ScanResponse {
       high_complexity_functions: number;
     };
   };
+  function_metrics?: Array<{
+    name: string;
+    file: string;
+    line: number;
+    complexity: number;
+    severity: string;
+  }>;
 }
 
 export const CodeScanner: React.FC = () => {
+  // Upload manager - consolidated upload logic
+  const uploadManager = useUploadManager({
+    onPathSelected: (path, lang) => {
+      setDirectoryPath(path);
+      setDetectedLanguage(lang as 'python' | 'javascript' | 'sql');
+    }
+  });
+
   const [directoryPath, setDirectoryPath] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(uploadManager.state.message || '');
   const [theme, setTheme] = useState<Theme>('light');
   const [activeTab, setActiveTab] = useState<TabType>('files');
+  const [detectedLanguage, setDetectedLanguage] = useState<'python' | 'javascript' | 'sql'>('python');
   const [detailTab, setDetailTab] = useState<DetailTab>('analysis');
   const [selectedFile, setSelectedFile] = useState<ScannedFile | null>(null);
   const [dragActive, setDragActive] = useState(false);
+
+  // Sync error state from upload manager
+  useEffect(() => {
+    if (uploadManager.state.error) {
+      setError(uploadManager.state.error);
+    } else if (uploadManager.state.message) {
+      setError(uploadManager.state.message);
+    }
+  }, [uploadManager.state.error, uploadManager.state.message]);
   const [scannedFiles, setScannedFiles] = useState<ScannedFile[]>([]);
   const [allFindings, setAllFindings] = useState<any[]>([]);
   const [exportFormat, setExportFormat] = useState<'json' | 'html' | 'markdown' | 'pdf'>('json');
@@ -62,6 +89,9 @@ export const CodeScanner: React.FC = () => {
   const [showFunctionModal, setShowFunctionModal] = useState(false);
   const [refactoredCode, setRefactoredCode] = useState<{original: string; refactored: string} | null>(null);
   const [refactorLoading, setRefactorLoading] = useState(false);
+  const [fileFunctions, setFileFunctions] = useState<Array<{name: string; complexity: number; severity: string}>>([]);
+  const [functionMetrics, setFunctionMetrics] = useState<any[]>([]);
+  const [hoveredFunction, setHoveredFunction] = useState<string | null>(null);
   const [metrics, setMetrics] = useState({
     grade: 'B',
     loc: 0,
@@ -72,22 +102,7 @@ export const CodeScanner: React.FC = () => {
     qualityScore: 100
   });
 
-  const folderInputRef = React.useRef<HTMLInputElement>(null);
-
-
-  const handleBrowseFolder = () => {
-    folderInputRef.current?.click();
-  };
-
-  const handleDirectorySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const firstFile = files[0];
-      const relativePath = (firstFile as any).webkitRelativePath || firstFile.name;
-      const directoryName = relativePath.split('/')[0] || relativePath;
-      setDirectoryPath(directoryName);
-    }
-  };
+  // Old handlers consolidated into uploadManager - see hooks/useUploadManager.ts
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -103,6 +118,24 @@ export const CodeScanner: React.FC = () => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
+
+    const items = e.dataTransfer?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === 'file') {
+        const entry = item.webkitGetAsEntry?.();
+        if (entry?.isDirectory) {
+          setDirectoryPath(entry.name);
+          setError(`📁 Dropped folder: "${entry.name}"`);
+        } else if (entry?.isFile) {
+          setDirectoryPath(entry.name);
+          setError(`📄 Dropped file: "${entry.name}"`);
+        }
+        break;
+      }
+    }
   };
 
   const handleScan = async () => {
@@ -117,21 +150,36 @@ export const CodeScanner: React.FC = () => {
     setScannedFiles([]);
 
     try {
+      console.log('Starting scan with path:', directoryPath);
+
       const response = await fetch('/api/v1/scan/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ directory_path: directoryPath, language: 'python' })
+        body: JSON.stringify({ directory_path: directoryPath, language: detectedLanguage })
       });
 
+      console.log('Response status:', response.status);
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Scan failed' }));
-        throw new Error(errorData.detail || `HTTP ${response.status}`);
+        const errorText = await response.text();
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.detail || `Scan failed: HTTP ${response.status}`);
+        } catch (e) {
+          throw new Error(`Scan failed: HTTP ${response.status} - ${errorText}`);
+        }
       }
 
       const data: ScanResponse = await response.json();
+      console.log('Scan response:', data);
 
       if (data.status === 'error') {
-        throw new Error(data.findings ? 'No code files found to scan' : 'Scan failed');
+        throw new Error(data.findings ? 'No code files found to scan' : data.findings || 'Scan failed');
+      }
+
+      // Success - data.status should be 'completed'
+      if (!data.scanned_files) {
+        console.warn('No scanned_files in response, deriving from findings');
       }
 
       // Process findings
@@ -144,6 +192,7 @@ export const CodeScanner: React.FC = () => {
         // Use files returned by backend
         files = data.scanned_files.map((f: any) => ({
           name: f.name,
+          path: f.path,
           language: f.language === 'python' ? 'py' : f.language === 'javascript' ? 'js' : 'py',
           loc: f.loc || 200,
           functions: 3,
@@ -161,6 +210,7 @@ export const CodeScanner: React.FC = () => {
             const isJs = fileName.endsWith('.js') || fileName.endsWith('.ts');
             fileMap.set(finding.file, {
               name: fileName,
+              path: finding.file,
               language: isJs ? 'js' : 'py',
               loc: 200,
               functions: 3,
@@ -194,6 +244,36 @@ export const CodeScanner: React.FC = () => {
         depCycles: 0,
         qualityScore: Math.round(qualityScore)
       });
+
+      // Extract functions from findings
+      const functionMap = new Map<string, {name: string; complexity: number; count: number; severity: string}>();
+      data.findings?.forEach((finding: any) => {
+        // Try to extract function name from message
+        const match = finding.message?.match(/(?:in|function|method)\s+[`']?([a-zA-Z_][a-zA-Z0-9_]*(?:\(\))?)[`']?/i);
+        if (match && match[1]) {
+          const fnName = match[1].endsWith('()') ? match[1] : match[1] + '()';
+          if (!functionMap.has(fnName)) {
+            functionMap.set(fnName, { name: fnName, complexity: 0, count: 0, severity: finding.severity });
+          }
+          const fn = functionMap.get(fnName)!;
+          fn.count++;
+          fn.complexity = Math.min(20, fn.count * 2);
+          if (finding.severity === 'CRITICAL') fn.severity = 'CRITICAL';
+        }
+      });
+
+      // Convert to array and sort by complexity
+      const functionsArray = Array.from(functionMap.values())
+        .sort((a, b) => b.complexity - a.complexity)
+        .slice(0, 10)
+        .map(f => ({ name: f.name, complexity: f.complexity, severity: f.severity }));
+
+      setFileFunctions(functionsArray);
+
+      // Store function metrics from backend response
+      if (data.function_metrics) {
+        setFunctionMetrics(data.function_metrics);
+      }
 
       setActiveTab('files');
     } catch (err) {
@@ -473,6 +553,68 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
     }
   };
 
+  const handleApplyChanges = async () => {
+    if (!selectedFunction || !refactoredCode || !selectedFile) {
+      setError('Missing function or refactored code');
+      return;
+    }
+
+    if (!selectedFile.path) {
+      setError('File path not available. Please select a file and try again.');
+      return;
+    }
+
+    setRefactorLoading(true);
+    try {
+      const requestBody = {
+        file_path: selectedFile.path,
+        refactored_code: refactoredCode.refactored,
+        function_name: selectedFunction.name
+      };
+
+      console.log('Applying refactor:', requestBody);
+
+      const response = await fetch('/api/v1/scan/apply-refactor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      const responseText = await response.text();
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch {
+        throw new Error(`Invalid response: ${responseText}`);
+      }
+
+      if (!response.ok) {
+        throw new Error(result.detail || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // Show success with file path
+      const filename = selectedFile.path.split('/').pop();
+      setError(`✅ Changes saved to ${filename}\n💡 Tip: Re-scan to see metrics improve`);
+
+      setTimeout(() => {
+        setSelectedFunction(null);
+        setRefactoredCode(null);
+        // Keep success message visible for 3 seconds
+      }, 3000);
+
+      // Auto-clear error after 5 seconds
+      setTimeout(() => {
+        setError('');
+      }, 1500);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error('Apply changes error:', err);
+      setError(`Failed to apply: ${errorMsg}`);
+    } finally {
+      setRefactorLoading(false);
+    }
+  };
+
   const getThemeStyles = () => theme === 'light' ? lightTheme : darkTheme;
   const ts = getThemeStyles();
 
@@ -527,7 +669,9 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
                   placeholder="e.g., api or /path/to/project"
                 />
                 <div style={ts.bwrap}>
-                  <button style={ts.bbtn} onClick={handleBrowseFolder}>Browse <span style={{fontSize: '8px'}}>▾</span></button>
+                  <button style={ts.bbtn} onClick={uploadManager.browseFolders} disabled={uploadManager.isSearching}>
+                    Browse <span style={{fontSize: '8px'}}>▾</span>
+                  </button>
                 </div>
               </div>
               {error && (
@@ -541,6 +685,7 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
+                title="Drag files, folders, or ZIP files here"
               >
                 Drop folder / file / .zip<br/>
                 <span style={ts.dzoneHl}>Browse</span> · max 100 MB
@@ -700,9 +845,20 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
 
           {/* TAB CONTENT */}
           {activeTab === 'files' && scannedFiles.length > 0 && (
-            <div style={ts.tabContent}>
+            <div style={{...ts.tabContent, overflow: 'auto', display: 'flex', flexDirection: 'column'}}>
               <div style={ts.tbar}>
-                <div style={ts.tbarInfo}><strong>{scannedFiles.length} files</strong> scanned · Python analysis · 0.24s</div>
+                <div style={ts.tbarInfo}>
+                  {(() => {
+                    const filesWithIssues = scannedFiles.filter(file =>
+                      allFindings.some(f => f.file.includes(file.name))
+                    );
+                    return <>
+                      <strong>{filesWithIssues.length > 0 ? filesWithIssues.length : 0} files with issues</strong>
+                      {filesWithIssues.length !== scannedFiles.length && ` of ${scannedFiles.length} total`}
+                      · Python analysis · 0.24s
+                    </>;
+                  })()}
+                </div>
                 <div style={ts.tbarRight}>
                   <div style={ts.fmts}>
                     <button style={{...ts.fmt, ...(exportFormat === 'json' ? ts.fmtOn : {})}} onClick={() => setExportFormat('json')}>JSON</button>
@@ -716,23 +872,30 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
 
               {/* TABLE */}
               <div style={ts.tableWrap}>
-                {scannedFiles.length > 0 ? (
-                  <table style={ts.table}>
-                    <thead>
-                      <tr style={ts.theadRow}>
-                        <th style={ts.th}>Path <span style={ts.sa}>↕</span></th>
-                        <th style={ts.th}>Lang <span style={ts.sa}>↕</span></th>
-                        <th style={ts.th}>LoC <span style={ts.sa}>↕</span></th>
-                        <th style={ts.th}>FN <span style={ts.sa}>↕</span></th>
-                        <th style={ts.th}>CLS <span style={ts.sa}>↕</span></th>
-                        <th style={ts.th}>Complexity <span style={ts.sa}>↕</span></th>
-                        <th style={ts.th}>Grade <span style={ts.sa}>↕</span></th>
-                        <th style={ts.th}>Severity <span style={ts.sa}>↕</span></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {scannedFiles.map((file) => (
-                        <tr key={file.name} style={{...ts.tbodyRow, ...(selectedFile?.name === file.name ? ts.tbodyRowSel : {})}}>
+                {(() => {
+                  // Filter files to show only those with issues
+                  const filesWithIssues = scannedFiles.filter(file =>
+                    allFindings.some(f => f.file.includes(file.name))
+                  );
+                  const filesToDisplay = filesWithIssues.length > 0 ? filesWithIssues : scannedFiles;
+
+                  return filesToDisplay.length > 0 ? (
+                    <table style={ts.table}>
+                      <thead>
+                        <tr style={ts.theadRow}>
+                          <th style={ts.th}>Path <span style={ts.sa}>↕</span></th>
+                          <th style={ts.th}>Lang <span style={ts.sa}>↕</span></th>
+                          <th style={ts.th}>LoC <span style={ts.sa}>↕</span></th>
+                          <th style={ts.th}>FN <span style={ts.sa}>↕</span></th>
+                          <th style={ts.th}>CLS <span style={ts.sa}>↕</span></th>
+                          <th style={ts.th}>Complexity <span style={ts.sa}>↕</span></th>
+                          <th style={ts.th}>Grade <span style={ts.sa}>↕</span></th>
+                          <th style={ts.th}>Severity <span style={ts.sa}>↕</span></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filesToDisplay.map((file) => (
+                        <tr key={file.name} style={{...ts.tbodyRow, ...(selectedFile?.name === file.name ? ts.tbodyRowSel : {}), cursor: 'pointer'}} onClick={() => setSelectedFile(file)}>
                           <td style={ts.td}>
                             <div style={ts.tdF}>
                               <div style={{...ts.fld, ...(file.language === 'py' ? ts.fldPy : ts.fldJs)}}></div>
@@ -754,21 +917,22 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
                           <td style={ts.td}><span style={{...ts.gp, ...(file.grade === 'A' ? ts.gA : file.grade === 'B' ? ts.gB : ts.gC)}}>{file.grade}</span></td>
                           <td style={ts.td}><span style={file.severity === '—' ? ts.svNone : ts.svLo}>{file.severity}</span></td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <div style={{...ts.phPanel, padding: '40px 20px'}}>
-                    <div style={ts.phIc}>📊</div>
-                    <div style={ts.phT}>No scans yet</div>
-                    <div style={ts.phS}>Enter a directory path and click Scan to analyze your code</div>
-                  </div>
-                )}
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div style={{...ts.phPanel, padding: '40px 20px'}}>
+                      <div style={ts.phIc}>📊</div>
+                      <div style={ts.phT}>{scannedFiles.length === 0 ? 'No scans yet' : 'No issues found'}</div>
+                      <div style={ts.phS}>{scannedFiles.length === 0 ? 'Enter a directory path and click Scan to analyze your code' : 'All scanned files have no issues ✓'}</div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* DETAIL */}
               {selectedFile && (
-                <div style={ts.detail}>
+                <div style={{...ts.detail, display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>
                   <div style={ts.detailTabs}>
                     <button
                       style={{...ts.dtab, ...(detailTab === 'analysis' ? ts.dtabOn : {})}}
@@ -776,19 +940,8 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
                     >
                       Analysis
                     </button>
-                    <span style={{color: '#cccccc', fontSize: '10px', margin: '0 8px'}}>·</span>
-                    <button
-                      style={{...ts.dtab, ...(detailTab === 'refactor' ? ts.dtabOn : {}), ...(detailTab === 'refactor' ? {background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#ffffff'} : {})}}
-                      onClick={() => {
-                        setDetailTab('refactor');
-                        if (!refactoredCode) handleRefactorClick();
-                      }}
-                      disabled={!selectedFile}
-                    >
-                      ✨ Refactor
-                    </button>
                   </div>
-                  <div style={{...ts.detailBody, display: 'flex', flexDirection: 'column'}}>
+                  <div style={{...ts.detailBody, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto'}}>
                     {/* TOP SECTION - Analysis or Refactor */}
                     {detailTab === 'analysis' && (
                       <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0', flex: selectedFunction ? '0 0 auto' : 1, height: selectedFunction ? 'auto' : '100%', borderBottom: selectedFunction ? `2px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}` : 'none', maxHeight: selectedFunction ? '350px' : '100%'}}>
@@ -799,20 +952,79 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
                           </div>
                           <div style={{flex: 1, overflow: 'auto', padding: '12px'}}>
                             <div style={ts.fnl}>
-                              {[
-                                { name: 'process_data()', cx: 18, p: 95 },
-                                { name: 'validate_input()', cx: 12, p: 75 },
-                                { name: 'format_output()', cx: 6, p: 38 },
-                                { name: 'init()', cx: 2, p: 15 }
-                              ].map((fn) => (
-                                <div key={fn.name} style={{...ts.fnR, cursor: 'pointer'}} onClick={() => handleFunctionClick(fn.name, fn.cx)}>
-                                  <span style={{...ts.fnNm, textDecoration: 'underline', color: '#667eea'}}>{fn.name}</span>
-                                  <span style={ts.fnCx}>{fn.cx}</span>
-                                  <div style={ts.fnB}>
-                                    <div style={{...ts.fnBf, width: `${fn.p}%`, background: fn.p > 70 ? '#ff6b6b' : fn.p > 40 ? '#f5c842' : '#6dde9a'}}></div>
-                                  </div>
-                                </div>
-                              ))}
+                              {(() => {
+                                // Check if selected file has any issues
+                                const fileHasIssues = allFindings.some(f => f.file.includes(selectedFile.name));
+
+                                if (!fileHasIssues) {
+                                  // No issues in this file, show empty state
+                                  return (
+                                    <div style={{padding: '12px', color: theme === 'light' ? '#999' : '#666', fontSize: '12px', textAlign: 'center'}}>
+                                      No issues found in this file ✓
+                                    </div>
+                                  );
+                                }
+
+                                // File has issues - show all functions from this file
+                                const selectedFileFunctions = functionMetrics.filter(fn =>
+                                  fn.file.includes(selectedFile.name)
+                                ).sort((a, b) => b.complexity - a.complexity);
+
+                                if (selectedFileFunctions.length === 0) {
+                                  return (
+                                    <div style={{padding: '12px', color: theme === 'light' ? '#999' : '#666', fontSize: '12px', textAlign: 'center'}}>
+                                      No functions found
+                                    </div>
+                                  );
+                                }
+
+                                return selectedFileFunctions.map((fn) => {
+                                  const isHovered = hoveredFunction === fn.name;
+                                  const isSelected = selectedFunction?.name === fn.name;
+                                  const showRefactor = isHovered || isSelected;
+
+                                  return (
+                                    <div
+                                      key={fn.name}
+                                      style={{...ts.fnR, display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: '8px', gap: '8px'}}
+                                      onMouseEnter={() => setHoveredFunction(fn.name)}
+                                      onMouseLeave={() => !isSelected && setHoveredFunction(null)}
+                                    >
+                                      <div style={{display: 'flex', alignItems: 'center', flex: 1, cursor: 'pointer'}} onClick={() => handleFunctionClick(fn.name, fn.complexity)}>
+                                        <span style={{...ts.fnNm, textDecoration: 'underline', color: '#667eea'}}>{fn.name}</span>
+                                        <span style={ts.fnCx}>{fn.complexity}</span>
+                                      </div>
+                                      <div style={ts.fnB}>
+                                        <div style={{...ts.fnBf, width: `${(fn.complexity / 20) * 100}%`, background: fn.complexity > 14 ? '#ff6b6b' : fn.complexity > 8 ? '#f5c842' : '#6dde9a'}}></div>
+                                      </div>
+                                      <button
+                                        style={{
+                                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                          color: '#ffffff',
+                                          border: 'none',
+                                          borderRadius: '4px',
+                                          padding: '4px 8px',
+                                          fontSize: '10px',
+                                          cursor: 'pointer',
+                                          fontWeight: 500,
+                                          whiteSpace: 'nowrap',
+                                          flexShrink: 0,
+                                          opacity: showRefactor ? 1 : 0,
+                                          transition: 'opacity 0.2s ease',
+                                          pointerEvents: showRefactor ? 'auto' : 'none'
+                                        }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleFunctionClick(fn.name, fn.complexity);
+                                          setTimeout(() => handleRefactorClick(), 100);
+                                        }}
+                                      >
+                                        ✨ Refactor
+                                      </button>
+                                    </div>
+                                  );
+                                })
+                              })()}
                             </div>
                           </div>
                         </div>
@@ -931,7 +1143,8 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
 
                     {/* BOTTOM SECTION - Function Code Split View */}
                     {selectedFunction && (
-                      <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', flex: 1, height: '100%', overflow: 'hidden'}}>
+                      <div style={{display: 'flex', flexDirection: 'column', flex: 1, minHeight: '300px', overflow: 'auto', borderTop: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`}}>
+                      <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', flex: 1, overflow: 'auto'}}>
                         {/* Original Function Code */}
                         <div style={{display: 'flex', flexDirection: 'column', borderRight: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`}}>
                           <div style={{padding: '12px 16px', background: theme === 'light' ? '#f9f9f9' : '#2a2a2a', borderBottom: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`, fontSize: '11px', fontWeight: 500, color: theme === 'light' ? '#666666' : '#aaaaaa', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
@@ -980,9 +1193,228 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
                           </div>
                         </div>
                       </div>
+                      {/* Action Buttons */}
+                      <div style={{display: 'flex', gap: '8px', padding: '12px 16px', borderTop: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`, background: theme === 'light' ? '#f5f5f5' : '#262626', justifyContent: 'flex-end'}}>
+                        <button
+                          style={{
+                            padding: '8px 16px',
+                            background: theme === 'light' ? '#f0f0f0' : '#404040',
+                            border: `1px solid ${theme === 'light' ? '#d0d0d0' : '#555555'}`,
+                            borderRadius: '4px',
+                            fontSize: '13px',
+                            fontWeight: 500,
+                            color: theme === 'light' ? '#666666' : '#bbbbbb',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                          onClick={() => setSelectedFunction(null)}
+                        >
+                          ✕ Reject
+                        </button>
+                        <button
+                          style={{
+                            padding: '8px 16px',
+                            background: '#4a7c4a',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontSize: '13px',
+                            fontWeight: 500,
+                            color: '#ffffff',
+                            cursor: refactorLoading ? 'not-allowed' : 'pointer',
+                            opacity: refactorLoading ? 0.6 : 1,
+                            transition: 'all 0.2s'
+                          }}
+                          onClick={handleApplyChanges}
+                          disabled={refactorLoading}
+                        >
+                          {refactorLoading ? '⚙️ Applying...' : '✓ Apply Changes'}
+                        </button>
+                      </div>
+                      </div>
                     )}
                   </div>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* OVERVIEW TAB */}
+          {activeTab === 'overview' && (
+            <div style={{...ts.tabContent, padding: '32px', overflow: 'auto'}}>
+              {scannedFiles.length === 0 ? (
+                <div style={{textAlign: 'center', paddingTop: '60px', color: theme === 'light' ? '#999' : '#666'}}>
+                  <div style={{fontSize: '32px', marginBottom: '12px'}}>📊</div>
+                  <div style={{fontSize: '16px', fontWeight: 500}}>No scan data yet</div>
+                  <div style={{fontSize: '13px', marginTop: '8px'}}>Scan a directory to see overview metrics</div>
+                </div>
+              ) : (
+                <>
+                  <h2 style={{fontSize: '20px', marginBottom: '16px', color: theme === 'light' ? '#333' : '#fff'}}>📊 Overview</h2>
+                  <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px'}}>
+                    <div style={{padding: '16px', background: theme === 'light' ? '#f5f5f5' : '#2a2a2a', borderRadius: '6px'}}>
+                      <div style={{fontSize: '12px', color: theme === 'light' ? '#666' : '#aaa'}}>Grade</div>
+                      <div style={{fontSize: '28px', fontWeight: 'bold', color: metrics.grade === 'A' ? '#4a7c4a' : '#f5c842'}}>
+                        {metrics.grade}
+                      </div>
+                    </div>
+                    <div style={{padding: '16px', background: theme === 'light' ? '#f5f5f5' : '#2a2a2a', borderRadius: '6px'}}>
+                      <div style={{fontSize: '12px', color: theme === 'light' ? '#666' : '#aaa'}}>Total Issues</div>
+                      <div style={{fontSize: '28px', fontWeight: 'bold'}}>{metrics.totalFindings}</div>
+                    </div>
+                    <div style={{padding: '16px', background: theme === 'light' ? '#f5f5f5' : '#2a2a2a', borderRadius: '6px'}}>
+                      <div style={{fontSize: '12px', color: theme === 'light' ? '#666' : '#aaa'}}>Critical</div>
+                      <div style={{fontSize: '28px', fontWeight: 'bold', color: '#ff6b6b'}}>{metrics.criticalCount}</div>
+                    </div>
+                  </div>
+                  <p style={{color: theme === 'light' ? '#666' : '#aaa'}}>Scanned {scannedFiles.length} files with {metrics.loc.toLocaleString()} lines of code.</p>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* COMPLEXITY TAB */}
+          {activeTab === 'complexity' && (
+            <div style={{...ts.tabContent, padding: '32px', overflow: 'auto'}}>
+              {scannedFiles.length === 0 ? (
+                <div style={{textAlign: 'center', paddingTop: '60px', color: theme === 'light' ? '#999' : '#666'}}>
+                  <div style={{fontSize: '32px', marginBottom: '12px'}}>📈</div>
+                  <div style={{fontSize: '16px', fontWeight: 500}}>No scan data yet</div>
+                  <div style={{fontSize: '13px', marginTop: '8px'}}>Scan a directory to see complexity analysis</div>
+                </div>
+              ) : (
+                <>
+                  <h2 style={{fontSize: '20px', marginBottom: '16px', color: theme === 'light' ? '#333' : '#fff'}}>📈 Complexity Analysis</h2>
+                  <div style={{marginBottom: '24px'}}>
+                    <h3 style={{fontSize: '14px', marginBottom: '12px', color: theme === 'light' ? '#333' : '#fff'}}>Functions by Complexity</h3>
+                    {fileFunctions.length > 0 ? (
+                      <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                        {fileFunctions.map((fn) => (
+                          <div key={fn.name} style={{display: 'flex', alignItems: 'center', gap: '12px', padding: '8px', background: theme === 'light' ? '#f5f5f5' : '#2a2a2a', borderRadius: '4px'}}>
+                            <div style={{flex: 1, fontSize: '13px'}}>{fn.name}</div>
+                            <div style={{width: '150px', height: '6px', background: theme === 'light' ? '#e0e0e0' : '#404040', borderRadius: '3px', overflow: 'hidden'}}>
+                              <div style={{height: '100%', width: `${(fn.complexity / 20) * 100}%`, background: fn.complexity > 14 ? '#ff6b6b' : fn.complexity > 8 ? '#f5c842' : '#6dde9a'}}></div>
+                            </div>
+                            <div style={{width: '40px', textAlign: 'right', fontSize: '12px', color: theme === 'light' ? '#999' : '#666'}}>{fn.complexity}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{color: theme === 'light' ? '#999' : '#666'}}>No functions with issues found.</p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* SMELLS TAB */}
+          {activeTab === 'smells' && (
+            <div style={{...ts.tabContent, padding: '32px', overflow: 'auto'}}>
+              {scannedFiles.length === 0 ? (
+                <div style={{textAlign: 'center', paddingTop: '60px', color: theme === 'light' ? '#999' : '#666'}}>
+                  <div style={{fontSize: '32px', marginBottom: '12px'}}>👃</div>
+                  <div style={{fontSize: '16px', fontWeight: 500}}>No scan data yet</div>
+                  <div style={{fontSize: '13px', marginTop: '8px'}}>Scan a directory to detect code smells</div>
+                </div>
+              ) : (
+                <>
+                  <h2 style={{fontSize: '20px', marginBottom: '16px', color: theme === 'light' ? '#333' : '#fff'}}>👃 Code Smells</h2>
+                  <div style={{marginBottom: '16px'}}>
+                    {allFindings.filter(f => f.type === 'Code Smell').length > 0 ? (
+                      allFindings.filter(f => f.type === 'Code Smell').map((issue, idx) => (
+                        <div key={idx} style={{padding: '12px', marginBottom: '8px', background: theme === 'light' ? '#fff8f0' : '#3a2a2a', borderLeft: '4px solid #f5c842', borderRadius: '4px', fontSize: '13px'}}>
+                          <strong>{issue.file}:{issue.line}</strong> — {issue.message}
+                        </div>
+                      ))
+                    ) : (
+                      <p style={{color: theme === 'light' ? '#999' : '#666'}}>No code smells detected. ✓</p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* DUPLICATION TAB */}
+          {activeTab === 'duplication' && (
+            <div style={{...ts.tabContent, padding: '32px', overflow: 'auto'}}>
+              {scannedFiles.length === 0 ? (
+                <div style={{textAlign: 'center', paddingTop: '60px', color: theme === 'light' ? '#999' : '#666'}}>
+                  <div style={{fontSize: '32px', marginBottom: '12px'}}>📋</div>
+                  <div style={{fontSize: '16px', fontWeight: 500}}>No scan data yet</div>
+                  <div style={{fontSize: '13px', marginTop: '8px'}}>Scan a directory to find code duplication</div>
+                </div>
+              ) : (
+                <>
+                  <h2 style={{fontSize: '20px', marginBottom: '16px', color: theme === 'light' ? '#333' : '#fff'}}>📋 Duplication</h2>
+                  <p style={{color: theme === 'light' ? '#999' : '#666'}}>Analyzing duplicated code blocks...</p>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* SECURITY TAB */}
+          {activeTab === 'security' && (
+            <div style={{...ts.tabContent, padding: '32px', overflow: 'auto'}}>
+              {scannedFiles.length === 0 ? (
+                <div style={{textAlign: 'center', paddingTop: '60px', color: theme === 'light' ? '#999' : '#666'}}>
+                  <div style={{fontSize: '32px', marginBottom: '12px'}}>🔒</div>
+                  <div style={{fontSize: '16px', fontWeight: 500}}>No scan data yet</div>
+                  <div style={{fontSize: '13px', marginTop: '8px'}}>Scan a directory to check security issues</div>
+                </div>
+              ) : (
+                <>
+                  <h2 style={{fontSize: '20px', marginBottom: '16px', color: theme === 'light' ? '#333' : '#fff'}}>🔒 Security Issues</h2>
+                  <div style={{marginBottom: '16px'}}>
+                    {allFindings.filter(f => f.severity === 'CRITICAL').length > 0 ? (
+                      allFindings.filter(f => f.severity === 'CRITICAL').map((issue, idx) => (
+                        <div key={idx} style={{padding: '12px', marginBottom: '8px', background: theme === 'light' ? '#ffefef' : '#3a1a1a', borderLeft: '4px solid #ff6b6b', borderRadius: '4px', fontSize: '13px'}}>
+                          <strong>{issue.file}:{issue.line}</strong> — {issue.message}
+                        </div>
+                      ))
+                    ) : (
+                      <p style={{color: theme === 'light' ? '#999' : '#666'}}>No critical security issues found. ✓</p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* DOCS TAB */}
+          {activeTab === 'docs' && (
+            <div style={{...ts.tabContent, padding: '32px', overflow: 'auto'}}>
+              {scannedFiles.length === 0 ? (
+                <div style={{textAlign: 'center', paddingTop: '60px', color: theme === 'light' ? '#999' : '#666'}}>
+                  <div style={{fontSize: '32px', marginBottom: '12px'}}>📝</div>
+                  <div style={{fontSize: '16px', fontWeight: 500}}>No scan data yet</div>
+                  <div style={{fontSize: '13px', marginTop: '8px'}}>Scan a directory to check documentation coverage</div>
+                </div>
+              ) : (
+                <>
+                  <h2 style={{fontSize: '20px', marginBottom: '16px', color: theme === 'light' ? '#333' : '#fff'}}>📝 Documentation</h2>
+                  <p style={{color: theme === 'light' ? '#999' : '#666', marginBottom: '16px'}}>Coverage: {metrics.documented}</p>
+                  <p style={{color: theme === 'light' ? '#666' : '#aaa', fontSize: '13px', lineHeight: '1.6'}}>Review functions for proper docstrings and inline comments. Well-documented code improves maintainability.</p>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* DEPENDENCIES TAB */}
+          {activeTab === 'dependencies' && (
+            <div style={{...ts.tabContent, padding: '32px', overflow: 'auto'}}>
+              {scannedFiles.length === 0 ? (
+                <div style={{textAlign: 'center', paddingTop: '60px', color: theme === 'light' ? '#999' : '#666'}}>
+                  <div style={{fontSize: '32px', marginBottom: '12px'}}>🔗</div>
+                  <div style={{fontSize: '16px', fontWeight: 500}}>No scan data yet</div>
+                  <div style={{fontSize: '13px', marginTop: '8px'}}>Scan a directory to analyze dependencies</div>
+                </div>
+              ) : (
+                <>
+                  <h2 style={{fontSize: '20px', marginBottom: '16px', color: theme === 'light' ? '#333' : '#fff'}}>🔗 Dependencies</h2>
+                  <p style={{color: theme === 'light' ? '#999' : '#666', marginBottom: '16px'}}>Circular Dependencies: {metrics.depCycles}</p>
+                  <p style={{color: theme === 'light' ? '#666' : '#aaa', fontSize: '13px', lineHeight: '1.6'}}>No problematic dependency cycles detected.</p>
+                </>
               )}
             </div>
           )}
@@ -1145,11 +1577,11 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
 
       {/* HIDDEN INPUTS */}
       <input
-        ref={folderInputRef}
+        ref={uploadManager.folderInputRef}
         type="file"
         multiple
         style={{ display: 'none' }}
-        onChange={handleDirectorySelect}
+        onChange={uploadManager.handleFolderSelect}
         {...({ webkitdirectory: '', mozdirectory: '' } as any)}
       />
     </div>

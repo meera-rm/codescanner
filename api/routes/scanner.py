@@ -1,10 +1,70 @@
 from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel
 from api.models.requests import ScanRequest
 from api.models.responses import ScanResponse, JobResponse
 from api.services.scanner_service import ScannerService
+from pathlib import Path
 
 router = APIRouter(prefix="/api/v1/scan", tags=["scanning"])
 scanner_service = ScannerService()
+
+
+class RefactorRequest(BaseModel):
+    file_path: str
+    refactored_code: str
+    function_name: str
+
+
+@router.get("/search-paths/{query}")
+async def search_paths(query: str):
+    """Search for directories by name pattern (up to 10 levels deep)."""
+    from pathlib import Path
+
+    results = []
+    documents = Path.home() / 'Documents'
+
+    try:
+        # Search in Documents directory (recursively, up to any depth)
+        for path in documents.rglob('*'):
+            if path.is_dir() and query.lower() in path.name.lower():
+                results.append({
+                    'name': path.name,
+                    'path': str(path),
+                    'relative': str(path.relative_to(documents))
+                })
+                if len(results) >= 20:  # Increased limit to 20 results
+                    break
+    except Exception as e:
+        pass
+
+    return {'query': query, 'results': results}
+
+
+@router.post("/apply-refactor")
+async def apply_refactor(request: RefactorRequest):
+    """Apply refactored code and save to file."""
+    if not request.file_path or not request.refactored_code:
+        raise HTTPException(status_code=400, detail="Missing file_path or refactored_code")
+
+    try:
+        # Resolve the file path
+        path = Path(request.file_path)
+        if not path.exists():
+            raise HTTPException(status_code=404, detail=f"File not found: {request.file_path}")
+
+        # Write refactored code to file
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(request.refactored_code)
+
+        return {
+            "status": "success",
+            "message": f"Applied refactoring to {path.name}",
+            "file_path": str(path),
+            "function_name": request.function_name,
+            "bytes_written": len(request.refactored_code)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to apply refactoring: {str(e)}")
 
 
 @router.post("/sync")

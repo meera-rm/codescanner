@@ -1,9 +1,10 @@
 import sys
 import os
 import uuid
+import ast
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scanner"))
 
@@ -53,6 +54,8 @@ class ScannerService:
                 Path.home() / 'Documents' / path_input,
                 Path.home() / 'Documents' / 'assignments' / 'pursuit' / path_input,
                 Path.home() / 'Documents' / 'codescanner' / path_input,
+                Path.home() / 'Documents' / 'claudeassisted' / path_input,
+                Path.home() / 'Documents' / 'Bronze_to_silver' / path_input,
                 Path.cwd() / path_input,
             ]
             for candidate in common_locations:
@@ -125,6 +128,9 @@ class ScannerService:
             # Get list of scanned files
             scanned_files = self._get_scanned_files(directory_path, language)
 
+            # Extract function-level metrics
+            function_metrics = self._extract_function_metrics(directory_path, language)
+
             result = {
                 "job_id": job_id,
                 "status": "completed",
@@ -133,6 +139,7 @@ class ScannerService:
                 "duration_ms": duration_ms,
                 "timestamp": start_time.isoformat(),
                 "scanned_files": scanned_files,
+                "function_metrics": function_metrics,
             }
 
             self.scan_jobs[job_id] = result
@@ -216,3 +223,91 @@ class ScannerService:
             "total_issues": len(complexity_findings),
             "rating": "critical" if high_complexity > 5 else "high" if high_complexity > 2 else "moderate",
         }
+
+    def _extract_function_metrics(self, directory_path: str, language: str) -> List[Dict[str, Any]]:
+        """Extract function-level complexity metrics from source files."""
+        functions = []
+        if not directory_path:
+            return functions
+
+        path = Path(directory_path)
+        if not path.exists():
+            return functions
+
+        # Extract Python function metrics
+        if language == "python" or language == "all":
+            for py_file in path.rglob("*.py"):
+                if any(pattern in str(py_file) for pattern in self.python_scanner.ignore_patterns):
+                    continue
+                try:
+                    with open(py_file, 'r', encoding='utf-8') as f:
+                        code = f.read()
+                    tree = ast.parse(code)
+                    functions.extend(self._extract_python_functions(tree, py_file))
+                except (SyntaxError, UnicodeDecodeError, IOError):
+                    pass
+
+        return functions
+
+    def _extract_python_functions(self, tree: ast.AST, filepath: Path) -> List[Dict[str, Any]]:
+        """Extract function names and complexity from Python AST."""
+        functions = []
+
+        def count_complexity(func_node):
+            complexity = 1
+            class ScopeWalker(ast.NodeVisitor):
+                def __init__(self):
+                    self.complexity = 0
+                def visit_FunctionDef(self, node):
+                    pass
+                def visit_AsyncFunctionDef(self, node):
+                    pass
+                def visit_If(self, node):
+                    self.complexity += 1
+                    self.generic_visit(node)
+                def visit_For(self, node):
+                    self.complexity += 1
+                    self.generic_visit(node)
+                def visit_While(self, node):
+                    self.complexity += 1
+                    self.generic_visit(node)
+                def visit_ExceptHandler(self, node):
+                    self.complexity += 1
+                    self.generic_visit(node)
+                def visit_BoolOp(self, node):
+                    self.complexity += len(node.values) - 1
+                    self.generic_visit(node)
+
+            walker = ScopeWalker()
+            for child in func_node.body:
+                walker.visit(child)
+            return complexity + walker.complexity
+
+        class FunctionVisitor(ast.NodeVisitor):
+            def visit_FunctionDef(self, node):
+                complexity = count_complexity(node)
+                severity = 'high' if complexity > 10 else 'medium' if complexity > 5 else 'low'
+                functions.append({
+                    "name": f"{node.name}()",
+                    "file": str(filepath),
+                    "line": node.lineno,
+                    "complexity": complexity,
+                    "severity": severity
+                })
+                self.generic_visit(node)
+
+            def visit_AsyncFunctionDef(self, node):
+                complexity = count_complexity(node)
+                severity = 'high' if complexity > 10 else 'medium' if complexity > 5 else 'low'
+                functions.append({
+                    "name": f"{node.name}()",
+                    "file": str(filepath),
+                    "line": node.lineno,
+                    "complexity": complexity,
+                    "severity": severity
+                })
+                self.generic_visit(node)
+
+        visitor = FunctionVisitor()
+        visitor.visit(tree)
+        return functions
