@@ -1,6 +1,8 @@
 import os
 import re
-from typing import Dict, Optional, Any
+import uuid
+from typing import Dict, Optional, Any, List
+from datetime import datetime
 
 
 class RefactoringService:
@@ -9,6 +11,7 @@ class RefactoringService:
     def __init__(self):
         self.api_key = os.getenv("ANTHROPIC_API_KEY")
         self.claude_available = self.api_key is not None
+        self.batch_jobs: Dict[str, Dict[str, Any]] = {}
 
     def generate_fix(self, issue: Dict[str, Any]) -> Dict[str, Any]:
         """Generate a fix suggestion for a code issue."""
@@ -180,3 +183,58 @@ RISK: <risk>
         risk = fix.get("risk_level", "unknown")
 
         return f"{explanation}\n\nRisk Level: {risk}"
+
+    def batch_refactor(self, functions: List[Dict[str, Any]], category: Optional[str] = None) -> Dict[str, Any]:
+        """Start a batch refactoring job for multiple functions."""
+        batch_id = f"batch_{uuid.uuid4().hex[:12]}"
+
+        batch_job = {
+            "batch_id": batch_id,
+            "status": "processing",
+            "category": category or "general",
+            "total_functions": len(functions),
+            "processed": 0,
+            "results": [],
+            "created_at": datetime.utcnow().isoformat(),
+            "functions": functions
+        }
+
+        self.batch_jobs[batch_id] = batch_job
+
+        # Process functions one by one
+        for i, func in enumerate(functions):
+            try:
+                fix = self.generate_fix({
+                    "type": "refactoring",
+                    "severity": func.get("severity", "medium"),
+                    "code_snippet": func.get("code", ""),
+                    "message": f"Refactor {func.get('name', 'function')} - Category: {category or 'general'}"
+                })
+
+                batch_job["results"].append({
+                    "function_name": func.get("name"),
+                    "file": func.get("file"),
+                    "line": func.get("line"),
+                    "original_code": func.get("code"),
+                    "refactored_code": fix.get("suggested_fix"),
+                    "explanation": fix.get("explanation"),
+                    "risk_level": fix.get("risk_level"),
+                    "status": "completed"
+                })
+            except Exception as e:
+                batch_job["results"].append({
+                    "function_name": func.get("name"),
+                    "file": func.get("file"),
+                    "line": func.get("line"),
+                    "error": str(e),
+                    "status": "error"
+                })
+
+            batch_job["processed"] = i + 1
+
+        batch_job["status"] = "completed"
+        return batch_job
+
+    def get_batch_status(self, batch_id: str) -> Optional[Dict[str, Any]]:
+        """Get the status of a batch refactoring job."""
+        return self.batch_jobs.get(batch_id)

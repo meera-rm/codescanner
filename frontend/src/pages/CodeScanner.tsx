@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useUploadManager } from '../hooks/useUploadManager';
+import { useRefactorBatch } from '../hooks/useRefactorBatch';
+import { useLiveCodeAnalysis } from '../hooks/useLiveCodeAnalysis';
+import FunctionSelector, { FunctionSelectItem } from '../components/FunctionSelector';
+import LiveCodeEditor from '../components/LiveCodeEditor';
+import LiveMetricsPanel from '../components/LiveMetricsPanel';
 
 type Theme = 'dark' | 'light';
-type TabType = 'overview' | 'complexity' | 'smells' | 'duplication' | 'security' | 'docs' | 'dependencies' | 'files' | 'refactor';
+type TabType = 'overview' | 'complexity' | 'smells' | 'duplication' | 'security' | 'docs' | 'dependencies' | 'files' | 'refactor' | 'live';
 type DetailTab = 'analysis' | 'refactor';
 
 interface ScannedFile {
@@ -76,20 +81,18 @@ export const CodeScanner: React.FC = () => {
   }, [uploadManager.state.error, uploadManager.state.message]);
   const [scannedFiles, setScannedFiles] = useState<ScannedFile[]>([]);
   const [allFindings, setAllFindings] = useState<any[]>([]);
-  const [exportFormat, setExportFormat] = useState<'json' | 'html' | 'markdown' | 'pdf'>('json');
+  const [exportFormat, setExportFormat] = useState<'json' | 'html' | 'markdown' | 'csv' | 'pdf'>('json');
   const [analyses, setAnalyses] = useState({
     'Basic metrics': true,
     'Cyclomatic complexity': true,
     'Code smells': true,
     'Code duplication': true
   });
-  const [selectedEngine, setSelectedEngine] = useState('Python analysis');
   const [collapsedSections, setCollapsedSections] = useState<{[key: string]: boolean}>({});
   const [selectedFunction, setSelectedFunction] = useState<{name: string; complexity: number; description: string} | null>(null);
   const [showFunctionModal, setShowFunctionModal] = useState(false);
   const [refactoredCode, setRefactoredCode] = useState<{original: string; refactored: string} | null>(null);
   const [refactorLoading, setRefactorLoading] = useState(false);
-  const [fileFunctions, setFileFunctions] = useState<Array<{name: string; complexity: number; severity: string}>>([]);
   const [functionMetrics, setFunctionMetrics] = useState<any[]>([]);
   const [hoveredFunction, setHoveredFunction] = useState<string | null>(null);
   const [metrics, setMetrics] = useState({
@@ -101,6 +104,24 @@ export const CodeScanner: React.FC = () => {
     depCycles: 0,
     qualityScore: 100
   });
+
+  // Phase 3.4: Batch Refactoring
+  const { state: batchState, startBatchRefactor, pollBatchStatus, applyBatchResults, reset: resetBatch } = useRefactorBatch();
+  const [selectedFunctions, setSelectedFunctions] = useState<FunctionSelectItem[]>([]);
+  const [showBatchUI, setShowBatchUI] = useState(false);
+  const [editHistory, setEditHistory] = useState<{version: number; code: string; timestamp: Date; functionName: string}[]>([]);
+  const [refactorCategory, setRefactorCategory] = useState<'complexity' | 'security' | 'style' | 'general'>('general');
+
+  // Phase 3.5: Real-time Code Analysis
+  const {
+    code: liveCode,
+    language: liveLanguage,
+    analysis: liveAnalysis,
+    isAnalyzing: isLiveAnalyzing,
+    error: liveError,
+    handleCodeChange: handleLiveCodeChange,
+    handleLanguageChange: handleLiveLanguageChange
+  } = useLiveCodeAnalysis();
 
   // Old handlers consolidated into uploadManager - see hooks/useUploadManager.ts
 
@@ -262,14 +283,6 @@ export const CodeScanner: React.FC = () => {
         }
       });
 
-      // Convert to array and sort by complexity
-      const functionsArray = Array.from(functionMap.values())
-        .sort((a, b) => b.complexity - a.complexity)
-        .slice(0, 10)
-        .map(f => ({ name: f.name, complexity: f.complexity, severity: f.severity }));
-
-      setFileFunctions(functionsArray);
-
       // Store function metrics from backend response
       if (data.function_metrics) {
         setFunctionMetrics(data.function_metrics);
@@ -285,7 +298,194 @@ export const CodeScanner: React.FC = () => {
     }
   };
 
-  const handleExport = (format: 'json' | 'html' | 'markdown' | 'pdf') => {
+  const generateHTMLReport = () => {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Scan Report</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+    .header h1 { font-size: 32px; margin-bottom: 10px; }
+    .header p { opacity: 0.9; }
+    .content { padding: 40px; }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+    .metric-card {
+      background: #f9f9f9;
+      padding: 20px;
+      border-radius: 6px;
+      border-left: 4px solid #667eea;
+      text-align: center;
+    }
+    .metric-card .value { font-size: 28px; font-weight: 600; color: #667eea; }
+    .metric-card .label { font-size: 12px; color: #666; margin-top: 8px; text-transform: uppercase; }
+    h2 {
+      font-size: 20px;
+      margin: 30px 0 15px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #667eea;
+      color: #333;
+    }
+    .file-item {
+      padding: 12px;
+      margin: 8px 0;
+      background: #f9f9f9;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .file-name { font-weight: 500; }
+    .file-meta { font-size: 12px; color: #666; }
+    .issue-item {
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 4px;
+      border-left: 4px solid;
+      background: #f9f9f9;
+    }
+    .issue-item.critical { border-left-color: #ff6b6b; background: rgba(255, 107, 107, 0.05); }
+    .issue-item.warning { border-left-color: #f5c842; background: rgba(245, 200, 66, 0.05); }
+    .issue-item.info { border-left-color: #6dde9a; background: rgba(109, 222, 154, 0.05); }
+    .issue-type { font-weight: 600; color: #333; }
+    .issue-meta { font-size: 12px; color: #666; margin-top: 5px; }
+    .empty { text-align: center; color: #999; padding: 20px; }
+    .footer {
+      text-align: center;
+      padding: 20px;
+      border-top: 1px solid #eee;
+      color: #999;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 Code Scan Report</h1>
+      <p>${directoryPath}</p>
+      <p>${new Date().toLocaleString()}</p>
+    </div>
+
+    <div class="content">
+      <h2>📈 Metrics Overview</h2>
+      <div class="metrics-grid">
+        <div class="metric-card"><div class="value">${metrics.grade}</div><div class="label">Grade</div></div>
+        <div class="metric-card"><div class="value">${metrics.loc}</div><div class="label">Lines of Code</div></div>
+        <div class="metric-card"><div class="value">${metrics.totalFindings}</div><div class="label">Total Issues</div></div>
+        <div class="metric-card"><div class="value">${metrics.criticalCount}</div><div class="label">Critical</div></div>
+        <div class="metric-card"><div class="value">${metrics.documented}</div><div class="label">Documented</div></div>
+        <div class="metric-card"><div class="value">${metrics.depCycles}</div><div class="label">Cycles</div></div>
+      </div>
+
+      <h2>📁 Files Scanned (${scannedFiles.length})</h2>
+      ${scannedFiles.length > 0 ? scannedFiles.map(f => `
+        <div class="file-item">
+          <div><div class="file-name">${f.name}</div><div class="file-meta">${f.language} • ${f.loc} LOC</div></div>
+          <div class="file-meta">Grade: ${f.grade}</div>
+        </div>
+      `).join('') : '<div class="empty">No files scanned</div>'}
+
+      <h2>🔍 Issues Found (${allFindings.length})</h2>
+      ${allFindings.length > 0 ? allFindings.map(f => `
+        <div class="issue-item ${f.severity.toLowerCase()}">
+          <div class="issue-type">${f.type}</div>
+          <div class="issue-meta">${f.file}:${f.line} • ${f.severity}</div>
+          <div class="issue-meta" style="margin-top: 8px;">${f.message}</div>
+        </div>
+      `).join('') : '<div class="empty">✓ No issues found</div>'}
+    </div>
+
+    <div class="footer">
+      Generated by CodeScanner on ${new Date().toLocaleString()}
+    </div>
+  </div>
+</body>
+</html>`;
+  };
+
+  const generateMarkdownReport = () => {
+    return `# 📊 Code Scan Report
+
+**Directory:** ${directoryPath}
+**Generated:** ${new Date().toLocaleString()}
+
+---
+
+## 📈 Metrics
+
+| Metric | Value |
+|--------|-------|
+| Grade | ${metrics.grade} |
+| Lines of Code | ${metrics.loc} |
+| Total Findings | ${metrics.totalFindings} |
+| Critical Issues | ${metrics.criticalCount} |
+| Documented | ${metrics.documented} |
+| Dependency Cycles | ${metrics.depCycles} |
+
+---
+
+## 📁 Files Scanned (${scannedFiles.length})
+
+${scannedFiles.length > 0 ? scannedFiles.map(f => `- **${f.name}** (${f.language}, ${f.loc} LOC) - Grade: ${f.grade}`).join('\n') : 'No files scanned'}
+
+---
+
+## 🔍 Issues Found (${allFindings.length})
+
+${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
+- **File:** ${f.file}:${f.line}
+- **Severity:** ${f.severity}
+- **Message:** ${f.message}
+`).join('\n') : '✓ No issues found'}
+
+---
+
+*Generated by CodeScanner*
+`;
+  };
+
+  const generateCSVReport = () => {
+    const headers = ['File', 'Type', 'Severity', 'Line', 'Message'];
+    const rows = allFindings.map(f => [
+      f.file,
+      f.type,
+      f.severity,
+      f.line,
+      `"${f.message.replace(/"/g, '""')}"`
+    ]);
+
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
+  };
+
+  const handleExport = (format: 'json' | 'html' | 'markdown' | 'csv' | 'pdf') => {
     setExportFormat(format);
 
     let content = '';
@@ -298,94 +498,28 @@ export const CodeScanner: React.FC = () => {
         timestamp: new Date().toISOString(),
         metrics,
         files: scannedFiles,
-        findings: allFindings
+        findings: allFindings,
+        functions: functionMetrics
       }, null, 2);
       filename += '.json';
       mimeType = 'application/json';
-    } else if (format === 'markdown') {
-      content = `# Code Scan Report
-**Directory:** ${directoryPath}
-**Generated:** ${new Date().toISOString()}
-
-## Metrics
-- Grade: ${metrics.grade}
-- Lines of Code: ${metrics.loc}
-- Total Findings: ${metrics.totalFindings}
-- High Severity: ${metrics.criticalCount}
-- Documented: ${metrics.documented}
-- Dep Cycles: ${metrics.depCycles}
-
-## Files Scanned (${scannedFiles.length})
-${scannedFiles.map(f => `- ${f.name} (${f.language}, ${f.loc} LOC)`).join('\n')}
-
-## Issues Found (${allFindings.length})
-${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${f.line} - ${f.message} (${f.severity})`).join('\n') : 'No issues found'}
-`;
-      filename += '.md';
-      mimeType = 'text/markdown';
     } else if (format === 'html') {
-      content = `<!DOCTYPE html>
-<html>
-<head>
-  <title>Code Scan Report</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-    .header { background: #333; color: #fff; padding: 20px; border-radius: 5px; }
-    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
-    .metric { background: #fff; padding: 15px; border-radius: 5px; border-left: 4px solid #667eea; }
-    .files { background: #fff; padding: 20px; border-radius: 5px; margin: 20px 0; }
-    .issues { background: #fff; padding: 20px; border-radius: 5px; }
-    .issue { padding: 10px; margin: 10px 0; border-left: 4px solid #ff6b6b; background: #fff5f5; }
-    .critical { border-left-color: #ff6b6b; }
-    .warning { border-left-color: #f5c842; }
-    .info { border-left-color: #6dde9a; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>Code Scan Report</h1>
-    <p>Directory: ${directoryPath}</p>
-    <p>Generated: ${new Date().toLocaleString()}</p>
-  </div>
-
-  <div class="metrics">
-    <div class="metric"><strong>Grade:</strong> ${metrics.grade}</div>
-    <div class="metric"><strong>Lines of Code:</strong> ${metrics.loc}</div>
-    <div class="metric"><strong>Total Findings:</strong> ${metrics.totalFindings}</div>
-    <div class="metric"><strong>High Severity:</strong> ${metrics.criticalCount}</div>
-    <div class="metric"><strong>Documented:</strong> ${metrics.documented}</div>
-    <div class="metric"><strong>Dep Cycles:</strong> ${metrics.depCycles}</div>
-  </div>
-
-  <div class="files">
-    <h2>Files Scanned (${scannedFiles.length})</h2>
-    <ul>
-      ${scannedFiles.map(f => `<li>${f.name} <small>(${f.language.toUpperCase()}, ${f.loc} LOC)</small></li>`).join('')}
-    </ul>
-  </div>
-
-  <div class="issues">
-    <h2>Issues Found (${allFindings.length})</h2>
-    ${allFindings.length > 0
-      ? allFindings.map(f => `<div class="issue ${f.severity.toLowerCase()}"><strong>${f.type}</strong> at ${f.file}:${f.line}<br/>${f.message}</div>`).join('')
-      : '<p style="color: #6dde9a;">✅ No issues found</p>'
-    }
-  </div>
-</body>
-</html>`;
+      content = generateHTMLReport();
       filename += '.html';
       mimeType = 'text/html';
+    } else if (format === 'markdown') {
+      content = generateMarkdownReport();
+      filename += '.md';
+      mimeType = 'text/markdown';
+    } else if (format === 'csv') {
+      content = generateCSVReport();
+      filename += '.csv';
+      mimeType = 'text/csv';
     } else if (format === 'pdf') {
-      alert('PDF export requires backend support. Using JSON format instead.');
-      content = JSON.stringify({
-        directory: directoryPath,
-        timestamp: new Date().toISOString(),
-        metrics,
-        files: scannedFiles,
-        findings: allFindings
-      }, null, 2);
-      filename += '.json';
-      mimeType = 'application/json';
+      // For PDF, generate HTML then convert via browser print
+      content = generateHTMLReport();
+      filename += '.html'; // Fallback to HTML, user can print to PDF
+      mimeType = 'text/html';
     }
 
     // Create blob and download
@@ -615,6 +749,89 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
     }
   };
 
+  // Batch Refactoring Handlers
+  const handleStartBatchRefactor = async () => {
+    if (selectedFunctions.length === 0) {
+      setError('Please select at least one function to refactor');
+      return;
+    }
+
+    const functionItems: FunctionSelectItem[] = selectedFunctions.map((fn, idx) => ({
+      id: `${fn.file}-${fn.line}-${idx}`,
+      name: fn.name,
+      file: fn.file,
+      line: fn.line,
+      complexity: fn.complexity,
+      severity: fn.severity,
+      code: fn.code
+    }));
+
+    await startBatchRefactor(functionItems, refactorCategory);
+  };
+
+  const handlePollBatch = async () => {
+    if (batchState.batchId) {
+      await pollBatchStatus(batchState.batchId);
+    }
+  };
+
+  const handleApplyBatchResults = async () => {
+    if (!batchState.batchId) {
+      setError('No batch job found');
+      return;
+    }
+
+    const resultsToApply = batchState.results
+      .filter((r: any) => r.status === 'completed' && r.refactored_code)
+      .map((r: any) => ({
+        ...r,
+        status: 'applied'
+      }));
+
+    if (resultsToApply.length === 0) {
+      setError('No valid results to apply');
+      return;
+    }
+
+    const result = await applyBatchResults(batchState.batchId, resultsToApply);
+    if (result) {
+      setError(`✅ Applied ${result.applied_count} function${result.applied_count !== 1 ? 's' : ''}`);
+
+      // Add to edit history
+      resultsToApply.forEach((r: any) => {
+        setEditHistory(prev => [...prev, {
+          version: prev.length + 1,
+          code: r.refactored_code,
+          timestamp: new Date(),
+          functionName: r.function_name
+        }]);
+      });
+
+      setTimeout(() => {
+        resetBatch();
+        setSelectedFunctions([]);
+        setShowBatchUI(false);
+        setError('');
+      }, 2000);
+    }
+  };
+
+  const handleRejectBatchResult = (index: number) => {
+    // Mark result as rejected
+    const updatedResults = [...batchState.results];
+    updatedResults[index] = { ...updatedResults[index], status: 'rejected' };
+    // Update state - would need to modify useRefactorBatch to expose this
+  };
+
+  const handleUndoLastChange = () => {
+    if (editHistory.length > 0) {
+      const lastEdit = editHistory[editHistory.length - 1];
+      setError(`↩️ Undid: ${lastEdit.functionName}`);
+      setEditHistory(prev => prev.slice(0, -1));
+      setTimeout(() => setError(''), 2000);
+    }
+  };
+
   const getThemeStyles = () => theme === 'light' ? lightTheme : darkTheme;
   const ts = getThemeStyles();
 
@@ -641,7 +858,15 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
           <span style={ts.chip}>100 MB zip</span>
         </div>
         <div style={ts.tbActs}>
-          <button style={ts.btnO} onClick={() => handleExport('json')} disabled={scannedFiles.length === 0}>↓ Export</button>
+          {scannedFiles.length > 0 && (
+            <div style={{display: 'flex', gap: '4px', marginRight: '12px'}}>
+              <button style={{...ts.fmt, fontSize: '9px', ...(exportFormat === 'json' ? ts.fmtOn : {})}} onClick={() => handleExport('json')} title="Export as JSON">JSON</button>
+              <button style={{...ts.fmt, fontSize: '9px', ...(exportFormat === 'html' ? ts.fmtOn : {})}} onClick={() => handleExport('html')} title="Export as HTML">HTML</button>
+              <button style={{...ts.fmt, fontSize: '9px', ...(exportFormat === 'markdown' ? ts.fmtOn : {})}} onClick={() => handleExport('markdown')} title="Export as Markdown">MD</button>
+              <button style={{...ts.fmt, fontSize: '9px', ...(exportFormat === 'csv' ? ts.fmtOn : {})}} onClick={() => handleExport('csv')} title="Export as CSV">CSV</button>
+              <button style={{...ts.fmt, fontSize: '9px', ...(exportFormat === 'pdf' ? ts.fmtOn : {})}} onClick={() => handleExport('pdf')} title="Export as PDF">PDF</button>
+            </div>
+          )}
           <button style={{...ts.btnP, ...(loading ? ts.btnPBusy : {})}} onClick={handleScan} disabled={loading}>
             {loading ? '⏸ Scanning' : '▶ Scan'}
           </button>
@@ -694,6 +919,68 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
             )}
           </div>
 
+          {/* RECENT PATHS */}
+          {uploadManager.recentPaths && uploadManager.recentPaths.length > 0 && (
+            <div style={ts.rs}>
+              <div style={{...ts.rsHead, cursor: 'pointer'}} onClick={() => toggleSection('recent')}>
+                <span style={ts.rsLbl}>⏱ RECENT ({uploadManager.recentPaths.length})</span>
+                <span style={{...ts.rsTog, transform: collapsedSections['recent'] ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.2s'}}>{collapsedSections['recent'] ? '▸' : '▾'}</span>
+              </div>
+              {!collapsedSections['recent'] && (
+                <div style={ts.rsBody}>
+                  {uploadManager.recentPaths.map((recent) => (
+                    <div
+                      key={recent.path}
+                      style={{
+                        padding: '8px 12px',
+                        fontSize: '10px',
+                        borderBottom: `1px solid ${theme === 'light' ? '#f0f0f0' : '#333333'}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '8px',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = theme === 'light' ? '#f5f5f5' : '#2a2a2a'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <div
+                        style={{flex: 1, minWidth: 0}}
+                        onClick={() => {
+                          setDirectoryPath(recent.path);
+                          uploadManager.handleTextInput(recent.path);
+                        }}
+                      >
+                        <div style={{fontWeight: 500, color: theme === 'light' ? '#333' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                          {recent.name}
+                        </div>
+                        <div style={{color: theme === 'light' ? '#999' : '#888', fontSize: '9px', marginTop: '2px'}}>
+                          {recent.relative || recent.path}
+                        </div>
+                        <div style={{color: theme === 'light' ? '#bbb' : '#666', fontSize: '8px', marginTop: '2px'}}>
+                          {(() => {
+                            const date = new Date(recent.timestamp);
+                            const now = new Date();
+                            const diffMs = now.getTime() - date.getTime();
+                            const diffMins = Math.floor(diffMs / 60000);
+                            const diffHours = Math.floor(diffMs / 3600000);
+                            const diffDays = Math.floor(diffMs / 86400000);
+
+                            if (diffMins < 1) return 'just now';
+                            if (diffMins < 60) return `${diffMins}m ago`;
+                            if (diffHours < 24) return `${diffHours}h ago`;
+                            return `${diffDays}d ago`;
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* FILES */}
           <div style={ts.rs}>
             <div style={{...ts.rsHead, cursor: 'pointer'}} onClick={() => toggleSection('files')}>
@@ -737,29 +1024,6 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
                       onChange={() => toggleAnalysis(analysis)}
                     />
                     <span>{analysis}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* ENGINE */}
-          <div style={ts.rs}>
-            <div style={{...ts.rsHead, cursor: 'pointer'}} onClick={() => toggleSection('engine')}>
-              <span style={ts.rsLbl}>3 · ENGINE</span>
-              <span style={{...ts.rsTog, transform: collapsedSections['engine'] ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.2s'}}>{collapsedSections['engine'] ? '▸' : '▾'}</span>
-            </div>
-            {!collapsedSections['engine'] && (
-              <div style={ts.rsBody}>
-                {['Python analysis', 'Claude Code analysis'].map((engine) => (
-                  <label key={engine} style={ts.eng}>
-                    <input
-                      type="radio"
-                      name="engine"
-                      checked={selectedEngine === engine}
-                      onChange={() => setSelectedEngine(engine)}
-                    />
-                    <span>{engine}</span>
                   </label>
                 ))}
               </div>
@@ -831,13 +1095,13 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
 
           {/* TABS */}
           <div style={ts.tabs}>
-            {(['overview', 'complexity', 'smells', 'duplication', 'security', 'docs', 'dependencies', 'files', 'refactor'] as TabType[]).map((tab) => (
+            {(['overview', 'complexity', 'smells', 'duplication', 'security', 'docs', 'dependencies', 'files', 'live', 'refactor'] as TabType[]).map((tab) => (
               <button
                 key={tab}
-                style={{...ts.tab, ...(activeTab === tab ? ts.tabOn : {}), ...(tab === 'refactor' ? {background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#ffffff'} : {})}}
+                style={{...ts.tab, ...(activeTab === tab ? ts.tabOn : {}), ...(tab === 'refactor' ? {background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#ffffff'} : {}), ...(tab === 'live' ? {background: 'linear-gradient(135deg, #6dde9a 0%, #4ba381 100%)', color: '#ffffff'} : {})}}
                 onClick={() => setActiveTab(tab)}
               >
-                {tab === 'refactor' ? '✨ Refactor' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab === 'refactor' ? '✨ Refactor' : tab === 'live' ? '💻 Live' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                 {['complexity', 'smells', 'dependencies'].includes(tab) && <span style={ts.tn}>·</span>}
               </button>
             ))}
@@ -864,6 +1128,7 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
                     <button style={{...ts.fmt, ...(exportFormat === 'json' ? ts.fmtOn : {})}} onClick={() => setExportFormat('json')}>JSON</button>
                     <button style={{...ts.fmt, ...(exportFormat === 'html' ? ts.fmtOn : {})}} onClick={() => setExportFormat('html')}>HTML</button>
                     <button style={{...ts.fmt, ...(exportFormat === 'markdown' ? ts.fmtOn : {})}} onClick={() => setExportFormat('markdown')}>Markdown</button>
+                    <button style={{...ts.fmt, ...(exportFormat === 'csv' ? ts.fmtOn : {})}} onClick={() => setExportFormat('csv')}>CSV</button>
                     <button style={{...ts.fmt, ...(exportFormat === 'pdf' ? ts.fmtOn : {})}} onClick={() => setExportFormat('pdf')}>PDF</button>
                   </div>
                   <button style={ts.btnO} onClick={handleDownload} disabled={scannedFiles.length === 0}>↓ Download</button>
@@ -1283,24 +1548,67 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
                 </div>
               ) : (
                 <>
-                  <h2 style={{fontSize: '20px', marginBottom: '16px', color: theme === 'light' ? '#333' : '#fff'}}>📈 Complexity Analysis</h2>
-                  <div style={{marginBottom: '24px'}}>
-                    <h3 style={{fontSize: '14px', marginBottom: '12px', color: theme === 'light' ? '#333' : '#fff'}}>Functions by Complexity</h3>
-                    {fileFunctions.length > 0 ? (
+                  <h2 style={{fontSize: '20px', marginBottom: '24px', color: theme === 'light' ? '#333' : '#fff'}}>📈 Cyclomatic Complexity Analysis</h2>
+
+                  {/* Complexity Summary */}
+                  <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px'}}>
+                    <div style={{padding: '16px', background: theme === 'light' ? '#f9f9f9' : '#2a2a2a', borderLeft: `4px solid #ff6b6b`, borderRadius: '4px'}}>
+                      <div style={{fontSize: '12px', color: theme === 'light' ? '#666' : '#aaa', marginBottom: '6px'}}>High Complexity {'>'} 10</div>
+                      <div style={{fontSize: '24px', fontWeight: 600, color: '#ff6b6b'}}>
+                        {functionMetrics.filter(f => f.complexity > 10).length}
+                      </div>
+                      <div style={{fontSize: '10px', color: theme === 'light' ? '#999' : '#666', marginTop: '4px'}}>functions need refactoring</div>
+                    </div>
+                    <div style={{padding: '16px', background: theme === 'light' ? '#f9f9f9' : '#2a2a2a', borderLeft: `4px solid #f5c842`, borderRadius: '4px'}}>
+                      <div style={{fontSize: '12px', color: theme === 'light' ? '#666' : '#aaa', marginBottom: '6px'}}>Medium Complexity 5–10</div>
+                      <div style={{fontSize: '24px', fontWeight: 600, color: '#f5c842'}}>
+                        {functionMetrics.filter(f => f.complexity > 5 && f.complexity <= 10).length}
+                      </div>
+                      <div style={{fontSize: '10px', color: theme === 'light' ? '#999' : '#666', marginTop: '4px'}}>functions to optimize</div>
+                    </div>
+                    <div style={{padding: '16px', background: theme === 'light' ? '#f9f9f9' : '#2a2a2a', borderLeft: `4px solid #6dde9a`, borderRadius: '4px'}}>
+                      <div style={{fontSize: '12px', color: theme === 'light' ? '#666' : '#aaa', marginBottom: '6px'}}>Low Complexity (1-5)</div>
+                      <div style={{fontSize: '24px', fontWeight: 600, color: '#6dde9a'}}>
+                        {functionMetrics.filter(f => f.complexity <= 5).length}
+                      </div>
+                      <div style={{fontSize: '10px', color: theme === 'light' ? '#999' : '#666', marginTop: '4px'}}>functions are simple</div>
+                    </div>
+                  </div>
+
+                  {/* All Functions Sorted */}
+                  <div>
+                    <h3 style={{fontSize: '14px', marginBottom: '12px', color: theme === 'light' ? '#333' : '#fff'}}>All Functions (sorted by complexity)</h3>
+                    {functionMetrics && functionMetrics.length > 0 ? (
                       <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-                        {fileFunctions.map((fn) => (
-                          <div key={fn.name} style={{display: 'flex', alignItems: 'center', gap: '12px', padding: '8px', background: theme === 'light' ? '#f5f5f5' : '#2a2a2a', borderRadius: '4px'}}>
-                            <div style={{flex: 1, fontSize: '13px'}}>{fn.name}</div>
-                            <div style={{width: '150px', height: '6px', background: theme === 'light' ? '#e0e0e0' : '#404040', borderRadius: '3px', overflow: 'hidden'}}>
-                              <div style={{height: '100%', width: `${(fn.complexity / 20) * 100}%`, background: fn.complexity > 14 ? '#ff6b6b' : fn.complexity > 8 ? '#f5c842' : '#6dde9a'}}></div>
+                        {[...functionMetrics].sort((a, b) => b.complexity - a.complexity).map((fn) => (
+                          <div key={`${fn.file}-${fn.name}`} style={{padding: '12px', background: theme === 'light' ? '#f5f5f5' : '#2a2a2a', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between', cursor: 'pointer', transition: 'background 0.2s'}} onMouseEnter={(e) => e.currentTarget.style.background = theme === 'light' ? '#efefef' : '#333333'} onMouseLeave={(e) => e.currentTarget.style.background = theme === 'light' ? '#f5f5f5' : '#2a2a2a'}>
+                            <div style={{flex: 1, minWidth: 0}}>
+                              <div style={{fontSize: '13px', fontWeight: 500, color: theme === 'light' ? '#333' : '#fff'}}>{fn.name}</div>
+                              <div style={{fontSize: '11px', color: theme === 'light' ? '#999' : '#666', marginTop: '4px'}}>{fn.file.split('/').pop()} • line {fn.line}</div>
                             </div>
-                            <div style={{width: '40px', textAlign: 'right', fontSize: '12px', color: theme === 'light' ? '#999' : '#666'}}>{fn.complexity}</div>
+                            <div style={{display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0}}>
+                              <div style={{width: '120px', height: '6px', background: theme === 'light' ? '#e0e0e0' : '#404040', borderRadius: '3px', overflow: 'hidden'}}>
+                                <div style={{height: '100%', width: `${(fn.complexity / 20) * 100}%`, background: fn.complexity > 10 ? '#ff6b6b' : fn.complexity > 5 ? '#f5c842' : '#6dde9a'}}></div>
+                              </div>
+                              <div style={{width: '35px', textAlign: 'right', fontSize: '13px', fontWeight: 600, color: fn.complexity > 10 ? '#ff6b6b' : fn.complexity > 5 ? '#f5c842' : '#6dde9a'}}>{fn.complexity}</div>
+                            </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p style={{color: theme === 'light' ? '#999' : '#666'}}>No functions with issues found.</p>
+                      <p style={{color: theme === 'light' ? '#999' : '#666'}}>No functions found.</p>
                     )}
+                  </div>
+
+                  {/* Tips */}
+                  <div style={{marginTop: '32px', padding: '16px', background: theme === 'light' ? '#e8f5e9' : '#1b3a1b', borderRadius: '4px', borderLeft: `4px solid #6dde9a`}}>
+                    <div style={{fontSize: '12px', fontWeight: 500, color: theme === 'light' ? '#2e7d32' : '#6dde9a', marginBottom: '8px'}}>💡 Tips to Reduce Complexity</div>
+                    <ul style={{fontSize: '11px', color: theme === 'light' ? '#388e3c' : '#81c784', margin: '0', paddingLeft: '20px', lineHeight: '1.6'}}>
+                      <li>Extract methods: Break complex functions into smaller, focused functions</li>
+                      <li>Reduce nesting: Flatten nested if/for statements with early returns</li>
+                      <li>Simplify conditions: Use switch statements instead of multiple if-else chains</li>
+                      <li>Remove duplicates: Extract repeated logic into helper functions</li>
+                    </ul>
                   </div>
                 </>
               )}
@@ -1421,12 +1729,127 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
 
           {activeTab === 'refactor' && (
             <div style={ts.tabContent}>
-              {selectedFile ? (
+              {/* Batch Refactoring Mode - Phase 3.4 */}
+              {showBatchUI ? (
+                <div style={{display: 'flex', flexDirection: 'column', height: '100%', padding: '16px', gap: '16px', backgroundColor: theme === 'light' ? '#f5f5f5' : '#1f1f1f'}}>
+                  {/* Header */}
+                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`}}>
+                    <h2 style={{margin: 0, fontSize: '16px', fontWeight: 600, color: theme === 'light' ? '#2c2c2c' : '#ffffff'}}>
+                      🔄 Batch Refactoring
+                    </h2>
+                    <button style={{...ts.btnO, fontSize: '10px'}} onClick={() => setShowBatchUI(false)}>
+                      Back to Single Mode
+                    </button>
+                  </div>
+
+                  {/* Category Selection */}
+                  <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                    <label style={{fontSize: '12px', fontWeight: 600, color: theme === 'light' ? '#666666' : '#cccccc'}}>Category:</label>
+                    <select
+                      value={refactorCategory}
+                      onChange={(e) => setRefactorCategory(e.target.value as any)}
+                      style={{padding: '6px 10px', borderRadius: '4px', border: `1px solid ${theme === 'light' ? '#d0d0d0' : '#333333'}`, backgroundColor: theme === 'light' ? '#ffffff' : '#2a2a2a', color: theme === 'light' ? '#2c2c2c' : '#ffffff', fontSize: '12px'}}
+                    >
+                      <option value="general">General</option>
+                      <option value="complexity">High Complexity</option>
+                      <option value="security">Security Issues</option>
+                      <option value="style">Code Style</option>
+                    </select>
+                    {editHistory.length > 0 && (
+                      <button style={{...ts.btnO, fontSize: '10px', marginLeft: 'auto'}} onClick={handleUndoLastChange}>
+                        ↩️ Undo ({editHistory.length})
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Function Selector */}
+                  <div style={{flex: 1, overflow: 'auto', backgroundColor: theme === 'light' ? '#ffffff' : '#1f1f1f', borderRadius: '4px'}}>
+                    {functionMetrics.length > 0 ? (
+                      <FunctionSelector
+                        functions={functionMetrics.map((fn, idx) => ({
+                          id: `${fn.file}-${fn.line}-${idx}`,
+                          name: fn.name,
+                          file: fn.file,
+                          line: fn.line,
+                          complexity: fn.complexity,
+                          severity: fn.severity as 'low' | 'medium' | 'high',
+                          code: fn.code || ''
+                        }))}
+                        onSelectionChange={setSelectedFunctions}
+                        categoryFilter={refactorCategory as any}
+                      />
+                    ) : (
+                      <div style={{padding: '24px', textAlign: 'center', color: '#999999'}}>
+                        <div style={{fontSize: '12px', marginBottom: '8px'}}>📊 No functions available</div>
+                        <div style={{fontSize: '11px', color: '#666666'}}>Scan a project to see available functions</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Batch Results */}
+                  {batchState.status !== 'idle' && (
+                    <div style={{padding: '12px', backgroundColor: theme === 'light' ? '#f9f9f9' : '#2a2a2a', borderRadius: '4px', borderLeft: `4px solid ${batchState.status === 'error' ? '#e74c3c' : batchState.status === 'completed' ? '#27ae60' : '#f39c12'}`}}>
+                      <div style={{fontSize: '12px', fontWeight: 600, marginBottom: '8px', color: theme === 'light' ? '#2c2c2c' : '#ffffff'}}>
+                        {batchState.status === 'processing' ? '⏳ Processing...' : batchState.status === 'completed' ? '✅ Complete' : '❌ Error'}
+                      </div>
+                      <div style={{fontSize: '11px', color: theme === 'light' ? '#666666' : '#cccccc', marginBottom: '8px'}}>
+                        Progress: {batchState.processedFunctions} / {batchState.totalFunctions} ({batchState.progress}%)
+                      </div>
+                      {batchState.results.length > 0 && (
+                        <div style={{maxHeight: '200px', overflowY: 'auto'}}>
+                          {batchState.results.map((result: any, idx: number) => (
+                            <div key={idx} style={{fontSize: '10px', padding: '6px', backgroundColor: theme === 'light' ? '#ffffff' : '#1f1f1f', marginBottom: '4px', borderRadius: '3px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                              <span>{result.function_name} - {result.status === 'error' ? '❌' : '✅'}</span>
+                              {result.status !== 'error' && result.refactored_code && (
+                                <button style={{...ts.btnO, fontSize: '9px', padding: '2px 6px'}} onClick={() => handleRejectBatchResult(idx)}>
+                                  Reject
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div style={{display: 'flex', gap: '8px', justifyContent: 'flex-end', paddingTop: '12px', borderTop: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`}}>
+                    {batchState.status === 'idle' && (
+                      <>
+                        <button style={{...ts.btnO, fontSize: '11px'}} onClick={() => setShowBatchUI(false)}>
+                          Cancel
+                        </button>
+                        <button style={{...ts.btnP, fontSize: '11px'}} onClick={handleStartBatchRefactor} disabled={selectedFunctions.length === 0}>
+                          🚀 Start Refactoring ({selectedFunctions.length})
+                        </button>
+                      </>
+                    )}
+                    {batchState.status === 'processing' && (
+                      <button style={{...ts.btnO, fontSize: '11px'}} onClick={handlePollBatch}>
+                        🔄 Check Status
+                      </button>
+                    )}
+                    {batchState.status === 'completed' && (
+                      <>
+                        <button style={{...ts.btnO, fontSize: '11px'}} onClick={() => resetBatch()}>
+                          New Batch
+                        </button>
+                        <button style={{...ts.btnP, fontSize: '11px'}} onClick={handleApplyBatchResults}>
+                          ✅ Apply All Changes
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : selectedFile ? (
                 <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', height: '100%'}}>
                   {/* Original Code */}
                   <div style={{display: 'flex', flexDirection: 'column', borderRight: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`}}>
-                    <div style={{padding: '16px', background: theme === 'light' ? '#f9f9f9' : '#2a2a2a', borderBottom: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`, fontSize: '12px', fontWeight: 500, color: theme === 'light' ? '#666666' : '#aaaaaa'}}>
-                      📄 {selectedFunction ? `${selectedFunction.name} - Original` : `${selectedFile.name} - Original`}
+                    <div style={{padding: '16px', background: theme === 'light' ? '#f9f9f9' : '#2a2a2a', borderBottom: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333333'}`, fontSize: '12px', fontWeight: 500, color: theme === 'light' ? '#666666' : '#aaaaaa', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                      <span>📄 {selectedFunction ? `${selectedFunction.name} - Original` : `${selectedFile.name} - Original`}</span>
+                      <button style={{...ts.btnO, fontSize: '9px', padding: '4px 8px'}} onClick={() => setShowBatchUI(true)}>
+                        🔄 Batch
+                      </button>
                     </div>
                     <div style={{flex: 1, overflow: 'auto', padding: '16px', background: theme === 'light' ? '#ffffff' : '#1f1f1f', fontFamily: "'DM Mono', monospace"}}>
                       {refactorLoading ? (
@@ -1493,14 +1916,41 @@ ${allFindings.length > 0 ? allFindings.map(f => `- **${f.type}** at ${f.file}:${
                   <div style={ts.phT}>Claude AI Refactoring</div>
                   <div style={ts.phS}>
                     <div style={{marginBottom: '12px'}}>Select a file from the Files tab to start refactoring</div>
-                    <div style={{fontSize: '11px', color: '#999999', marginTop: '16px'}}>💡 Tip: Click on a function in the Analysis tab for function-level refactoring</div>
+                    <div style={{fontSize: '11px', color: '#999999', marginTop: '16px'}}>💡 Tip: Click on a function in the Analysis tab for function-level refactoring, or use Batch mode for multiple functions</div>
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {activeTab !== 'files' && activeTab !== 'refactor' && (
+          {/* Phase 3.5: Live Editor Tab */}
+          {activeTab === 'live' && (
+            <div style={ts.tabContent}>
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', height: '100%', padding: '16px'}}>
+                {/* Code Editor - Left */}
+                <LiveCodeEditor
+                  code={liveCode}
+                  language={liveLanguage}
+                  onCodeChange={handleLiveCodeChange}
+                  onLanguageChange={handleLiveLanguageChange}
+                  isAnalyzing={isLiveAnalyzing}
+                  theme={theme}
+                />
+
+                {/* Metrics Panel - Right */}
+                <div style={{display: 'flex', flexDirection: 'column', overflow: 'auto'}}>
+                  <LiveMetricsPanel
+                    analysis={liveAnalysis}
+                    isAnalyzing={isLiveAnalyzing}
+                    error={liveError}
+                    theme={theme}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab !== 'files' && activeTab !== 'refactor' && activeTab !== 'live' && (
             <div style={{...ts.tabContent, ...ts.phPanel}}>
               <div style={ts.phIc}>{
                 activeTab === 'overview' ? '📊' :

@@ -42,13 +42,27 @@ export const useUploadManager = (options: UploadManagerOptions = {}) => {
   // Detect language from file extension
   const detectLanguage = useCallback((path: string, filename?: string): 'python' | 'javascript' | 'sql' => {
     const fullStr = `${path} ${filename || ''}`.toLowerCase();
-    if (fullStr.includes('.js') || fullStr.includes('.jsx') || fullStr.includes('.ts') || fullStr.includes('.tsx')) {
+
+    // Check for JavaScript indicators (file extensions or project markers)
+    if (fullStr.includes('.js') || fullStr.includes('.jsx') || fullStr.includes('.ts') || fullStr.includes('.tsx') ||
+        fullStr.includes('package.json') || fullStr.includes('vite.config') || fullStr.includes('webpack') ||
+        fullStr.includes('node_modules') || fullStr.includes('react') || fullStr.includes('next') ||
+        fullStr.includes('angular') || fullStr.includes('vue')) {
       return 'javascript';
     }
-    if (fullStr.includes('.sql')) {
+
+    // Check for SQL indicators
+    if (fullStr.includes('.sql') || fullStr.includes('postgres') || fullStr.includes('mysql')) {
       return 'sql';
     }
-    return 'python'; // Default
+
+    // Check for Python indicators (file extensions or project markers)
+    if (fullStr.includes('.py') || fullStr.includes('python') || fullStr.includes('django') ||
+        fullStr.includes('flask') || fullStr.includes('requirements.txt') || fullStr.includes('pipfile')) {
+      return 'python';
+    }
+
+    return 'python'; // Default to Python
   }, []);
 
   // Get language emoji label

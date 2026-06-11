@@ -40,6 +40,40 @@ class ScannerService:
             converted.append(finding_dict)
         return converted
 
+    def _detect_language_from_directory(self, directory_path: str) -> str:
+        """Auto-detect language by examining directory contents."""
+        try:
+            path = Path(directory_path)
+            if not path.exists():
+                return "python"  # Default
+
+            # Check for JavaScript indicators
+            for file in path.rglob("*"):
+                name = file.name.lower()
+                if name.endswith((".js", ".jsx", ".ts", ".tsx")):
+                    return "javascript"
+                if name in ("package.json", "vite.config.js", "webpack.config.js", "tsconfig.json"):
+                    return "javascript"
+
+            # Check for Python indicators
+            for file in path.rglob("*"):
+                name = file.name.lower()
+                if name.endswith(".py"):
+                    return "python"
+                if name in ("requirements.txt", "pyproject.toml", "setup.py", "pipfile"):
+                    return "python"
+
+            # Check for SQL indicators
+            for file in path.rglob("*"):
+                name = file.name.lower()
+                if name.endswith(".sql"):
+                    return "sql"
+
+            # Default to Python
+            return "python"
+        except Exception:
+            return "python"
+
     def _resolve_path(self, path_input: str) -> str:
         """Resolve path: try exact path first, then search common locations."""
         path = Path(path_input)
@@ -91,6 +125,11 @@ class ScannerService:
             # Resolve directory path if provided
             if directory_path:
                 directory_path = self._resolve_path(directory_path)
+                # Auto-detect language from directory contents if language is default
+                if language == "python":
+                    detected = self._detect_language_from_directory(directory_path)
+                    if detected != "python":  # Only override if we detected something other than Python
+                        language = detected
 
             if language == "python" or language == "all":
                 if code:
@@ -177,6 +216,7 @@ class ScannerService:
                 })
 
         if language == "javascript" or language == "all":
+            # Scan for .js files
             for js_file in path.rglob("*.js"):
                 if any(pattern in str(js_file) for pattern in ["node_modules", ".git"]):
                     continue
@@ -184,6 +224,42 @@ class ScannerService:
                 files.append({
                     "name": js_file.name,
                     "path": str(js_file),
+                    "language": "javascript",
+                    "loc": loc
+                })
+
+            # Scan for .jsx files
+            for jsx_file in path.rglob("*.jsx"):
+                if any(pattern in str(jsx_file) for pattern in ["node_modules", ".git"]):
+                    continue
+                loc = self._count_lines(jsx_file)
+                files.append({
+                    "name": jsx_file.name,
+                    "path": str(jsx_file),
+                    "language": "javascript",
+                    "loc": loc
+                })
+
+            # Scan for .ts files
+            for ts_file in path.rglob("*.ts"):
+                if any(pattern in str(ts_file) for pattern in ["node_modules", ".git"]):
+                    continue
+                loc = self._count_lines(ts_file)
+                files.append({
+                    "name": ts_file.name,
+                    "path": str(ts_file),
+                    "language": "javascript",
+                    "loc": loc
+                })
+
+            # Scan for .tsx files
+            for tsx_file in path.rglob("*.tsx"):
+                if any(pattern in str(tsx_file) for pattern in ["node_modules", ".git"]):
+                    continue
+                loc = self._count_lines(tsx_file)
+                files.append({
+                    "name": tsx_file.name,
+                    "path": str(tsx_file),
                     "language": "javascript",
                     "loc": loc
                 })
