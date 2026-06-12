@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Api Design Specification
+source: claude-code
+project: codescanner
+---
+
 # CODEPULSE AI - Complete API Design Specification
 **Version:** 1.0  
 **Status:** Design Complete, Phase 1 Implementation Starting  

@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Getting Started
+source: claude-code
+project: codescanner
+---
+
 # CodePulse AI - Getting Started Guide
 
 Welcome to the CodePulse AI team! This guide will help you get up and running quickly.

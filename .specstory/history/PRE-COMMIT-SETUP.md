@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Pre-Commit-Setup
+source: claude-code
+project: codescanner
+---
+
 # Pre-Commit Hook Setup
 
 ## Overview

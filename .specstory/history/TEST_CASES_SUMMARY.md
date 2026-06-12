@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Test Cases Summary
+source: claude-code
+project: codescanner
+---
+
 # Path I: Test Cases Summary
 
 **Total Test Suites:** 3 components + 1 E2E suite  

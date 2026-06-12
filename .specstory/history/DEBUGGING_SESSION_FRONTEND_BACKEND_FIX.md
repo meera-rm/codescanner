@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Debugging Session Frontend Backend Fix
+source: claude-code
+project: codescanner
+---
+
 # CodePulse AI - Frontend/Backend Debugging Session
 **Date:** June 7, 2026  
 **Status:** ✅ RESOLVED  

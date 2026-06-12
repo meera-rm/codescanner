@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Design Doc V2
+source: claude-code
+project: codescanner
+---
+
 # Code Scanner — Design Document V2
 
 **Based on:** Hackathon_Training_Guide.md Core Requirements  

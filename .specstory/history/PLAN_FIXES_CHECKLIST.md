@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Plan Fixes Checklist
+source: claude-code
+project: codescanner
+---
+
 # Plan Fixes Checklist — Implementation Ready
 **Status:** Track progress as you apply fixes from PLAN_AUDIT_REPORT.md  
 **Target:** All critical + medium fixes applied before Phase 1 starts

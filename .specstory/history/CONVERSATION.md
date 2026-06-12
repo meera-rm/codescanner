@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Conversation
+source: claude-code
+project: codescanner
+---
+
 # Code Scanner Project — Complete Conversation History
 
 **Date Range:** 2026-06-04 to 2026-06-06  

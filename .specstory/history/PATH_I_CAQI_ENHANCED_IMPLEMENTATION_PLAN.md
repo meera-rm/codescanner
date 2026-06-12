@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Path I Caqi Enhanced Implementation Plan
+source: claude-code
+project: codescanner
+---
+
 # Path I: CAQI Enhanced - Implementation Plan
 
 **Project:** CODEPULSE AI - Path I Enhancement  

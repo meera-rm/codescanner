@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Code Review Findings
+source: claude-code
+project: codescanner
+---
+
 # Comprehensive Code Review - Issues & Pitfalls
 
 **Date:** 2026-06-06  

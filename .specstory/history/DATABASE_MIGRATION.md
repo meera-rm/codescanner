@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Database Migration
+source: claude-code
+project: codescanner
+---
+
 # Path I: Database Migration Guide
 
 **Status:** Production-Ready  

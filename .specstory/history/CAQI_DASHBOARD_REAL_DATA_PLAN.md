@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Caqi Dashboard Real Data Plan
+source: claude-code
+project: codescanner
+---
+
 # CAQI Dashboard: From Mock Data to Real Data
 **Date:** June 7, 2026  
 **Status:** ⏳ Planning Phase  

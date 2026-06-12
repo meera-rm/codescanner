@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Phase I+2 Culture Interventions Implementation Plan
+source: claude-code
+project: codescanner
+---
+
 # Phase I+2: Culture Interventions - Implementation Plan
 
 **Project:** CODEPULSE AI - Path I Culture Interventions  

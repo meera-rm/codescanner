@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Path I Overview
+source: claude-code
+project: codescanner
+---
+
 # Path I: CAQI Enhanced - Complete Overview
 
 **Project Name:** Code Scanner Path I - CAQI Enhanced (Team Analytics & Culture Tracking)  

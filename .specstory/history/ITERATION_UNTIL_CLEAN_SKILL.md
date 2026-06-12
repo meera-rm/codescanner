@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Iteration Until Clean Skill
+source: claude-code
+project: codescanner
+---
+
 # ITERATION UNTIL CLEAN — Core Differentiator Skill
 
 **Feature:** Automated code improvement loop with multi-agent review  

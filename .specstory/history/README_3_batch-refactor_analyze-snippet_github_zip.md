@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Readme 3 Batch-Refactor Analyze-Snippet Github Zip
+source: claude-code
+project: codescanner
+---
+
 # CodeScanner Phase 3 - Complete Documentation
 
 **Version:** 3.6  

@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Readme
+source: claude-code
+project: codescanner
+---
+
 # CodePulse AI — Code Intelligence Platform
 
 > **Analyze. Refactor. Improve. Repeat until clean.**

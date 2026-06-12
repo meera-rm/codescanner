@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Phase 2 Core Scanning Onboarding Authentication Plan
+source: claude-code
+project: codescanner
+---
+
 # Phase 2 Plan: Core Scanning + Onboarding + Authentication
 
 **Project:** CODEPULSE AI Client-Service Architecture  

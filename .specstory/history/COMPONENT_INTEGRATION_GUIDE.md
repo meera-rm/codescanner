@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Component Integration Guide
+source: claude-code
+project: codescanner
+---
+
 # Component Integration Guide
 
 ## Overview

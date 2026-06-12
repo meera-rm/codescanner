@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Combined Project Summary
+source: claude-code
+project: codescanner
+---
+
 # CodePulse AI - Complete Project Summary
 
 **Project Owner:** Meera Ramesh  

@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Contributing Batch-Refactor Analyze-Snippet Github Zip
+source: claude-code
+project: codescanner
+---
+
 # CodeScanner Developer Guide
 
 A hands-on guide for developers working on CodeScanner Phase 3.

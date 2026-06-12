@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Docs Batch-Refactor Analyze-Snippet Github Zip
+source: claude-code
+project: codescanner
+---
+
 # CodeScanner Phase 3 - Documentation Index
 
 **Complete documentation for CodeScanner Phase 3.0-3.6**

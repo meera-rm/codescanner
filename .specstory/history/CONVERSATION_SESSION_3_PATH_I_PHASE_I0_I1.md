@@ -1,3 +1,10 @@
+---
+created_at: 2026-06-12T18:16:43Z
+title: Conversation Session 3 Path I Phase I0 I1
+source: claude-code
+project: codescanner
+---
+
 # Session 3: Path I (CAQI Enhanced) - Phase I.0 & I.1 Implementation
 
 **Date:** 2026-06-06  
