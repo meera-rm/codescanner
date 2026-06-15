@@ -1,9 +1,11 @@
 """Celery tasks for Iteration Until Clean."""
 
 import uuid
+import asyncio
 from datetime import datetime
 from api.tasks.celery_app import app
 from api.services.iteration_clean_service import IterationCleanService
+from api.services.scanner_service import ScannerService
 from api.db.database import SessionLocal
 from api.db.models import IterationJob, IterationHistory
 
@@ -105,69 +107,70 @@ def fix_until_clean_sync(job_id: str,
                         target_grade: str = "A",
                         max_iterations: int = 10) -> dict:
     """
-    Synchronous version of fix_until_clean for testing.
+    Synchronous version of fix_until_clean using asyncio.run().
 
-    Returns dict with result data that can be stored in database.
+    Calls the real IterationCleanService.fix_until_clean() and returns
+    result data that can be stored in the database.
+
+    Args:
+        job_id: Unique job identifier
+        codebase_path: Path to codebase to iterate
+        target_grade: Target grade (A, B, C, etc)
+        max_iterations: Maximum iterations before stopping
+
+    Returns:
+        Dict with status, grade info, and iteration history
     """
+    try:
+        # Create service with real scanner
+        scanner = ScannerService()
+        service = IterationCleanService(scanner_service=scanner)
 
-    # Note: This would be implemented using asyncio.run() in production
-    # For now, returning placeholder result structure
+        # Run async iteration loop synchronously
+        result = asyncio.run(
+            service.fix_until_clean(
+                job_id=job_id,
+                codebase_path=codebase_path,
+                target_grade=target_grade,
+                max_iterations=max_iterations,
+            )
+        )
 
-    return {
-        "status": "completed",
-        "job_id": job_id,
-        "start_grade": "C",
-        "final_grade": "A",
-        "grade_improvement": 23,
-        "iterations_count": 4,
-        "max_iterations": max_iterations,
-        "history": [
-            {
-                "iteration_number": 1,
-                "grade_before": "C",
-                "grade_after": "B-",
-                "issues_fixed": 5,
-                "agent_selected": "Agent A (Simplicity)",
-                "fix_description": "Extracted 3 helper functions",
-                "validation_passed": True,
-                "changes": {"complexity_reduction": 60},
-            },
-            {
-                "iteration_number": 2,
-                "grade_before": "B-",
-                "grade_after": "B",
-                "issues_fixed": 6,
-                "agent_selected": "Agent A (Simplicity)",
-                "fix_description": "Removed code duplication",
-                "validation_passed": True,
-                "changes": {"complexity_reduction": 45},
-            },
-            {
-                "iteration_number": 3,
-                "grade_before": "B",
-                "grade_after": "A-",
-                "issues_fixed": 10,
-                "agent_selected": "Agent A (Simplicity)",
-                "fix_description": "Added type hints and restructured",
-                "validation_passed": True,
-                "changes": {"complexity_reduction": 50},
-            },
-            {
-                "iteration_number": 4,
-                "grade_before": "A-",
-                "grade_after": "A",
-                "issues_fixed": 2,
-                "agent_selected": "Agent A (Simplicity)",
-                "fix_description": "Fixed final edge cases",
-                "validation_passed": True,
-                "changes": {"complexity_reduction": 40},
-            },
-        ],
-        "metrics": {
-            "total_iterations": 4,
-            "total_issues_fixed": 23,
-            "final_grade": "A",
-            "complexity_reduction": "28 → 8 (71%)",
-            "agents_used": ["Agent A (Simplicity)"],
-        },
-    }
+        # Convert IterationResult dataclass to dict for database storage
+        return {
+            "status": result.status,
+            "job_id": result.job_id,
+            "start_grade": result.start_grade,
+            "final_grade": result.final_grade,
+            "grade_improvement": result.grade_improvement,
+            "iterations_count": result.iterations_count,
+            "max_iterations": result.max_iterations,
+            "history": [
+                {
+                    "iteration_number": h.iteration_number,
+                    "grade_before": h.grade_before,
+                    "grade_after": h.grade_after,
+                    "issues_fixed": h.issues_fixed,
+                    "agent_selected": h.agent_selected,
+                    "fix_description": h.fix_description,
+                    "validation_passed": h.validation_passed,
+                    "changes": h.changes,
+                }
+                for h in result.history
+            ],
+            "metrics": result.metrics,
+        }
+
+    except Exception as e:
+        # Return error result that will be stored in database
+        return {
+            "status": "failed",
+            "job_id": job_id,
+            "start_grade": "unknown",
+            "final_grade": "unknown",
+            "grade_improvement": 0,
+            "iterations_count": 0,
+            "max_iterations": max_iterations,
+            "history": [],
+            "metrics": {"error": str(e)},
+        }

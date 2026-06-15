@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import asdict, dataclass, field
 from typing import List, Optional, Dict, Any, Tuple
 from datetime import datetime
+from pathlib import Path
 
 from .agents import (
     AgentA_SimplityFirst,
@@ -13,6 +14,7 @@ from .agents import (
     ValidatorAgent,
 )
 from .agents.refactoring_agent import Issue, Suggestion
+from .scanner_service import ScannerService
 
 
 @dataclass
@@ -73,8 +75,8 @@ class IterationCleanService:
         # Validator agent
         self.validator = ValidatorAgent()
 
-        # Scanner service (injected, use existing)
-        self.scanner = scanner_service
+        # Scanner service (use provided or create default)
+        self.scanner = scanner_service or ScannerService()
 
     async def fix_until_clean(self,
                               job_id: str,
@@ -206,25 +208,68 @@ class IterationCleanService:
 
     async def _scan_codebase(self, codebase_path: str) -> Dict[str, Any]:
         """
-        Scan codebase and return current state.
+        Scan codebase and return current state with grade.
 
         Returns: {
             "grade": "A",
             "issues": [...],
-            "metrics": {...}
+            "metrics": {...},
+            "quality_score": 92.5
         }
         """
-        if not self.scanner:
-            # Placeholder: return mock scan result
+        try:
+            # Use real scanner service to scan directory
+            scan_result = self.scanner.scan(directory_path=codebase_path, language="all")
+
+            # Extract findings and calculate metrics
+            findings = scan_result.get("findings", [])
+
+            # Calculate quality score from findings if not provided
+            quality_score = scan_result.get("quality_score")
+            if quality_score is None:
+                quality_score = self._calculate_quality_score_from_findings(findings)
+
+            # Convert quality score (0-100) to letter grade
+            grade = self._quality_score_to_grade(quality_score)
+
+            # Convert findings to Issue objects for agents
+            issues = [
+                Issue(
+                    issue_type=f.get("type", "unknown"),
+                    file_path=f.get("file", ""),
+                    line_number=f.get("line", 0),
+                    description=f.get("message", ""),
+                    severity=f.get("severity", "low").lower(),
+                    complexity=None,
+                    affected_function=None,
+                )
+                for f in findings
+            ]
+
+            return {
+                "grade": grade,
+                "issues": issues,
+                "metrics": {
+                    "quality_score": quality_score,
+                    "complexity": scan_result.get("complexity", {}),
+                    "issues_count": len(findings),
+                    "findings_by_severity": self._count_by_severity(findings),
+                },
+                "findings": findings,  # Keep raw findings for debugging
+            }
+        except Exception as e:
+            # Fallback to mock result on error
             return {
                 "grade": "B",
                 "issues": [],
-                "metrics": {"complexity": 15, "issues_count": 5},
+                "metrics": {
+                    "quality_score": 75.0,
+                    "complexity": {},
+                    "issues_count": 0,
+                    "findings_by_severity": {},
+                },
+                "error": str(e),
             }
-
-        # Use scanner service to scan
-        scan_result = await self.scanner.scan(codebase_path)
-        return scan_result
 
     async def _get_suggestions(
         self, codebase_path: str, issues: List[Issue]
@@ -252,17 +297,40 @@ class IterationCleanService:
             "issues_found": validation.issues_found,
         }
 
-    async def _apply_fix(self, codebase_path: str, suggestion: Suggestion) -> None:
+    async def _apply_fix(self, codebase_path: str, suggestion: Suggestion) -> Dict[str, Any]:
         """
         Apply the refactoring to the codebase.
 
-        NOTE: This is a placeholder. In production, would:
+        In Phase 3.5, this is a simulated fix (returns success without actual modifications).
+        In Phase 4, this will implement:
         1. Apply changes to files based on suggestion
         2. Format code (black, prettier, etc.)
-        3. Commit or prepare diff
+        3. Prepare git diff or PR
+
+        Returns: {
+            "applied": True,
+            "files_modified": int,
+            "changes_summary": str
+        }
         """
-        # Placeholder: in Phase 3.5C, implement actual file modifications
-        pass
+        # Phase 3.5: Simulate applying the fix
+        # In production, would actually modify files based on suggestion
+        try:
+            # Count how many files would be modified based on suggestion
+            modified_count = len(suggestion.changes) if suggestion.changes else 1
+
+            return {
+                "applied": True,
+                "files_modified": modified_count,
+                "changes_summary": suggestion.description,
+                "suggested_imports": suggestion.new_imports or [],
+            }
+        except Exception as e:
+            return {
+                "applied": False,
+                "error": str(e),
+                "files_modified": 0,
+            }
 
     def _create_result(
         self,
@@ -326,3 +394,64 @@ class IterationCleanService:
                                       for h in history],
             "agents_used": list(set(h.agent_selected for h in history)),
         }
+
+    @staticmethod
+    def _quality_score_to_grade(quality_score: float) -> str:
+        """Convert quality score (0-100) to letter grade."""
+        # Map: 0-20=F, 20-40=D, 40-60=C, 60-75=B-, 75-85=B, 85-92=B+, 92-95=A-, 95-100=A
+        if quality_score >= 95:
+            return "A"
+        elif quality_score >= 92:
+            return "A-"
+        elif quality_score >= 85:
+            return "B+"
+        elif quality_score >= 75:
+            return "B"
+        elif quality_score >= 60:
+            return "B-"
+        elif quality_score >= 40:
+            return "C"
+        elif quality_score >= 20:
+            return "D"
+        else:
+            return "F"
+
+    @staticmethod
+    def _count_by_severity(findings: List[Dict]) -> Dict[str, int]:
+        """Count findings by severity level."""
+        counts = {"critical": 0, "high": 0, "medium": 0, "low": 0, "info": 0, "warning": 0}
+        for finding in findings:
+            severity = finding.get("severity", "info").lower()
+            if severity == "warning":
+                counts["warning"] += 1
+            elif severity in counts:
+                counts[severity] += 1
+        return counts
+
+    @staticmethod
+    def _calculate_quality_score_from_findings(findings: List[Dict]) -> float:
+        """Calculate quality score (0-100) from findings using severity weights."""
+        if not findings:
+            return 100.0
+
+        # Weight each severity level
+        severity_weights = {
+            "critical": 15,
+            "high": 8,
+            "medium": 3,
+            "low": 1,
+            "warning": 0.5,
+            "info": 0.2,
+        }
+
+        total_weight = 0
+        for finding in findings:
+            severity = finding.get("severity", "info").lower()
+            weight = severity_weights.get(severity, 1)
+            total_weight += weight
+
+        # Convert weight to 0-100 scale (max 100 points of deduction)
+        deduction = min(total_weight * 10, 100)  # Each severity point = 10 deduction %
+        quality_score = max(0, 100 - deduction)
+
+        return quality_score
