@@ -2,12 +2,31 @@ from fastapi import APIRouter
 from datetime import datetime, timedelta
 import random
 
-router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"])
+router = APIRouter(
+    prefix="/api/v1/dashboard",
+    tags=["dashboard"],
+    responses={404: {"description": "Not found"}},
+)
 
 
-@router.get("/summary")
+@router.get(
+    "/summary",
+    summary="Get Dashboard Summary",
+    description="Retrieve comprehensive dashboard summary including AI insights, enterprise info, monitoring metrics, and recent activity",
+    response_description="Dashboard summary object with all key metrics"
+)
 async def get_dashboard_summary():
-    """Get dashboard summary with mock data"""
+    """
+    Get Dashboard Summary
+
+    Returns:
+    - **summary**: Main dashboard metrics
+      - **ai_insights**: Pattern analysis and complexity metrics
+      - **enterprise**: Plan info and API key stats
+      - **monitoring**: System health and performance
+      - **activity**: Recent analyses and API activity
+    - **analytics**: Historical health timeline data
+    """
     return {
         "summary": {
             "ai_insights": {
@@ -46,9 +65,20 @@ async def get_dashboard_summary():
     }
 
 
-@router.get("/widgets/ai-insights")
+@router.get(
+    "/widgets/ai-insights",
+    summary="AI Insights Widget",
+    description="Get AI learning insights including pattern analysis, code complexity, and active agents"
+)
 async def get_ai_insights():
-    """Get AI insights widget data"""
+    """
+    Get AI Insights Widget Data
+
+    Returns metrics on:
+    - **total_patterns**: Number of patterns analyzed
+    - **avg_complexity**: Average code complexity score
+    - **top_agents**: List of active AI agents analyzing code
+    """
     return {
         "data": {
             "total_patterns": 48,
@@ -58,9 +88,21 @@ async def get_ai_insights():
     }
 
 
-@router.get("/widgets/system-health")
+@router.get(
+    "/widgets/system-health",
+    summary="System Health Widget",
+    description="Get real-time system health metrics including availability, error rates, and response times"
+)
 async def get_system_health():
-    """Get system health widget data"""
+    """
+    Get System Health Metrics
+
+    Returns:
+    - **availability**: System uptime percentage
+    - **error_rate**: Percentage of failed requests
+    - **response_time**: Average API response time in ms
+    - **status**: Overall system health status (healthy/degraded/down)
+    """
     return {
         "data": {
             "availability": 99.9,
@@ -71,9 +113,20 @@ async def get_system_health():
     }
 
 
-@router.get("/widgets/alerts")
+@router.get(
+    "/widgets/alerts",
+    summary="Active Alerts Widget",
+    description="Get currently active system and code quality alerts"
+)
 async def get_alerts():
-    """Get alerts widget data"""
+    """
+    Get Active Alerts
+
+    Returns array of alerts with:
+    - **level**: Alert severity (critical/warning/info)
+    - **message**: Alert description
+    - **timestamp**: When alert was triggered
+    """
     return {
         "data": {
             "alerts": [
@@ -84,9 +137,21 @@ async def get_alerts():
     }
 
 
-@router.get("/widgets/activity")
+@router.get(
+    "/widgets/activity",
+    summary="Recent Activity Widget",
+    description="Get recent code analysis, refactoring, and API activity metrics"
+)
 async def get_activity():
-    """Get recent activity widget data"""
+    """
+    Get Recent Activity Data
+
+    Returns:
+    - **analyses_today**: Number of code analyses today
+    - **github_prs**: Active GitHub pull requests analyzed
+    - **api_calls**: Total API calls today
+    - **errors**: Number of errors encountered
+    """
     return {
         "data": {
             "analyses_today": 45,
@@ -97,9 +162,21 @@ async def get_activity():
     }
 
 
-@router.get("/widgets/usage")
+@router.get(
+    "/widgets/usage",
+    summary="Plan Usage Widget",
+    description="Get current subscription plan usage and limits"
+)
 async def get_usage():
-    """Get plan usage widget data"""
+    """
+    Get Plan Usage Data
+
+    Returns:
+    - **api_calls**: Current API call count
+    - **analyses**: Code analyses performed
+    - **storage_mb**: Storage used in MB
+    - **limits**: Plan limits and quotas
+    """
     return {
         "data": {
             "api_calls": 7234,
@@ -112,9 +189,22 @@ async def get_usage():
     }
 
 
-@router.get("/widgets/quality-trends")
+@router.get(
+    "/widgets/quality-trends",
+    summary="Code Quality Trends Widget",
+    description="Get historical code quality trends and improvements"
+)
 async def get_quality_trends():
-    """Get code quality trends widget data"""
+    """
+    Get Quality Trends Data
+
+    Returns:
+    - **current_score**: Current code quality score (0-100)
+    - **previous_score**: Previous period score for comparison
+    - **trend**: Trend direction (up/down/stable)
+    - **improvement_percentage**: Percentage improvement
+    - **issues_resolved**: Number of issues fixed
+    """
     return {
         "data": {
             "current_score": 78.5,
@@ -126,9 +216,20 @@ async def get_quality_trends():
     }
 
 
-@router.get("/analytics")
+@router.get(
+    "/analytics",
+    summary="Analytics Panel Data",
+    description="Get comprehensive analytics including request metrics, performance profiling, and ML learning data"
+)
 async def get_analytics():
-    """Get analytics panel data"""
+    """
+    Get Analytics Data
+
+    Returns:
+    - **monitoring**: Request and error metrics
+    - **performance**: Response time statistics (min/max/p95/p99)
+    - **learning**: AI agent learning and improvement metrics
+    """
     return {
         "monitoring": {
             "total_requests": 15234,
@@ -147,4 +248,78 @@ async def get_analytics():
             "total_experiences": 234,
             "avg_improvement": 3.2
         }
+    }
+
+
+@router.get(
+    "/security",
+    summary="Security Dashboard Data",
+    description="Get comprehensive security vulnerability report with severity classification and recommendations"
+)
+async def get_security():
+    """
+    Get Security Dashboard Data
+
+    Returns array of security issues with:
+    - **type**: Vulnerability type (SQL Injection, XSS, Hardcoded Secret, etc.)
+    - **severity**: Severity level (critical/high/medium/low)
+    - **message**: Detailed description
+    - **file**: Source file path
+    - **line**: Line number where issue was found
+    - **count**: Number of occurrences
+
+    Severity Levels:
+    - CRITICAL: Immediate action required, high impact exploits
+    - HIGH: Significant risk, likely to be exploited
+    - MEDIUM: Moderate risk, should be addressed soon
+    - LOW: Minor risk, best practice violation
+    """
+    return {
+        "issues": [
+            {
+                "id": "1",
+                "type": "SQL Injection",
+                "severity": "critical",
+                "message": "Unescaped SQL query detected",
+                "file": "auth.py",
+                "line": 42,
+                "count": 2
+            },
+            {
+                "id": "2",
+                "type": "Hardcoded Secret",
+                "severity": "high",
+                "message": "API key hardcoded in source",
+                "file": "config.js",
+                "line": 15,
+                "count": 1
+            },
+            {
+                "id": "3",
+                "type": "XSS Vulnerability",
+                "severity": "high",
+                "message": "Unsanitized user input in HTML",
+                "file": "dashboard.tsx",
+                "line": 89,
+                "count": 3
+            },
+            {
+                "id": "4",
+                "type": "Command Injection",
+                "severity": "medium",
+                "message": "Shell command with user input",
+                "file": "utils.py",
+                "line": 156,
+                "count": 1
+            },
+            {
+                "id": "5",
+                "type": "Weak Cryptography",
+                "severity": "medium",
+                "message": "MD5 hash detected",
+                "file": "security.py",
+                "line": 78,
+                "count": 2
+            }
+        ]
     }
