@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Grid, Container, CircularProgress, Alert, Button, Box } from '@mui/material';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Shield } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -15,6 +15,8 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import DashboardSummary from '../components/DashboardSummary';
+import DashboardSettings from '../components/DashboardSettings';
+import ExportReport from '../components/ExportReport';
 import AIInsightsWidget from '../components/widgets/AIInsightsWidget';
 import SystemHealthWidget from '../components/widgets/SystemHealthWidget';
 import AlertsWidget from '../components/widgets/AlertsWidget';
@@ -28,18 +30,34 @@ interface DashboardData {
   analytics: any;
 }
 
+interface DashboardConfig {
+  refreshInterval: number;
+  alertThreshold: number;
+  darkMode: boolean;
+  autoExport: boolean;
+}
+
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'health'>('overview');
+  const [config, setConfig] = useState<DashboardConfig>(() => {
+    const saved = localStorage.getItem('dashboardConfig');
+    return saved ? JSON.parse(saved) : {
+      refreshInterval: 30,
+      alertThreshold: 80,
+      darkMode: false,
+      autoExport: false,
+    };
+  });
 
   useEffect(() => {
     fetchDashboardData();
-    const interval = setInterval(fetchDashboardData, 30000); // Refresh every 30 seconds
+    const interval = setInterval(fetchDashboardData, config.refreshInterval * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [config.refreshInterval]);
 
   const fetchDashboardData = async () => {
     try {
@@ -79,8 +97,8 @@ const Dashboard: React.FC = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      {/* Back Button */}
-      <Box sx={{ mb: 3 }}>
+      {/* Header Toolbar */}
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
         <Button
           startIcon={<ArrowLeft size={20} />}
           onClick={() => navigate('/')}
@@ -93,6 +111,19 @@ const Dashboard: React.FC = () => {
         >
           Back to Home
         </Button>
+
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            startIcon={<Shield size={20} />}
+            onClick={() => navigate('/security-dashboard')}
+            variant="outlined"
+            sx={{ textTransform: 'none' }}
+          >
+            Security
+          </Button>
+          <ExportReport data={data} filename="dashboard-report" />
+          <DashboardSettings config={config} onConfigChange={setConfig} />
+        </Box>
       </Box>
 
       {/* Header Summary */}

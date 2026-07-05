@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
+import SecurityDashboard from './pages/SecurityDashboard';
 import { CAQILanding } from './pages/CAQILanding';
 import { CAQIDashboard } from './pages/CAQIDashboard';
 import { CAQIAnalyzer } from './pages/CAQIAnalyzer';
@@ -20,6 +21,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/security-dashboard" element={<SecurityDashboard />} />
           <Route path="/personality" element={<PersonalityProfiler />} />
           <Route path="/letter" element={<InheritanceLetter />} />
           <Route path="/caqi" element={<CAQILanding />} />
