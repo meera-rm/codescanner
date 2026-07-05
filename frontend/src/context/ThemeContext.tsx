@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 interface ThemeContextType {
   isDarkMode: boolean;
@@ -17,6 +17,18 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsDarkMode(newValue);
     localStorage.setItem('darkMode', String(newValue));
   };
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.body.style.backgroundColor = '#121212';
+      document.body.style.color = '#ffffff';
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      document.body.style.backgroundColor = '#ffffff';
+      document.body.style.color = '#000000';
+    }
+  }, [isDarkMode]);
 
   return (
     <ThemeContext.Provider value={{ isDarkMode, toggleDarkMode }}>

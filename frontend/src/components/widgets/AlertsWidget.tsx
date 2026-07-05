@@ -54,16 +54,19 @@ const AlertsWidget: React.FC = () => {
                 gap: 1,
               }}
             >
-              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', width: '100%' }}>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
                 <Chip
                   label={alert.level.toUpperCase()}
                   size="small"
                   color={getLevelColor(alert.level)}
                   variant="outlined"
                 />
+                <Typography variant="caption" sx={{ color: '#999' }}>
+                  {alert.timestamp}
+                </Typography>
               </Box>
-              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                {alert.title}
+              <Typography variant="body2" sx={{ fontWeight: '500' }}>
+                {alert.message}
               </Typography>
             </ListItem>
           ))}
