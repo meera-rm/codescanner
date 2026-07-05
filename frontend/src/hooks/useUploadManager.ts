@@ -6,7 +6,7 @@ import { useRecentPaths } from './useRecentPaths';
 
 export interface UploadState {
   directoryPath: string;
-  language: 'python' | 'javascript' | 'sql';
+  language: 'python' | 'javascript' | 'typescript' | 'go' | 'java' | 'rust';
   message: string;
   isLoading: boolean;
   error: string;
@@ -40,20 +40,36 @@ export const useUploadManager = (options: UploadManagerOptions = {}) => {
   });
 
   // Detect language from file extension
-  const detectLanguage = useCallback((path: string, filename?: string): 'python' | 'javascript' | 'sql' => {
+  const detectLanguage = useCallback((path: string, filename?: string): 'python' | 'javascript' | 'typescript' | 'go' | 'java' | 'rust' => {
     const fullStr = `${path} ${filename || ''}`.toLowerCase();
 
-    // Check for JavaScript indicators (file extensions or project markers)
-    if (fullStr.includes('.js') || fullStr.includes('.jsx') || fullStr.includes('.ts') || fullStr.includes('.tsx') ||
-        fullStr.includes('package.json') || fullStr.includes('vite.config') || fullStr.includes('webpack') ||
-        fullStr.includes('node_modules') || fullStr.includes('react') || fullStr.includes('next') ||
-        fullStr.includes('angular') || fullStr.includes('vue')) {
-      return 'javascript';
+    // Check for Rust indicators
+    if (fullStr.includes('.rs') || fullStr.includes('cargo.toml') || fullStr.includes('cargo.lock')) {
+      return 'rust';
     }
 
-    // Check for SQL indicators
-    if (fullStr.includes('.sql') || fullStr.includes('postgres') || fullStr.includes('mysql')) {
-      return 'sql';
+    // Check for Go indicators
+    if (fullStr.includes('.go') || fullStr.includes('go.mod') || fullStr.includes('go.sum')) {
+      return 'go';
+    }
+
+    // Check for Java indicators
+    if (fullStr.includes('.java') || fullStr.includes('pom.xml') || fullStr.includes('build.gradle') ||
+        fullStr.includes('src/main/java')) {
+      return 'java';
+    }
+
+    // Check for TypeScript indicators
+    if (fullStr.includes('.ts') && !fullStr.includes('.tsx')) {
+      return 'typescript';
+    }
+
+    // Check for JavaScript/TypeScript indicators
+    if (fullStr.includes('.js') || fullStr.includes('.jsx') || fullStr.includes('.tsx') ||
+        fullStr.includes('package.json') || fullStr.includes('vite.config') || fullStr.includes('webpack') ||
+        fullStr.includes('node_modules') || fullStr.includes('react') || fullStr.includes('next') ||
+        fullStr.includes('angular') || fullStr.includes('vue') || fullStr.includes('tsconfig')) {
+      return fullStr.includes('.ts') || fullStr.includes('tsconfig') ? 'typescript' : 'javascript';
     }
 
     // Check for Python indicators (file extensions or project markers)
@@ -69,9 +85,15 @@ export const useUploadManager = (options: UploadManagerOptions = {}) => {
   const getLanguageLabel = useCallback((lang: string) => {
     switch (lang) {
       case 'javascript':
-        return '📄 JS';
-      case 'sql':
-        return '📊 SQL';
+        return '📜 JavaScript';
+      case 'typescript':
+        return '📘 TypeScript';
+      case 'go':
+        return '🔵 Go';
+      case 'java':
+        return '☕ Java';
+      case 'rust':
+        return '🦀 Rust';
       default:
         return '🐍 Python';
     }

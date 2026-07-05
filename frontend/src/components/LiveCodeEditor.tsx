@@ -2,9 +2,9 @@ import React from 'react';
 
 interface LiveCodeEditorProps {
   code: string;
-  language: 'python' | 'javascript' | 'sql';
+  language: 'python' | 'javascript' | 'typescript' | 'go' | 'java' | 'rust';
   onCodeChange: (code: string) => void;
-  onLanguageChange: (language: 'python' | 'javascript' | 'sql') => void;
+  onLanguageChange: (language: 'python' | 'javascript' | 'typescript' | 'go' | 'java' | 'rust') => void;
   isAnalyzing: boolean;
   theme?: 'light' | 'dark';
 }
@@ -61,9 +61,12 @@ export const LiveCodeEditor: React.FC<LiveCodeEditorProps> = ({
             cursor: 'pointer'
           }}
         >
-          <option value="python">Python</option>
-          <option value="javascript">JavaScript</option>
-          <option value="sql">SQL</option>
+          <option value="python">🐍 Python</option>
+          <option value="javascript">📜 JavaScript</option>
+          <option value="typescript">📘 TypeScript</option>
+          <option value="go">🔵 Go</option>
+          <option value="java">☕ Java</option>
+          <option value="rust">🦀 Rust</option>
         </select>
 
         {isAnalyzing && (
@@ -93,7 +96,7 @@ export const LiveCodeEditor: React.FC<LiveCodeEditorProps> = ({
       <textarea
         value={code}
         onChange={(e) => onCodeChange(e.target.value)}
-        placeholder="Paste or type code here... (Python, JavaScript, or SQL)"
+        placeholder="Paste or type code here... (Python, JavaScript, TypeScript, Go, Java, or Rust)"
         style={{
           flex: 1,
           padding: '16px',
@@ -119,7 +122,7 @@ export const LiveCodeEditor: React.FC<LiveCodeEditorProps> = ({
         color: '#999999',
         flexShrink: 0
       }}>
-        💡 Results update automatically every 300ms • Supports Python, JavaScript, SQL
+        💡 Results update automatically every 300ms • Supports Python, JavaScript, TypeScript, Go, Java, Rust
       </div>
     </div>
   );

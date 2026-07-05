@@ -22,7 +22,7 @@ interface CachedAnalysis {
 
 export const useLiveCodeAnalysis = () => {
   const [code, setCode] = useState('');
-  const [language, setLanguage] = useState<'python' | 'javascript' | 'sql'>('python');
+  const [language, setLanguage] = useState<'python' | 'javascript' | 'typescript' | 'go' | 'java' | 'rust'>('python');
   const [analysis, setAnalysis] = useState<SnippetAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -109,7 +109,7 @@ export const useLiveCodeAnalysis = () => {
     }, 300); // 300ms debounce
   }, [language, analyzeCode]);
 
-  const handleLanguageChange = useCallback((newLanguage: 'python' | 'javascript' | 'sql') => {
+  const handleLanguageChange = useCallback((newLanguage: 'python' | 'javascript' | 'typescript' | 'go' | 'java' | 'rust') => {
     setLanguage(newLanguage);
     // Re-analyze with new language
     if (code.trim().length > 0) {
