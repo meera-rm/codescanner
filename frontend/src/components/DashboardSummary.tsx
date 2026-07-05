@@ -85,13 +85,13 @@ const DashboardSummary: React.FC<SummaryProps> = ({ summary }) => {
             >
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <Typography variant="caption" sx={{ color: '#666' }}>
+                  <Typography variant="caption" sx={{ color: '#1a1a2e !important', fontWeight: 600 }}>
                     {card.label}
                   </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 'bold', mt: 1, color: card.color }}>
+                  <Typography variant="h5" sx={{ fontWeight: 'bold', mt: 1, color: '#000000 !important' }}>
                     {card.value}
                   </Typography>
-                  <Typography variant="caption" sx={{ color: '#999', display: 'block', mt: 0.5 }}>
+                  <Typography variant="caption" sx={{ color: '#333333 !important', display: 'block', mt: 0.5, fontWeight: 500 }}>
                     {card.subtitle}
                   </Typography>
                 </div>
