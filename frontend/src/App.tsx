@@ -10,6 +10,7 @@ import InheritanceLetter from './pages/InheritanceLetter';
 import CodeScanner from './pages/CodeScanner';
 import OnboardingProfiles from './pages/OnboardingProfiles';
 import APIDocumentation from './pages/APIDocumentation';
+import IterationDashboard from './pages/IterationDashboard';
 
 const App: React.FC = () => {
   return (
@@ -25,6 +26,8 @@ const App: React.FC = () => {
           <Route path="/scanner" element={<CodeScanner />} />
           <Route path="/onboarding" element={<OnboardingProfiles />} />
           <Route path="/api" element={<APIDocumentation />} />
+          <Route path="/dashboard/:jobId" element={<IterationDashboard />} />
+          <Route path="/iteration/:jobId" element={<IterationDashboard />} />
         </Routes>
       </Router>
     </ErrorBoundary>

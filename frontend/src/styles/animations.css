@@ -1,0 +1,298 @@
+/* Dashboard Animations */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-color {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Animation Classes */
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.4s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out;
+}
+
+.animate-bounce {
+  animation: bounce 0.5s ease-in-out;
+}
+
+/* Page Transitions */
+.iteration-dashboard {
+  animation: fade-in 0.3s ease-out;
+}
+
+.dashboard-header {
+  animation: slide-down 0.4s ease-out;
+}
+
+.grade-section > * {
+  animation: slide-up 0.4s ease-out;
+  animation-fill-mode: both;
+}
+
+.grade-section > *:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.grade-section > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.grade-section > *:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.chart-container {
+  animation: slide-up 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.metrics-section {
+  animation: slide-up 0.5s ease-out 0.2s both;
+}
+
+.timeline-section {
+  animation: slide-up 0.5s ease-out 0.3s both;
+}
+
+/* Chart Update Animations */
+.recharts-line {
+  animation: draw-line 0.5s ease-out forwards;
+}
+
+.recharts-bar {
+  animation: scale-in 0.3s ease-out forwards;
+}
+
+.recharts-pie-sector {
+  animation: scale-in 0.3s ease-out forwards;
+}
+
+/* Timeline Item Animations */
+.timeline-item {
+  animation: slide-up 0.4s ease-out;
+  animation-fill-mode: both;
+}
+
+.timeline-item:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.timeline-item:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.timeline-item:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.timeline-item:nth-child(n + 4) {
+  animation-delay: 0.3s;
+}
+
+/* Status Updates */
+.status-update {
+  animation: pulse-color 1.5s ease-in-out;
+}
+
+.grade-display {
+  transition: color 0.3s ease;
+}
+
+.progress-fill {
+  transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Button Animations */
+button {
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Smooth Color Transitions */
+.grade-badge,
+.status-badge,
+.metric-card {
+  transition: all 0.3s ease;
+}
+
+/* Loading State Animations */
+@keyframes skeleton-loading {
+  0% {
+    background-color: #e5e7eb;
+  }
+  50% {
+    background-color: #f3f4f6;
+  }
+  100% {
+    background-color: #e5e7eb;
+  }
+}
+
+.skeleton {
+  animation: skeleton-loading 2s ease-in-out infinite;
+}
+
+/* Error/Success Animations */
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+.error-state {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes check-mark {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.completion-message.completed {
+  animation: slide-up 0.4s ease-out;
+}
+
+/* Smooth Transitions on Media Queries */
+@media (max-width: 768px) {
+  * {
+    transition: all 0.2s ease;
+  }
+
+  .grade-section {
+    animation-delay: 0s;
+  }
+
+  .grade-section > * {
+    animation-delay: 0s;
+  }
+
+  .charts-section > * {
+    animation-delay: 0s;
+  }
+}
+
+/* Reduced Motion Preference */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark Mode Animations */
+@media (prefers-color-scheme: dark) {
+  @keyframes skeleton-loading-dark {
+    0% {
+      background-color: #4b5563;
+    }
+    50% {
+      background-color: #5a6575;
+    }
+    100% {
+      background-color: #4b5563;
+    }
+  }
+
+  .skeleton {
+    animation: skeleton-loading-dark 2s ease-in-out infinite;
+  }
+}

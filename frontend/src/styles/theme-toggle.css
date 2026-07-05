@@ -1,0 +1,129 @@
+/* Theme Toggle Styles */
+
+.theme-toggle-container {
+  position: relative;
+}
+
+.theme-toggle-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  background: white;
+  color: #1f2937;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.theme-toggle-button:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+.theme-toggle-button:active {
+  transform: scale(0.95);
+}
+
+.theme-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 140px;
+  overflow: hidden;
+  animation: dropdown-slide-down 0.2s ease-out;
+}
+
+@keyframes dropdown-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.theme-option {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: white;
+  color: #1f2937;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.theme-option:hover {
+  background: #f9fafb;
+  padding-left: 1.25rem;
+}
+
+.theme-option.active {
+  background: #eff6ff;
+  color: #0ea5e9;
+  font-weight: 600;
+  border-left: 3px solid #0ea5e9;
+  padding-left: calc(1rem - 3px);
+}
+
+/* Dark Mode Styles */
+@media (prefers-color-scheme: dark) {
+  .theme-toggle-button {
+    background: #374151;
+    color: #f3f4f6;
+    border-color: #4b5563;
+  }
+
+  .theme-toggle-button:hover {
+    background: #4b5563;
+    border-color: #6b7280;
+  }
+
+  .theme-dropdown {
+    background: #374151;
+    border-color: #4b5563;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .theme-option {
+    background: #374151;
+    color: #f3f4f6;
+  }
+
+  .theme-option:hover {
+    background: #4b5563;
+  }
+
+  .theme-option.active {
+    background: #1e3a5f;
+    color: #0ea5e9;
+    border-left-color: #0ea5e9;
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .theme-dropdown {
+    min-width: 120px;
+  }
+
+  .theme-option {
+    padding: 0.6rem 0.8rem;
+  }
+}
