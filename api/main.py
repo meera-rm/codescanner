@@ -34,7 +34,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 # Auth disabled for local development
-from api.routes import health, auth, creative_suite, config, caqi_enhanced, scanner, onboarding, iteration
+from api.routes import health, auth, creative_suite, config, caqi_enhanced, scanner, onboarding, iteration, dashboard
 # Temporarily disabled routes - will fix one by one
 # from api.routes import metrics, webhooks, analysis, advanced_analytics
 from api.db.database import engine, Base
@@ -78,6 +78,7 @@ app.include_router(caqi_enhanced.router)  # Path I: CAQI Team Analytics
 app.include_router(scanner.router)  # Path K: Code Scanner
 app.include_router(onboarding.router)  # Path J: Onboarding Profiles
 app.include_router(iteration.router)  # Phase 3.5: Iteration Until Clean
+app.include_router(dashboard.router)  # Phase 7: Dashboard
 # Temporarily disabled - fixing one by one
 app.include_router(config.router)
 # app.include_router(metrics.router)

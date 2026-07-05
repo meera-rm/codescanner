@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, Container, CircularProgress, Alert } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Grid, Container, CircularProgress, Alert, Button, Box } from '@mui/material';
+import { ArrowLeft } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -27,6 +29,7 @@ interface DashboardData {
 }
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,6 +79,22 @@ const Dashboard: React.FC = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
+      {/* Back Button */}
+      <Box sx={{ mb: 3 }}>
+        <Button
+          startIcon={<ArrowLeft size={20} />}
+          onClick={() => navigate('/')}
+          sx={{
+            textTransform: 'none',
+            color: '#1976d2',
+            fontSize: '1rem',
+            '&:hover': { background: '#f0f0f0' },
+          }}
+        >
+          Back to Home
+        </Button>
+      </Box>
+
       {/* Header Summary */}
       {data?.summary && <DashboardSummary summary={data.summary} />}
 
