@@ -88,7 +88,7 @@ const DashboardSummary: React.FC<SummaryProps> = ({ summary }) => {
                   <Typography variant="caption" sx={{ color: '#666' }}>
                     {card.label}
                   </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 'bold', mt: 1 }}>
+                  <Typography variant="h5" sx={{ fontWeight: 'bold', mt: 1, color: '#000' }}>
                     {card.value}
                   </Typography>
                   <Typography variant="caption" sx={{ color: '#999', display: 'block', mt: 0.5 }}>
