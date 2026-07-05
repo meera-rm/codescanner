@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 export interface ExtractedZip {
   name: string;
   path: string;
-  language: 'python' | 'javascript' | 'sql';
+  language: 'python' | 'javascript' | 'typescript' | 'go' | 'java' | 'rust';
   message: string;
 }
 
@@ -15,16 +15,25 @@ export const useZipExtractor = () => {
   const [isExtracting, setIsExtracting] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const detectZipLanguage = useCallback((zipName: string): 'python' | 'javascript' | 'sql' => {
+  const detectZipLanguage = useCallback((zipName: string): 'python' | 'javascript' | 'typescript' | 'go' | 'java' | 'rust' => {
     const name = zipName.toLowerCase();
+    if (name.includes('rust') || name.includes('.rs') || name.includes('cargo')) {
+      return 'rust';
+    }
+    if (name.includes('golang') || name.includes('.go') || name.includes('go-')) {
+      return 'go';
+    }
+    if (name.includes('java') || name.includes('spring') || name.includes('maven')) {
+      return 'java';
+    }
+    if (name.includes('typescript') || name.includes('ts-') || name.includes('tsconfig')) {
+      return 'typescript';
+    }
     if (name.includes('python') || name.includes('py') || name.includes('flask') || name.includes('django')) {
       return 'python';
     }
-    if (name.includes('node') || name.includes('react') || name.includes('js') || name.includes('typescript')) {
+    if (name.includes('node') || name.includes('react') || name.includes('js') || name.includes('javascript')) {
       return 'javascript';
-    }
-    if (name.includes('sql') || name.includes('database') || name.includes('db')) {
-      return 'sql';
     }
     return 'python'; // Default
   }, []);

@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect } from 'react';
 export interface RecentPath {
   path: string;
   name: string;
-  language: 'python' | 'javascript' | 'sql';
+  language: 'python' | 'javascript' | 'typescript' | 'go' | 'java' | 'rust';
   timestamp: number;
   relative?: string;
 }

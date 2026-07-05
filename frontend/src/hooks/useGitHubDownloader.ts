@@ -5,13 +5,13 @@ export interface GitHubRepo {
   repo: string;
   url: string;
   branch: string;
-  language: 'python' | 'javascript' | 'sql';
+  language: 'python' | 'javascript' | 'typescript' | 'go' | 'java' | 'rust';
 }
 
 export interface GitHubDownloadResult {
   name: string;
   path: string;
-  language: 'python' | 'javascript' | 'sql';
+  language: 'python' | 'javascript' | 'typescript' | 'go' | 'java' | 'rust';
   owner: string;
   repo: string;
   message: string;
@@ -67,7 +67,7 @@ export const useGitHubDownloader = () => {
   }, []);
 
   // Detect likely language from repo name
-  const detectRepoLanguage = (repoName: string): 'python' | 'javascript' | 'sql' => {
+  const detectRepoLanguage = (repoName: string): 'python' | 'javascript' | 'typescript' | 'go' | 'java' | 'rust' => {
     const name = repoName.toLowerCase();
     if (name.includes('python') || name.includes('py') || name.includes('flask') || name.includes('django') || name.includes('etl')) {
       return 'python';

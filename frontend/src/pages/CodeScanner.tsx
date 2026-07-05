@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useUploadManager } from '../hooks/useUploadManager';
 import { useRefactorBatch } from '../hooks/useRefactorBatch';
 import { useLiveCodeAnalysis } from '../hooks/useLiveCodeAnalysis';
@@ -9,6 +10,7 @@ import LiveMetricsPanel from '../components/LiveMetricsPanel';
 type Theme = 'dark' | 'light';
 type TabType = 'overview' | 'complexity' | 'smells' | 'duplication' | 'security' | 'docs' | 'dependencies' | 'files' | 'refactor' | 'live';
 type DetailTab = 'analysis' | 'refactor';
+type SupportedLanguage = 'python' | 'javascript' | 'typescript' | 'go' | 'java' | 'rust';
 
 interface ScannedFile {
   name: string;
@@ -53,11 +55,16 @@ interface ScanResponse {
 }
 
 export const CodeScanner: React.FC = () => {
+  const navigate = useNavigate();
+
   // Upload manager - consolidated upload logic
   const uploadManager = useUploadManager({
     onPathSelected: (path, lang) => {
       setDirectoryPath(path);
-      setDetectedLanguage(lang as 'python' | 'javascript' | 'sql');
+      const supportedLang = ['python', 'javascript', 'typescript', 'go', 'java', 'rust'].includes(lang)
+        ? (lang as SupportedLanguage)
+        : 'python';
+      setDetectedLanguage(supportedLang);
     }
   });
 
@@ -66,7 +73,7 @@ export const CodeScanner: React.FC = () => {
   const [error, setError] = useState(uploadManager.state.message || '');
   const [theme, setTheme] = useState<Theme>('light');
   const [activeTab, setActiveTab] = useState<TabType>('files');
-  const [detectedLanguage, setDetectedLanguage] = useState<'python' | 'javascript' | 'sql'>('python');
+  const [detectedLanguage, setDetectedLanguage] = useState<SupportedLanguage>('python');
   const [detailTab, setDetailTab] = useState<DetailTab>('analysis');
   const [selectedFile, setSelectedFile] = useState<ScannedFile | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -211,28 +218,49 @@ export const CodeScanner: React.FC = () => {
 
       if (data.scanned_files && data.scanned_files.length > 0) {
         // Use files returned by backend
-        files = data.scanned_files.map((f: any) => ({
-          name: f.name,
-          path: f.path,
-          language: f.language === 'python' ? 'py' : f.language === 'javascript' ? 'js' : 'py',
-          loc: f.loc || 200,
-          functions: 3,
-          classes: 0,
-          complexity: 8.2,
-          grade: 'A',
-          severity: '—'
-        }));
+        files = data.scanned_files.map((f: any) => {
+          const langMap: Record<string, string> = {
+            'python': 'py',
+            'javascript': 'js',
+            'typescript': 'ts',
+            'go': 'go',
+            'java': 'java',
+            'rust': 'rust'
+          };
+          const displayLang = langMap[f.language?.toLowerCase()] || f.language || 'py';
+          return {
+            name: f.name,
+            path: f.path,
+            language: displayLang,
+            loc: f.loc || 200,
+            functions: 3,
+            classes: 0,
+            complexity: 8.2,
+            grade: 'A',
+            severity: '—'
+          };
+        });
       } else {
         // Fallback: derive files from findings
         const fileMap = new Map<string, ScannedFile>();
         data.findings?.forEach((finding) => {
           if (!fileMap.has(finding.file)) {
             const fileName = finding.file.split('/').pop() || finding.file;
-            const isJs = fileName.endsWith('.js') || fileName.endsWith('.ts');
+            const detectLanguage = (name: string): string => {
+              if (name.endsWith('.py')) return 'py';
+              if (name.endsWith('.js')) return 'js';
+              if (name.endsWith('.ts')) return 'ts';
+              if (name.endsWith('.tsx')) return 'ts';
+              if (name.endsWith('.jsx')) return 'js';
+              if (name.endsWith('.go')) return 'go';
+              if (name.endsWith('.java')) return 'java';
+              if (name.endsWith('.rs')) return 'rust';
+              return 'py';
+            };
             fileMap.set(finding.file, {
               name: fileName,
               path: finding.file,
-              language: isJs ? 'js' : 'py',
+              language: detectLanguage(fileName),
               loc: 200,
               functions: 3,
               classes: 0,
@@ -832,6 +860,36 @@ ${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
     }
   };
 
+  const getLanguageLabel = (lang: string): string => {
+    const labels: Record<string, string> = {
+      'python': 'Python',
+      'py': 'Python',
+      'javascript': 'JavaScript',
+      'js': 'JavaScript',
+      'typescript': 'TypeScript',
+      'ts': 'TypeScript',
+      'go': 'Go',
+      'java': 'Java',
+      'rust': 'Rust'
+    };
+    return labels[lang.toLowerCase()] || lang;
+  };
+
+  const getLanguageIcon = (lang: string): string => {
+    const icons: Record<string, string> = {
+      'python': '🐍',
+      'py': '🐍',
+      'javascript': '📜',
+      'js': '📜',
+      'typescript': '📘',
+      'ts': '📘',
+      'go': '🔵',
+      'java': '☕',
+      'rust': '🦀'
+    };
+    return icons[lang.toLowerCase()] || '📄';
+  };
+
   const getThemeStyles = () => theme === 'light' ? lightTheme : darkTheme;
   const ts = getThemeStyles();
 
@@ -839,6 +897,24 @@ ${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
     <div style={ts.container}>
       {/* TOPBAR */}
       <div style={ts.topbar}>
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            background: 'none',
+            border: 'none',
+            outline: 'none',
+            cursor: 'pointer',
+            padding: '4px 8px',
+            fontSize: '18px',
+            color: theme === 'light' ? '#333' : '#fff',
+            marginRight: '8px',
+            display: 'flex',
+            alignItems: 'center'
+          }}
+          title="Go back"
+        >
+          ←
+        </button>
         <div style={ts.tbLogo}>
           <div style={ts.logoHex}>⬡</div>
           <span style={ts.tbName}>CodeLens<sup>BETA</sup></span>
@@ -852,11 +928,6 @@ ${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
           <span style={ts.duration}>· 0.24s</span>
         </div>
         <div style={ts.tbSpacer}></div>
-        <div style={ts.tbChips}>
-          <span style={ts.chip}>Python only</span>
-          <span style={{...ts.chip, ...ts.chipWarning}}>Max 15k files</span>
-          <span style={ts.chip}>100 MB zip</span>
-        </div>
         <div style={ts.tbActs}>
           {scannedFiles.length > 0 && (
             <div style={{display: 'flex', gap: '4px', marginRight: '12px'}}>
@@ -898,6 +969,30 @@ ${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
                     Browse <span style={{fontSize: '8px'}}>▾</span>
                   </button>
                 </div>
+              </div>
+              <div style={{padding: '8px 14px'}}>
+                <label style={{fontSize: '9px', color: theme === 'light' ? '#666' : '#aaa', display: 'block', marginBottom: '4px'}}>Language</label>
+                <select
+                  value={detectedLanguage}
+                  onChange={(e) => setDetectedLanguage(e.target.value as SupportedLanguage)}
+                  style={{
+                    width: '100%',
+                    padding: '6px 8px',
+                    fontSize: '11px',
+                    border: `1px solid ${theme === 'light' ? '#ddd' : '#444'}`,
+                    borderRadius: '3px',
+                    background: theme === 'light' ? '#f9f9f9' : '#1a1a1a',
+                    color: theme === 'light' ? '#333' : '#eee',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="python">{getLanguageIcon('python')} Python</option>
+                  <option value="javascript">{getLanguageIcon('javascript')} JavaScript</option>
+                  <option value="typescript">{getLanguageIcon('typescript')} TypeScript</option>
+                  <option value="go">{getLanguageIcon('go')} Go</option>
+                  <option value="java">{getLanguageIcon('java')} Java</option>
+                  <option value="rust">{getLanguageIcon('rust')} Rust</option>
+                </select>
               </div>
               {error && (
                 <div style={{padding: '8px 14px', fontSize: '9px', color: '#ff6b6b', backgroundColor: 'rgba(255, 107, 107, 0.08)', borderLeft: '2px solid #ff6b6b', margin: '6px 14px', borderRadius: '3px'}}>
@@ -993,11 +1088,11 @@ ${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
                 scannedFiles.map((file) => (
                   <div
                     key={file.name}
-                    style={{...ts.fi, ...(selectedFile?.name === file.name ? ts.fiOn : {})}}
+                    style={{...ts.fi, ...(selectedFile?.name === file.name ? ts.fiOn : {}), display: 'flex', alignItems: 'center', gap: '6px'}}
                     onClick={() => setSelectedFile(file)}
                   >
-                    <div style={{...ts.fiDot, ...(file.language === 'py' ? ts.fiDotPy : ts.fiDotJs)}}></div>
-                    <span style={ts.fiName}>{file.name}</span>
+                    <div style={{fontSize: '12px'}}>{getLanguageIcon(file.language)}</div>
+                    <span style={{...ts.fiName, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis'}}>{file.name}</span>
                     <span style={ts.fiLoc}>{file.loc}</span>
                   </div>
                 ))
@@ -1167,7 +1262,12 @@ ${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
                               {file.name}
                             </div>
                           </td>
-                          <td style={ts.td}><span style={file.language === 'py' ? ts.ltPy : ts.ltJs}>{file.language}</span></td>
+                          <td style={ts.td}>
+                            <span style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
+                              <span>{getLanguageIcon(file.language)}</span>
+                              <span style={file.language === 'py' ? ts.ltPy : ts.ltJs}>{getLanguageLabel(file.language)}</span>
+                            </span>
+                          </td>
                           <td style={{...ts.td, ...ts.tdNum}}>{file.loc}</td>
                           <td style={{...ts.td, ...ts.tdNum}}>{file.functions}</td>
                           <td style={{...ts.td, ...ts.tdNum}}>{file.classes}</td>
