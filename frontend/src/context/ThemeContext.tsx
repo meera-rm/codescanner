@@ -21,7 +21,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.setAttribute('data-theme', 'dark');
-      document.body.style.backgroundColor = '#121212';
+      document.body.style.backgroundColor = '#0a0e27';
       document.body.style.color = '#ffffff';
     } else {
       document.documentElement.removeAttribute('data-theme');

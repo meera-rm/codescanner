@@ -10,47 +10,72 @@
 }
 
 [data-theme="dark"] {
-  --bg-primary: #121212;
-  --bg-secondary: #1e1e1e;
-  --text-primary: #ffffff;
-  --text-secondary: #b0bec5;
-  --border-color: #333333;
-  --shadow-color: rgba(0, 0, 0, 0.5);
+  --bg-primary: #0a0e27;
+  --bg-secondary: #12172e;
+  --text-primary: #e8eef5;
+  --text-secondary: #c0c8d8;
+  --border-color: #1a1f35;
+  --shadow-color: rgba(0, 0, 0, 0.7);
 }
 
 /* Apply dark mode to body and common elements */
 [data-theme="dark"] body {
-  background-color: #121212;
+  background-color: #0a0e27;
   color: #ffffff;
 }
 
-[data-theme="dark"] .MuiPaper-root {
-  background-color: #1e1e1e !important;
-  color: #ffffff !important;
+/* Dark backgrounds get light text */
+[data-theme="dark"] .MuiPaper-root[style*="rgb(30, 30, 30)"],
+[data-theme="dark"] .MuiPaper-root:not([style*="rgb(245"]) {
+  background-color: #12172e !important;
+  color: #e8eef5 !important;
 }
 
+/* Light backgrounds keep dark text (except summary cards which have inline styles) */
 [data-theme="dark"] .MuiTypography-root {
-  color: #ffffff !important;
+  color: #e8eef5;
+}
+
+[data-theme="dark"] .MuiTypography-h5,
+[data-theme="dark"] .MuiTypography-h6 {
+  color: #f5f5f5;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .MuiTypography-body2 {
+  color: #d0d8e8;
+}
+
+[data-theme="dark"] .MuiTypography-caption {
+  color: #a8b0c0;
 }
 
 [data-theme="dark"] .MuiButton-outlined {
-  color: #ffffff;
-  border-color: #555555;
+  color: #e8eef5;
+  border-color: #252d4a;
 }
 
 [data-theme="dark"] .MuiButton-outlined:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  border-color: #777777;
+  border-color: #35405a;
+}
+
+[data-theme="dark"] .MuiButton-text {
+  color: #e8eef5;
+}
+
+[data-theme="dark"] .MuiButton-contained {
+  color: #ffffff;
 }
 
 [data-theme="dark"] .MuiDialog-paper {
-  background-color: #1e1e1e;
+  background-color: #12172e;
   color: #ffffff;
 }
 
 [data-theme="dark"] .MuiDialogTitle-root {
   color: #ffffff;
-  border-bottom-color: #333333;
+  border-bottom-color: #1a1f35;
 }
 
 [data-theme="dark"] .MuiSlider-root {
@@ -66,13 +91,13 @@
 }
 
 [data-theme="dark"] .MuiChip-root {
-  background-color: #2a2a2a;
-  color: #ffffff;
+  background-color: #1a1f35;
+  color: #e8eef5;
 }
 
 [data-theme="dark"] .MuiListItem-root {
-  background-color: #2a2a2a;
-  color: #ffffff;
+  background-color: #1a1f35;
+  color: #e8eef5;
 }
 
 [data-theme="dark"] .MuiSwitch-switchBase {
@@ -84,7 +109,7 @@
 }
 
 [data-theme="dark"] .MuiSwitch-track {
-  background-color: #555555;
+  background-color: #252d4a;
 }
 
 [data-theme="dark"] .MuiInput-root {
@@ -92,7 +117,7 @@
 }
 
 [data-theme="dark"] .MuiInput-underline:before {
-  border-bottom-color: #555555;
+  border-bottom-color: #252d4a;
 }
 
 [data-theme="dark"] .MuiInput-underline:after {
@@ -102,9 +127,9 @@
 [data-theme="dark"] input,
 [data-theme="dark"] textarea,
 [data-theme="dark"] select {
-  background-color: #2a2a2a;
+  background-color: #1a1f35;
   color: #ffffff;
-  border-color: #555555;
+  border-color: #252d4a;
 }
 
 [data-theme="dark"] input::placeholder {
@@ -113,36 +138,83 @@
 
 /* Cards and containers */
 [data-theme="dark"] .path-card {
-  background-color: #1e1e1e;
+  background-color: #12172e;
   color: #ffffff;
-  border-color: #333333;
+  border-color: #1a1f35;
 }
 
 [data-theme="dark"] .home-container {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: linear-gradient(135deg, #0a0e27 0%, #12172e 100%);
 }
 
 [data-theme="dark"] .theme-toggle-button {
-  background-color: #2a2a2a;
+  background-color: #12172e;
   color: #ffffff;
-  border-color: #444444;
+  border-color: #1a1f35;
 }
 
 [data-theme="dark"] .theme-toggle-button:hover {
-  background-color: #3a3a3a;
-  border-color: #555555;
+  background-color: #1a1f35;
+  border-color: #252d4a;
 }
 
 [data-theme="dark"] .theme-dropdown {
-  background-color: #2a2a2a;
-  border-color: #444444;
+  background-color: #12172e;
+  border-color: #1a1f35;
 }
 
 [data-theme="dark"] .theme-option {
-  background-color: #2a2a2a;
+  background-color: #12172e;
   color: #ffffff;
 }
 
 [data-theme="dark"] .theme-option:hover {
-  background-color: #3a3a3a;
+  background-color: #1a1f35;
+}
+
+/* Chart and SVG text */
+[data-theme="dark"] .recharts-text {
+  fill: #d0d8e8 !important;
+}
+
+[data-theme="dark"] .recharts-cartesian-axis-tick text {
+  fill: #b0b8c8 !important;
+}
+
+[data-theme="dark"] .recharts-legend-wrapper {
+  color: #d0d8e8 !important;
+}
+
+[data-theme="dark"] .recharts-legend-item-text {
+  color: #d0d8e8 !important;
+}
+
+/* Widget specific styling */
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4 {
+  color: #f5f5f5;
+}
+
+[data-theme="dark"] .lucide-react {
+  color: #e8eef5;
+}
+
+/* Tab styling */
+[data-theme="dark"] button[role="tab"] {
+  color: #a0a8b8;
+}
+
+[data-theme="dark"] button[role="tab"][aria-selected="true"] {
+  color: #1976d2;
+}
+
+/* Keep text readable - only apply light colors where background is dark */
+[data-theme="dark"] .MuiPaper-root h5 {
+  color: #f5f5f5;
+}
+
+[data-theme="dark"] strong,
+[data-theme="dark"] b {
+  color: #f5f5f5;
 }
