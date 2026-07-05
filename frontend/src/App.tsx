@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import Home from './pages/Home';
+import Dashboard from './pages/Dashboard';
 import { CAQILanding } from './pages/CAQILanding';
 import { CAQIDashboard } from './pages/CAQIDashboard';
 import { CAQIAnalyzer } from './pages/CAQIAnalyzer';
@@ -18,6 +19,7 @@ const App: React.FC = () => {
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/personality" element={<PersonalityProfiler />} />
           <Route path="/letter" element={<InheritanceLetter />} />
           <Route path="/caqi" element={<CAQILanding />} />

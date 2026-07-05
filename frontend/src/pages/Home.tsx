@@ -43,6 +43,15 @@ export const Home: React.FC = () => {
       description: 'Generate onboarding guides and team profiles for new hires',
       icon: '👥',
       color: '#f39c12'
+    },
+    {
+      id: 'dashboard',
+      title: 'Analytics Dashboard',
+      subtitle: 'Main Hub',
+      description: 'View real-time metrics, health monitoring, and AI insights',
+      icon: '📈',
+      color: '#e74c3c',
+      featured: true
     }
   ];
 
@@ -56,7 +65,11 @@ export const Home: React.FC = () => {
 
       <main className="paths-grid">
         {paths.map((path) => (
-          <Link key={path.id} to={`/${path.id}`} className="path-card">
+          <Link
+            key={path.id}
+            to={`/${path.id}`}
+            className={`path-card ${path.featured ? 'featured' : ''}`}
+          >
             <div className="path-icon" style={{ '--icon-color': path.color } as React.CSSProperties}>
               {path.icon}
             </div>
