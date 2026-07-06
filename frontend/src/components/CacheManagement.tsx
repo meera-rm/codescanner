@@ -6,39 +6,35 @@ import {
   Grid,
   Button,
   Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   CircularProgress,
   Alert,
-  LinearProgress,
   Typography,
   Chip,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-interface CacheStats {
-  name: string;
-  keys_count: number;
-  memory_usage_bytes: number;
-  ttl_minutes: number;
-  hit_rate_percent?: number;
-  eviction_policy?: string;
-}
-
 interface CacheInfo {
-  redis_connected: boolean;
-  redis_host: string;
-  redis_port: number;
-  redis_db: number;
-  connected_clients: number;
-  used_memory_mb: number;
-  total_memory_mb: number;
-  cache_stats: CacheStats[];
+  status: string;
+  server: {
+    version: string;
+    process_id: number;
+    uptime_seconds: number;
+  };
+  clients: {
+    connected: number;
+    blocked: number;
+  };
+  memory: {
+    used_bytes: number;
+    used_human: string;
+    peak_bytes: number;
+    peak_human: string;
+  };
+  stats: {
+    total_connections_received: number;
+    total_commands_processed: number;
+  };
 }
 
 export function CacheManagement() {
@@ -135,10 +131,6 @@ export function CacheManagement() {
     );
   }
 
-  const memoryUsagePercent = cacheInfo
-    ? (cacheInfo.used_memory_mb / cacheInfo.total_memory_mb) * 100
-    : 0;
-
   return (
     <Box sx={{ p: 2 }}>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -159,12 +151,12 @@ export function CacheManagement() {
                     <Box>
                       <Typography variant="h6">Redis Connection</Typography>
                       <Typography variant="body2" color="textSecondary">
-                        {cacheInfo.redis_host}:{cacheInfo.redis_port} (DB {cacheInfo.redis_db})
+                        Version {cacheInfo.server.version} • PID {cacheInfo.server.process_id}
                       </Typography>
                     </Box>
                     <Chip
-                      label={cacheInfo.redis_connected ? 'Connected' : 'Disconnected'}
-                      color={cacheInfo.redis_connected ? 'success' : 'error'}
+                      label={cacheInfo.status === 'available' ? 'Connected' : 'Disconnected'}
+                      color={cacheInfo.status === 'available' ? 'success' : 'error'}
                       variant="outlined"
                     />
                   </Box>
@@ -174,20 +166,19 @@ export function CacheManagement() {
                       <Typography color="textSecondary" gutterBottom>
                         Connected Clients
                       </Typography>
-                      <Typography variant="h5">{cacheInfo.connected_clients}</Typography>
+                      <Typography variant="h5">{cacheInfo.clients.connected}</Typography>
                     </Grid>
-                    <Grid item xs={12} sm={8}>
+                    <Grid item xs={12} sm={4}>
                       <Typography color="textSecondary" gutterBottom>
-                        Memory Usage ({cacheInfo.used_memory_mb}MB / {cacheInfo.total_memory_mb}MB)
+                        Uptime
                       </Typography>
-                      <LinearProgress
-                        variant="determinate"
-                        value={Math.min(memoryUsagePercent, 100)}
-                        sx={{ height: 10, borderRadius: 5 }}
-                      />
-                      <Typography variant="caption" sx={{ mt: 1 }}>
-                        {memoryUsagePercent.toFixed(1)}% used
+                      <Typography variant="h5">{Math.round(cacheInfo.server.uptime_seconds / 60)}m</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <Typography color="textSecondary" gutterBottom>
+                        Memory Usage
                       </Typography>
+                      <Typography variant="h5">{cacheInfo.memory.used_human}</Typography>
                     </Grid>
                   </Grid>
                 </CardContent>
@@ -248,46 +239,29 @@ export function CacheManagement() {
             </Grid>
           </Grid>
 
-          {/* Cache Statistics */}
-          {cacheInfo.cache_stats.length > 0 && (
-            <Grid item xs={12}>
+          {/* Redis Stats */}
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid item xs={12} sm={6}>
               <Card>
-                <CardHeader title="Cache Statistics by Scope" />
-                <TableContainer>
-                  <Table>
-                    <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
-                      <TableRow>
-                        <TableCell>Cache Scope</TableCell>
-                        <TableCell align="right">Keys Count</TableCell>
-                        <TableCell align="right">Memory Usage</TableCell>
-                        <TableCell align="right">TTL (Minutes)</TableCell>
-                        <TableCell align="right">Hit Rate</TableCell>
-                        <TableCell align="right">Eviction Policy</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {cacheInfo.cache_stats.map((stat) => (
-                        <TableRow key={stat.name}>
-                          <TableCell>{stat.name}</TableCell>
-                          <TableCell align="right">{stat.keys_count}</TableCell>
-                          <TableCell align="right">
-                            {(stat.memory_usage_bytes / 1024).toFixed(2)} KB
-                          </TableCell>
-                          <TableCell align="right">{stat.ttl_minutes}</TableCell>
-                          <TableCell align="right">
-                            {stat.hit_rate_percent ? `${stat.hit_rate_percent.toFixed(1)}%` : 'N/A'}
-                          </TableCell>
-                          <TableCell align="right">
-                            {stat.eviction_policy || 'Default'}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography color="textSecondary" gutterBottom>
+                    Total Commands Processed
+                  </Typography>
+                  <Typography variant="h4">{cacheInfo.stats.total_commands_processed}</Typography>
+                </CardContent>
               </Card>
             </Grid>
-          )}
+            <Grid item xs={12} sm={6}>
+              <Card>
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography color="textSecondary" gutterBottom>
+                    Total Connections
+                  </Typography>
+                  <Typography variant="h4">{cacheInfo.stats.total_connections_received}</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
 
           {/* Cache Configuration Info */}
           <Grid container spacing={2} sx={{ mt: 2 }}>
