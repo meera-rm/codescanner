@@ -61,10 +61,16 @@ export function PerformanceMonitoring() {
         fetch(`http://localhost:8000/api/v1/performance/distribution?minutes=${minutes}`),
       ]);
 
+      if (!summaryRes.ok) {
+        setError(`Failed to load performance metrics: ${summaryRes.status}`);
+        setLoading(false);
+        return;
+      }
+
       const [summaryData, endpointsData, distData] = await Promise.all([
         summaryRes.json(),
-        endpointsRes.json(),
-        distRes.json(),
+        endpointsRes.ok ? endpointsRes.json() : {},
+        distRes.ok ? distRes.json() : {},
       ]);
 
       setSummary(summaryData);
@@ -124,7 +130,11 @@ export function PerformanceMonitoring() {
         </Box>
       )}
 
-      {summary && (
+      {!summary ? (
+        <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+          No performance data available. Make some API requests and try again.
+        </Box>
+      ) : (
         <>
           {/* Summary Cards */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -134,7 +144,7 @@ export function PerformanceMonitoring() {
                   <Typography color="textSecondary" gutterBottom>
                     Total Requests
                   </Typography>
-                  <Typography variant="h4">{summary.total_requests}</Typography>
+                  <Typography variant="h4">{summary?.total_requests || 0}</Typography>
                 </CardContent>
               </Card>
             </Grid>
@@ -144,7 +154,7 @@ export function PerformanceMonitoring() {
                   <Typography color="textSecondary" gutterBottom>
                     Avg Response Time
                   </Typography>
-                  <Typography variant="h4">{summary.avg_response_time_ms.toFixed(1)}ms</Typography>
+                  <Typography variant="h4">{(summary?.avg_response_time_ms || 0).toFixed(1)}ms</Typography>
                 </CardContent>
               </Card>
             </Grid>
@@ -154,8 +164,8 @@ export function PerformanceMonitoring() {
                   <Typography color="textSecondary" gutterBottom>
                     P95 Response Time
                   </Typography>
-                  <Typography variant="h4" sx={{ color: summary.p95_response_time_ms > 500 ? '#d32f2f' : '#4caf50' }}>
-                    {summary.p95_response_time_ms.toFixed(1)}ms
+                  <Typography variant="h4" sx={{ color: (summary?.p95_response_time_ms || 0) > 500 ? '#d32f2f' : '#4caf50' }}>
+                    {(summary?.p95_response_time_ms || 0).toFixed(1)}ms
                   </Typography>
                 </CardContent>
               </Card>
@@ -166,8 +176,8 @@ export function PerformanceMonitoring() {
                   <Typography color="textSecondary" gutterBottom>
                     Error Rate
                   </Typography>
-                  <Typography variant="h4" sx={{ color: summary.error_rate_percent > 2 ? '#d32f2f' : '#4caf50' }}>
-                    {summary.error_rate_percent.toFixed(2)}%
+                  <Typography variant="h4" sx={{ color: (summary?.error_rate_percent || 0) > 2 ? '#d32f2f' : '#4caf50' }}>
+                    {(summary?.error_rate_percent || 0).toFixed(2)}%
                   </Typography>
                 </CardContent>
               </Card>

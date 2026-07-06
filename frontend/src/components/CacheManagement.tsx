@@ -58,8 +58,14 @@ export function CacheManagement() {
         fetch('http://localhost:8000/api/v1/cache/info'),
       ]);
 
+      if (!infoRes.ok) {
+        setError(`Failed to load cache information: ${infoRes.status}`);
+        setLoading(false);
+        return;
+      }
+
       const [_statsData, infoData] = await Promise.all([
-        statsRes.json(),
+        statsRes.ok ? statsRes.json() : {},
         infoRes.json(),
       ]);
 
@@ -138,7 +144,11 @@ export function CacheManagement() {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
-      {cacheInfo && (
+      {!cacheInfo ? (
+        <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+          No cache information available.
+        </Box>
+      ) : (
         <>
           {/* Connection Status */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
