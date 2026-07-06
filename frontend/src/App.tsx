@@ -14,6 +14,8 @@ import CodeScanner from './pages/CodeScanner';
 import OnboardingProfiles from './pages/OnboardingProfiles';
 import APIDocumentation from './pages/APIDocumentation';
 import IterationDashboard from './pages/IterationDashboard';
+import GitHubConnect from './pages/GitHubConnect';
+import GitHubCallback from './pages/GitHubCallback';
 
 const App: React.FC = () => {
   return (
@@ -33,6 +35,8 @@ const App: React.FC = () => {
           <Route path="/api" element={<APIDocumentation />} />
           <Route path="/dashboard/:jobId" element={<IterationDashboard />} />
           <Route path="/iteration/:jobId" element={<IterationDashboard />} />
+          <Route path="/github-connect" element={<GitHubConnect />} />
+          <Route path="/github-callback" element={<GitHubCallback />} />
         </Routes>
       </Router>
     </ErrorBoundary>

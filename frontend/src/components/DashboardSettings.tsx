@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Paper, Typography, Box, Slider, Switch, FormControlLabel, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import { Settings, Moon, Sun } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Paper, Typography, Box, Slider, Switch, FormControlLabel, Button, Dialog, DialogTitle, DialogContent, DialogActions, Divider } from '@mui/material';
+import { Settings, Moon, Sun, Github } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 interface DashboardConfig {
@@ -16,6 +17,7 @@ interface DashboardSettingsProps {
 }
 
 const DashboardSettings: React.FC<DashboardSettingsProps> = ({ config, onConfigChange }) => {
+  const navigate = useNavigate();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const [open, setOpen] = useState(false);
   const [localConfig, setLocalConfig] = useState(config);
@@ -119,6 +121,33 @@ const DashboardSettings: React.FC<DashboardSettingsProps> = ({ config, onConfigC
             <Typography variant="caption" sx={{ color: '#999', display: 'block', mt: 1 }}>
               Automatically export dashboard data daily at 9 AM
             </Typography>
+          </Box>
+
+          {/* GitHub Integration */}
+          <Divider sx={{ my: 2 }} />
+
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <Github size={20} color="#0366d6" />
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                GitHub Integration
+              </Typography>
+            </Box>
+            <Typography variant="body2" sx={{ color: '#666', mb: 2 }}>
+              Connect your GitHub repositories for automated PR scanning and code review
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<Github size={18} />}
+              onClick={() => {
+                handleClose();
+                navigate('/github-connect');
+              }}
+              fullWidth
+            >
+              Setup GitHub Integration
+            </Button>
           </Box>
         </DialogContent>
 
