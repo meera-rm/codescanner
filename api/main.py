@@ -34,7 +34,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 # Auth disabled for local development
-from api.routes import health, auth, creative_suite, config, caqi_enhanced, scanner, onboarding, iteration, dashboard, metrics, webhooks, analysis, advanced_analytics, github
+from api.routes import health, auth, creative_suite, config, caqi_enhanced, scanner, onboarding, iteration, dashboard, metrics, webhooks, analysis, advanced_analytics, github, jobs
+from api.tasks import job_queue
 from api.db.database import engine, Base
 
 
@@ -83,6 +84,7 @@ app.include_router(webhooks.router)  # Webhook management
 app.include_router(analysis.router)  # Code analysis (architecture, git, refactoring)
 app.include_router(advanced_analytics.router)  # Path I+1: Advanced Analytics
 app.include_router(github.router)  # Phase 12: GitHub Integration
+app.include_router(jobs.router)  # Phase 12.4: Job queue management
 
 # ============================================================================
 # Root & Documentation Endpoints
