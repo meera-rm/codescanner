@@ -34,9 +34,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 # Auth disabled for local development
-from api.routes import health, auth, creative_suite, config, caqi_enhanced, scanner, onboarding, iteration, dashboard, metrics, webhooks, analysis, advanced_analytics, github, jobs, ci, ci_dashboard, alerts, search, websocket, cache
+from api.routes import health, auth, creative_suite, config, caqi_enhanced, scanner, onboarding, iteration, dashboard, metrics, webhooks, analysis, advanced_analytics, github, jobs, ci, ci_dashboard, alerts, search, websocket, cache, performance
 from api.tasks import job_queue
 from api.db.database import engine, Base
+from api.middleware.performance_middleware import performance_monitoring_middleware
 
 
 # ============================================================================
@@ -59,6 +60,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Performance monitoring middleware
+app.middleware("http")(performance_monitoring_middleware)
 
 # ============================================================================
 # Database Initialization
@@ -91,6 +95,7 @@ app.include_router(alerts.router)  # Phase 15.A.1: Alerts & Notifications
 app.include_router(search.router)  # Phase 15.A.5: Search & Advanced Filtering
 app.include_router(websocket.router)  # Phase 15.A.3: Real-time WebSocket Updates
 app.include_router(cache.router)  # Phase 15.A.4: Redis Caching
+app.include_router(performance.router)  # Phase 15.A.6: Performance Profiling
 
 # ============================================================================
 # Root & Documentation Endpoints
