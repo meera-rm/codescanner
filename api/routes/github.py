@@ -4,8 +4,12 @@ from sqlalchemy.orm import Session
 from api.db.database import get_db
 from api.db.models import GitHubInstallation, GitHubRepository, User
 from api.services.github_service import GitHubService
+from api.services.pr_scan_service import PRScanService
 import uuid
 from datetime import datetime
+import os
+import tempfile
+import subprocess
 
 router = APIRouter(prefix="/api/v1/github", tags=["github"])
 
@@ -244,6 +248,100 @@ async def update_repository(
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.post("/scan-pr")
+async def scan_pr(
+    repo_name: str,
+    pr_number: int,
+    access_token: str,
+    base_branch: str = "main",
+    head_branch: str = "HEAD",
+    db: Session = Depends(get_db),
+):
+    """Trigger a PR scan."""
+    try:
+        # Get repository from database
+        repo = (
+            db.query(GitHubRepository)
+            .filter(GitHubRepository.repo_name == repo_name)
+            .first()
+        )
+
+        if not repo:
+            raise HTTPException(status_code=404, detail="Repository not found")
+
+        if not repo.enabled:
+            raise HTTPException(status_code=400, detail="Repository scanning disabled")
+
+        # Clone repo to temp directory
+        with tempfile.TemporaryDirectory() as temp_dir:
+            clone_url = f"https://{access_token}@github.com/{repo_name}.git"
+
+            try:
+                subprocess.run(
+                    ["git", "clone", clone_url, temp_dir],
+                    capture_output=True,
+                    timeout=60
+                )
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Failed to clone repo: {str(e)}")
+
+            # Scan the PR
+            scan_service = PRScanService(temp_dir, repo.id)
+            scan_result = scan_service.scan_pr(
+                base_branch=base_branch,
+                head_branch=head_branch,
+                pr_number=pr_number,
+                repo_name=repo_name,
+                db=db
+            )
+
+            if scan_result['status'] == 'error':
+                raise HTTPException(status_code=400, detail=scan_result.get('error'))
+
+            # Generate review comment
+            comment = scan_service.generate_review_comment(
+                scan_result['findings'],
+                pr_number
+            )
+
+            # Post comment to PR
+            if comment:
+                github_service.post_pr_comment(
+                    access_token,
+                    repo_name,
+                    pr_number,
+                    comment
+                )
+
+            # Determine if PR should be blocked
+            should_block = scan_service.should_block_pr(
+                scan_result['findings'],
+                repo.fail_on_critical,
+                repo.fail_on_error
+            )
+
+            # Set PR status
+            status = "failure" if should_block else "success"
+            description = f"CodePulse scan: {status.upper()}"
+
+            if scan_result['summary']['critical'] > 0:
+                description += f" - {scan_result['summary']['critical']} critical issue(s)"
+
+            return {
+                "status": "completed",
+                "pr_number": pr_number,
+                "repository": repo_name,
+                "scan_result": scan_result,
+                "should_block": should_block,
+                "comment_posted": True
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/webhook")
 async def handle_webhook(request: Request, db: Session = Depends(get_db)):
     """Handle GitHub webhook events."""
@@ -265,17 +363,34 @@ async def handle_webhook(request: Request, db: Session = Depends(get_db)):
             if action in ["opened", "synchronize"]:
                 pr_data = payload.get("pull_request", {})
                 repo_data = payload.get("repository", {})
+                installation_id = payload.get("installation", {}).get("id")
 
-                return {
-                    "status": "received",
-                    "event": event,
-                    "action": action,
-                    "message": "PR scan will be triggered",
-                    "pr": {
-                        "number": pr_data.get("number"),
-                        "repository": repo_data.get("full_name"),
-                    },
-                }
+                pr_number = pr_data.get("number")
+                repo_name = repo_data.get("full_name")
+                commit_sha = pr_data.get("head", {}).get("sha")
+
+                # Get installation and access token
+                installation = (
+                    db.query(GitHubInstallation)
+                    .filter(GitHubInstallation.installation_id == installation_id)
+                    .first()
+                )
+
+                if installation:
+                    token = github_service.decrypt_token(installation.token)
+
+                    # Queue scan (for now, just acknowledge)
+                    return {
+                        "status": "queued",
+                        "event": event,
+                        "action": action,
+                        "message": "PR scan queued",
+                        "pr": {
+                            "number": pr_number,
+                            "repository": repo_name,
+                            "commit": commit_sha,
+                        },
+                    }
 
         return {"status": "acknowledged", "event": event}
     except Exception as e:
