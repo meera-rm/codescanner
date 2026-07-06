@@ -1,5 +1,6 @@
 """Service for managing CI/CD scan history and metrics."""
 import uuid
+import asyncio
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
@@ -61,6 +62,39 @@ class CIHistoryService:
 
         # Update trend metrics
         CIHistoryService.update_trend_metrics(db, repository)
+
+        # Invalidate cache for this repository
+        try:
+            from api.services.cache_service import CacheService
+            CacheService.invalidate_on_scan(repository)
+        except Exception as e:
+            print(f"Failed to invalidate cache: {e}")
+
+        # Broadcast scan completion to WebSocket clients (async, non-blocking)
+        try:
+            from api.services.websocket_service import manager
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # We're in an async context, create task
+                asyncio.create_task(manager.broadcast_scan_complete(scan))
+            else:
+                # We're in a sync context, schedule for later
+                # The FastAPI event loop will handle it
+                pass
+        except RuntimeError:
+            # No event loop, which is fine - FastAPI will broadcast when it has a loop
+            pass
+        except Exception as e:
+            print(f"Failed to broadcast scan: {e}")
+
+        # Send alerts if thresholds triggered
+        try:
+            from api.services.alert_service import AlertService
+            alert_results = AlertService.process_alerts(db, scan)
+            if alert_results.get('email_sent') or alert_results.get('slack_sent'):
+                print(f"Alerts sent for {repository}: email={alert_results['email_sent']}, slack={alert_results['slack_sent']}")
+        except Exception as e:
+            print(f"Failed to process alerts: {e}")
 
         return scan
 

@@ -16,6 +16,7 @@ import APIDocumentation from './pages/APIDocumentation';
 import IterationDashboard from './pages/IterationDashboard';
 import GitHubConnect from './pages/GitHubConnect';
 import GitHubCallback from './pages/GitHubCallback';
+import CIDashboard from './pages/CIDashboard';
 
 const App: React.FC = () => {
   return (
@@ -24,6 +25,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/ci-dashboard" element={<CIDashboard />} />
           <Route path="/security-dashboard" element={<SecurityDashboard />} />
           <Route path="/personality" element={<PersonalityProfiler />} />
           <Route path="/letter" element={<InheritanceLetter />} />

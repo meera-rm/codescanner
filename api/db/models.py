@@ -394,3 +394,33 @@ class CITrendMetrics(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class AlertPreference(Base):
+    """User alert notification preferences."""
+
+    __tablename__ = "alert_preferences"
+
+    id = Column(String, primary_key=True, index=True)
+    repository = Column(String, index=True)  # Repository to alert on (or "all")
+
+    # Thresholds
+    alert_on_critical = Column(Boolean, default=True)
+    alert_on_error = Column(Boolean, default=False)
+    critical_threshold = Column(Integer, default=1)  # Alert if >= N critical issues
+    error_threshold = Column(Integer, default=5)     # Alert if >= N errors
+
+    # Channels
+    email_enabled = Column(Boolean, default=True)
+    email_address = Column(String, nullable=True)
+    slack_enabled = Column(Boolean, default=False)
+    slack_webhook = Column(String, nullable=True)  # Encrypted webhook URL
+
+    # Frequency
+    alert_frequency = Column(String, default='immediate')  # immediate, daily, weekly
+
+    # Status
+    is_active = Column(Boolean, default=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
