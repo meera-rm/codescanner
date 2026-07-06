@@ -315,3 +315,82 @@ class PRScan(Base):
     completed_at = Column(DateTime, nullable=True)
 
     repository = relationship("GitHubRepository", back_populates="pr_scans")
+
+
+# Phase 14.5: CI/CD Integration - Dashboard & Reports
+
+class CIScanHistory(Base):
+    """Track CI/CD scan execution history."""
+
+    __tablename__ = "ci_scan_history"
+
+    id = Column(String, primary_key=True, index=True)
+    repository = Column(String, index=True)  # Repository path or name
+    branch = Column(String, default="main", index=True)
+    platform = Column(String, index=True)  # github, gitlab, jenkins, circleci, etc.
+    event_type = Column(String)  # push, pull_request, schedule, manual
+    commit_sha = Column(String, nullable=True, index=True)
+    status = Column(String, index=True)  # success, failure, warning
+
+    # Findings summary
+    critical_count = Column(Integer, default=0)
+    error_count = Column(Integer, default=0)
+    warning_count = Column(Integer, default=0)
+    info_count = Column(Integer, default=0)
+    total_findings = Column(Integer, default=0)
+
+    # File statistics
+    files_scanned = Column(Integer, default=0)
+    languages = Column(JSON, default={})  # {python: 50, javascript: 30, sql: 5}
+
+    # Report formats
+    report_json = Column(JSON, nullable=True)
+    report_sarif = Column(JSON, nullable=True)
+    report_junit = Column(Text, nullable=True)
+    report_sonarqube = Column(JSON, nullable=True)
+
+    # Performance
+    duration_ms = Column(Integer, nullable=True)
+
+    # Metadata
+    webhook_id = Column(String, nullable=True, index=True)
+    scan_job_id = Column(String, nullable=True, index=True)
+    triggered_by = Column(String, nullable=True)  # user email or service
+
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    completed_at = Column(DateTime, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class CITrendMetrics(Base):
+    """Aggregated CI/CD metrics for trends and analytics."""
+
+    __tablename__ = "ci_trend_metrics"
+
+    id = Column(String, primary_key=True, index=True)
+    repository = Column(String, unique=True, index=True)
+
+    # Current metrics
+    last_scan_at = Column(DateTime, nullable=True)
+    total_scans = Column(Integer, default=0)
+    successful_scans = Column(Integer, default=0)
+    failed_scans = Column(Integer, default=0)
+    pass_rate = Column(Float, default=0.0)  # 0-100
+
+    # Trend data (last 30 days)
+    avg_critical_per_scan = Column(Float, default=0.0)
+    avg_error_per_scan = Column(Float, default=0.0)
+    avg_warning_per_scan = Column(Float, default=0.0)
+    avg_scan_duration_ms = Column(Integer, default=0)
+
+    # Historical data
+    critical_trend = Column(JSON, default=[])  # List of {date, count}
+    error_trend = Column(JSON, default=[])
+    warning_trend = Column(JSON, default=[])
+    pass_rate_trend = Column(JSON, default=[])
+
+    # Platform breakdown
+    platforms = Column(JSON, default={})  # {github: 5, jenkins: 3, gitlab: 2}
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
