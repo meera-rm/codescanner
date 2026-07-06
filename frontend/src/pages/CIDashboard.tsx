@@ -20,9 +20,12 @@ import {
   TextField,
   MenuItem,
   Alert,
+  Pagination,
+  Badge,
 } from '@mui/material';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { format } from 'date-fns';
+// import SearchFilters from '../components/SearchFilters';
+// import useWebSocket from '../hooks/useWebSocket';
 
 interface ScanHistory {
   id: string;
@@ -87,10 +90,41 @@ const CIDashboard: React.FC = () => {
   const [trends, setTrends] = useState<TrendMetrics | null>(null);
   const [days, setDays] = useState<number>(30);
   const [error, setError] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<ScanHistory[]>([]);
+  const [totalSearchResults, setTotalSearchResults] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [wsConnected, setWsConnected] = useState(false);
+  const [recentUpdateCount, setRecentUpdateCount] = useState(0);
 
   useEffect(() => {
     fetchDashboardData();
   }, [days]);
+
+  // WebSocket disabled temporarily to fix flickering
+  // const { isConnected } = useWebSocket({
+  //   url: 'ws://localhost:8000/api/v1/ws/dashboard',
+  //   onMessage: (message) => {
+  //     if (message.type === 'scan_complete') {
+  //       fetchDashboardData();
+  //       setRecentUpdateCount(prev => prev + 1);
+  //       setTimeout(() => setRecentUpdateCount(0), 3000);
+  //     } else if (message.type === 'dashboard_refresh') {
+  //       setSummary(message.data);
+  //     }
+  //   },
+  //   onConnect: () => {
+  //     console.log('WebSocket connected');
+  //     setWsConnected(true);
+  //   },
+  //   onDisconnect: () => {
+  //     console.log('WebSocket disconnected');
+  //     setWsConnected(false);
+  //   },
+  //   onError: (error) => {
+  //     console.error('WebSocket error:', error);
+  //   },
+  // });
 
   const fetchDashboardData = async () => {
     try {
@@ -118,6 +152,46 @@ const CIDashboard: React.FC = () => {
     }
   };
 
+  const handleSearch = async (filters: Record<string, any>) => {
+    try {
+      setLoading(true);
+      setError(null);
+      setCurrentPage(1);
+
+      // Build query string
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value));
+        }
+      });
+      params.append('limit', '50');
+      params.append('offset', '0');
+
+      const response = await fetch(`http://localhost:8000/api/v1/search/scans?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data.results);
+        setTotalSearchResults(data.total);
+        setIsSearchMode(true);
+      } else {
+        setError('Failed to perform search');
+      }
+    } catch (err) {
+      setError('Search failed');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setIsSearchMode(false);
+    setSearchResults([]);
+    setTotalSearchResults(0);
+    setCurrentPage(1);
+  };
+
   const fetchTrends = async (repository: string) => {
     try {
       const res = await fetch(`http://localhost:8000/api/v1/ci-dashboard/trends/${encodeURIComponent(repository)}`);
@@ -133,6 +207,46 @@ const CIDashboard: React.FC = () => {
   const handleSelectRepository = (repo: string) => {
     setSelectedRepo(repo);
     fetchTrends(repo);
+  };
+
+  const exportAsCSV = async () => {
+    try {
+      const queryParams = new URLSearchParams({ days: days.toString() });
+      const response = await fetch(`http://localhost:8000/api/v1/ci-dashboard/export/csv?${queryParams}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `codepulse-scans-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (err) {
+      setError('Failed to export CSV');
+    }
+  };
+
+  const exportAsPDF = async () => {
+    try {
+      const queryParams = new URLSearchParams({ days: days.toString() });
+      const response = await fetch(`http://localhost:8000/api/v1/ci-dashboard/export/pdf?${queryParams}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `codepulse-report-${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (err) {
+      setError('Failed to export PDF');
+    }
   };
 
   const getStatusColor = (status: string): 'success' | 'error' | 'warning' | 'default' => {
@@ -173,28 +287,71 @@ const CIDashboard: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" sx={{ mb: 3 }}>
-        CI/CD Dashboard
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4">
+          CI/CD Dashboard
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          {recentUpdateCount > 0 && (
+            <Badge badgeContent={recentUpdateCount} color="success">
+              <Chip label="Updates" color="success" size="small" />
+            </Badge>
+          )}
+          <Chip
+            label={wsConnected ? 'Live' : 'Offline'}
+            color={wsConnected ? 'success' : 'error'}
+            size="small"
+            variant={wsConnected ? 'filled' : 'outlined'}
+          />
+        </Box>
+      </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      {/* Time Filter */}
+      {wsConnected && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          🔄 Real-time updates enabled. Dashboard will auto-refresh when scans complete.
+        </Alert>
+      )}
+
+      {/* Search Filters - Temporarily disabled */}
+      {/* <SearchFilters onSearch={handleSearch} onClear={handleClearSearch} /> */}
+
+      {/* Time Filter & Export */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <TextField
-            select
-            label="Time Period"
-            value={days}
-            onChange={(e) => setDays(parseInt(e.target.value))}
-            size="small"
-            sx={{ minWidth: 200 }}
-          >
-            <MenuItem value={7}>Last 7 days</MenuItem>
-            <MenuItem value={14}>Last 14 days</MenuItem>
-            <MenuItem value={30}>Last 30 days</MenuItem>
-            <MenuItem value={90}>Last 90 days</MenuItem>
-          </TextField>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+            <TextField
+              select
+              label="Time Period"
+              value={days}
+              onChange={(e) => setDays(parseInt(e.target.value))}
+              size="small"
+              sx={{ minWidth: 200 }}
+            >
+              <MenuItem value={7}>Last 7 days</MenuItem>
+              <MenuItem value={14}>Last 14 days</MenuItem>
+              <MenuItem value={30}>Last 30 days</MenuItem>
+              <MenuItem value={90}>Last 90 days</MenuItem>
+            </TextField>
+
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={exportAsCSV}
+              >
+                📊 Export CSV
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={exportAsPDF}
+              >
+                📄 Export PDF
+              </Button>
+            </Box>
+          </Box>
         </CardContent>
       </Card>
 
@@ -253,7 +410,9 @@ const CIDashboard: React.FC = () => {
 
       {/* Scan History Table */}
       <Card sx={{ mb: 3 }}>
-        <CardHeader title="Recent Scans" />
+        <CardHeader
+          title={isSearchMode ? `Search Results (${totalSearchResults} found)` : 'Recent Scans'}
+        />
         <TableContainer>
           <Table>
             <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
@@ -268,7 +427,7 @@ const CIDashboard: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {history.slice(0, 10).map((scan) => (
+              {(isSearchMode ? searchResults : history.slice(0, 10)).map((scan) => (
                 <TableRow key={scan.id} sx={{ '&:hover': { backgroundColor: '#f9f9f9' } }}>
                   <TableCell>{scan.repository}</TableCell>
                   <TableCell>{getPlatformIcon(scan.platform)} {scan.platform}</TableCell>
@@ -295,12 +454,21 @@ const CIDashboard: React.FC = () => {
                       {scan.warning_count}
                     </span>
                   </TableCell>
-                  <TableCell>{format(new Date(scan.created_at), 'MMM dd, HH:mm')}</TableCell>
+                  <TableCell>{new Date(scan.created_at).toLocaleDateString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
+        {isSearchMode && totalSearchResults > 50 && (
+          <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
+            <Pagination
+              count={Math.ceil(totalSearchResults / 50)}
+              page={currentPage}
+              onChange={(_, page) => setCurrentPage(page)}
+            />
+          </Box>
+        )}
       </Card>
 
       {/* Repository Selection for Trends */}
