@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Tabs, Tab, Paper, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Box, Tabs, Tab, Paper, Typography, Button } from '@mui/material';
 import PerformanceMonitoring from '../components/PerformanceMonitoring';
 import AlertConfiguration from '../components/AlertConfiguration';
 import CacheManagement from '../components/CacheManagement';
@@ -34,6 +35,7 @@ function a11yProps(index: number) {
 }
 
 export function MonitoringDashboard() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -44,9 +46,14 @@ export function MonitoringDashboard() {
     <Box sx={{ width: '100%' }}>
       <Paper sx={{ mb: 3 }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider', p: 2 }}>
-          <Typography variant="h5" sx={{ mb: 2 }}>
-            System Monitoring & Management
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h5">
+              System Monitoring & Management
+            </Typography>
+            <Button variant="outlined" onClick={() => navigate('/ci-dashboard')}>
+              ← Back to CI Dashboard
+            </Button>
+          </Box>
           <Tabs value={activeTab} onChange={handleTabChange} aria-label="monitoring tabs">
             <Tab label="Performance Monitoring" {...a11yProps(0)} />
             <Tab label="Alert Configuration" {...a11yProps(1)} />
