@@ -25,7 +25,7 @@ import {
 } from '@mui/material';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 // import SearchFilters from '../components/SearchFilters';
-// import useWebSocket from '../hooks/useWebSocket';
+import useWebSocket from '../hooks/useWebSocket';
 
 interface ScanHistory {
   id: string;
@@ -101,30 +101,32 @@ const CIDashboard: React.FC = () => {
     fetchDashboardData();
   }, [days]);
 
-  // WebSocket disabled temporarily to fix flickering
-  // const { isConnected } = useWebSocket({
-  //   url: 'ws://localhost:8000/api/v1/ws/dashboard',
-  //   onMessage: (message) => {
-  //     if (message.type === 'scan_complete') {
-  //       fetchDashboardData();
-  //       setRecentUpdateCount(prev => prev + 1);
-  //       setTimeout(() => setRecentUpdateCount(0), 3000);
-  //     } else if (message.type === 'dashboard_refresh') {
-  //       setSummary(message.data);
-  //     }
-  //   },
-  //   onConnect: () => {
-  //     console.log('WebSocket connected');
-  //     setWsConnected(true);
-  //   },
-  //   onDisconnect: () => {
-  //     console.log('WebSocket disconnected');
-  //     setWsConnected(false);
-  //   },
-  //   onError: (error) => {
-  //     console.error('WebSocket error:', error);
-  //   },
-  // });
+  // WebSocket for real-time updates (fixed with exponential backoff)
+  const { isConnected } = useWebSocket({
+    url: `http://localhost:8000/api/v1/ws/dashboard`,
+    onMessage: (message) => {
+      if (message.type === 'scan_complete') {
+        console.log('Scan completed, refreshing dashboard');
+        fetchDashboardData();
+        setRecentUpdateCount(prev => prev + 1);
+        setTimeout(() => setRecentUpdateCount(0), 3000);
+      } else if (message.type === 'dashboard_refresh') {
+        console.log('Dashboard refresh message received');
+        setSummary(message.data);
+      }
+    },
+    onConnect: () => {
+      console.log('WebSocket connected');
+      setWsConnected(true);
+    },
+    onDisconnect: () => {
+      console.log('WebSocket disconnected');
+      setWsConnected(false);
+    },
+    onError: (error) => {
+      console.warn('WebSocket error:', error);
+    },
+  });
 
   const fetchDashboardData = async () => {
     try {
