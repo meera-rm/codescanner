@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -86,6 +87,7 @@ const CIDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [history, setHistory] = useState<ScanHistory[]>([]);
+  const navigate = useNavigate();
   const [selectedRepo, setSelectedRepo] = useState<string>('');
   const [trends, setTrends] = useState<TrendMetrics | null>(null);
   const [days, setDays] = useState<number>(30);
@@ -351,6 +353,13 @@ const CIDashboard: React.FC = () => {
                 onClick={exportAsPDF}
               >
                 📄 Export PDF
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => navigate('/monitoring')}
+              >
+                🔧 Monitoring & Management
               </Button>
             </Box>
           </Box>
