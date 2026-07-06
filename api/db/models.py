@@ -256,3 +256,62 @@ class TeamMember(Base):
     __table_args__ = (
         UniqueConstraint("team_id", "developer_id", name="unique_team_member"),
     )
+
+
+class GitHubInstallation(Base):
+    """GitHub App installation for a user."""
+
+    __tablename__ = "github_installations"
+
+    id = Column(String, primary_key=True, index=True)
+    user_id = Column(String, ForeignKey("users.id"), index=True)
+    installation_id = Column(Integer, unique=True, index=True)  # GitHub app installation ID
+    token = Column(String)  # Encrypted access token
+    token_expires_at = Column(DateTime, nullable=True)
+    repositories = relationship("GitHubRepository", back_populates="installation")
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = relationship("User")
+
+
+class GitHubRepository(Base):
+    """GitHub repository connected to CodePulse."""
+
+    __tablename__ = "github_repositories"
+
+    id = Column(String, primary_key=True, index=True)
+    installation_id = Column(String, ForeignKey("github_installations.id"), index=True)
+    repo_name = Column(String, index=True)  # owner/repo
+    repo_id = Column(Integer, unique=True, index=True)  # GitHub repo ID
+    enabled = Column(Boolean, default=True)
+    fail_on_critical = Column(Boolean, default=True)
+    fail_on_error = Column(Boolean, default=False)
+    pr_scans = relationship("PRScan", back_populates="repository")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    installation = relationship("GitHubInstallation", back_populates="repositories")
+
+
+class PRScan(Base):
+    """GitHub PR scan results."""
+
+    __tablename__ = "pr_scans"
+
+    id = Column(String, primary_key=True, index=True)
+    repository_id = Column(String, ForeignKey("github_repositories.id"), index=True)
+    pr_number = Column(Integer, index=True)
+    branch = Column(String)
+    commit_sha = Column(String, index=True)
+    findings = Column(JSON, default=[])  # Scan results
+    comment_id = Column(String, nullable=True)  # GitHub comment ID
+    status = Column(String, default="pending")  # pending, success, failure
+    critical_count = Column(Integer, default=0)
+    error_count = Column(Integer, default=0)
+    warning_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    completed_at = Column(DateTime, nullable=True)
+
+    repository = relationship("GitHubRepository", back_populates="pr_scans")
