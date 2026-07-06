@@ -307,6 +307,9 @@ const CIDashboard: React.FC = () => {
             size="small"
             variant={wsConnected ? 'filled' : 'outlined'}
           />
+          <Button variant="outlined" size="small" onClick={() => navigate('/')}>
+            ← Home
+          </Button>
         </Box>
       </Box>
 
