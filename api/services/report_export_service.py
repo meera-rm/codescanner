@@ -84,8 +84,9 @@ class ReportExportService:
         repository: str = None,
         platform: str = None,
         days: int = 30,
+        include_trends: bool = True,
     ) -> bytes:
-        """Generate PDF report of scan history with charts."""
+        """Generate PDF report of scan history with charts and trends."""
         # Get data
         query = db.query(CIScanHistory)
 
@@ -148,22 +149,77 @@ class ReportExportService:
             elements.append(summary_table)
             elements.append(Spacer(1, 0.3 * inch))
 
+        # Repository Breakdown (if reporting on specific repo)
+        if scans:
+            elements.append(PageBreak())
+            elements.append(Paragraph('Repository & Platform Analysis', styles['Heading2']))
+
+            # By Repository
+            repo_data = ReportExportService._aggregate_by_repository(scans)
+            if repo_data:
+                elements.append(Paragraph('By Repository', styles['Heading3']))
+                repo_table_data = [['Repository', 'Scans', 'Pass Rate', 'Avg Critical', 'Avg Errors']]
+                for repo, stats in repo_data.items():
+                    repo_table_data.append([
+                        repo[:25],
+                        str(stats['count']),
+                        f"{stats['pass_rate']:.1f}%",
+                        f"{stats['avg_critical']:.1f}",
+                        f"{stats['avg_errors']:.1f}",
+                    ])
+
+                repo_table = Table(repo_table_data)
+                repo_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2e7d32')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 9),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+                ]))
+                elements.append(repo_table)
+                elements.append(Spacer(1, 0.2 * inch))
+
+            # By Platform
+            platform_data = ReportExportService._aggregate_by_platform(scans)
+            if platform_data:
+                elements.append(Paragraph('By Platform', styles['Heading3']))
+                plat_table_data = [['Platform', 'Scans', 'Pass Rate', 'Total Issues']]
+                for plat, stats in platform_data.items():
+                    plat_table_data.append([
+                        plat.capitalize(),
+                        str(stats['count']),
+                        f"{stats['pass_rate']:.1f}%",
+                        str(stats['total_issues']),
+                    ])
+
+                plat_table = Table(plat_table_data)
+                plat_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#c62828')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 9),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+                ]))
+                elements.append(plat_table)
+
         # Scan Details Table
         if scans:
             elements.append(PageBreak())
-            elements.append(Paragraph('Recent Scans', styles['Heading2']))
+            elements.append(Paragraph('Detailed Scan Results', styles['Heading2']))
 
             scan_data = [['Repository', 'Platform', 'Status', 'Critical', 'Errors', 'Warnings', 'Date']]
 
-            for scan in scans[:20]:  # Last 20 scans
+            for scan in scans[:50]:  # Last 50 scans
                 scan_data.append([
                     scan.repository[:20],  # Truncate long names
                     scan.platform,
-                    scan.status,
+                    scan.status.upper()[:3],  # SUC/FAI
                     str(scan.critical_count),
                     str(scan.error_count),
                     str(scan.warning_count),
-                    scan.created_at.strftime('%Y-%m-%d %H:%M'),
+                    scan.created_at.strftime('%Y-%m-%d'),
                 ])
 
             scan_table = Table(scan_data)
@@ -172,9 +228,9 @@ class ReportExportService:
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('FONTSIZE', (0, 0), (-1, -1), 8),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('GRID', (0, 0), (-1, -1), 1, colors.grey),
                 ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
             ]))
 
@@ -222,3 +278,62 @@ class ReportExportService:
             'errors': sum(s.error_count for s in scans),
             'warnings': sum(s.warning_count for s in scans),
         }
+
+    @staticmethod
+    def _aggregate_by_repository(scans: List[CIScanHistory]) -> Dict[str, Dict[str, Any]]:
+        """Aggregate statistics by repository."""
+        repos = {}
+        for scan in scans:
+            if scan.repository not in repos:
+                repos[scan.repository] = {
+                    'count': 0,
+                    'successful': 0,
+                    'critical': 0,
+                    'errors': 0,
+                }
+            repos[scan.repository]['count'] += 1
+            if scan.status == 'success':
+                repos[scan.repository]['successful'] += 1
+            repos[scan.repository]['critical'] += scan.critical_count
+            repos[scan.repository]['errors'] += scan.error_count
+
+        # Calculate averages
+        for repo in repos:
+            count = repos[repo]['count']
+            repos[repo]['pass_rate'] = (repos[repo]['successful'] / count * 100) if count > 0 else 0
+            repos[repo]['avg_critical'] = repos[repo]['critical'] / count if count > 0 else 0
+            repos[repo]['avg_errors'] = repos[repo]['errors'] / count if count > 0 else 0
+
+        return repos
+
+    @staticmethod
+    def _aggregate_by_platform(scans: List[CIScanHistory]) -> Dict[str, Dict[str, Any]]:
+        """Aggregate statistics by platform."""
+        platforms = {}
+        for scan in scans:
+            if scan.platform not in platforms:
+                platforms[scan.platform] = {
+                    'count': 0,
+                    'successful': 0,
+                    'critical': 0,
+                    'errors': 0,
+                    'warnings': 0,
+                }
+            platforms[scan.platform]['count'] += 1
+            if scan.status == 'success':
+                platforms[scan.platform]['successful'] += 1
+            platforms[scan.platform]['critical'] += scan.critical_count
+            platforms[scan.platform]['errors'] += scan.error_count
+            platforms[scan.platform]['warnings'] += scan.warning_count
+
+        # Calculate statistics
+        for plat in platforms:
+            count = platforms[plat]['count']
+            platforms[plat]['pass_rate'] = (platforms[plat]['successful'] / count * 100) if count > 0 else 0
+            platforms[plat]['total_issues'] = (
+                platforms[plat]['critical'] +
+                platforms[plat]['errors'] +
+                platforms[plat]['warnings']
+            )
+
+        return platforms
