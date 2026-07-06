@@ -2,11 +2,14 @@
 from datetime import datetime, timedelta
 from typing import Optional, List
 from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi.responses import StreamingResponse, FileResponse
 from sqlalchemy.orm import Session
 
 from api.db.database import get_db
 from api.db.models import CIScanHistory, CITrendMetrics
 from api.services.ci_history_service import CIHistoryService
+from api.services.report_export_service import ReportExportService
+from api.services.cache_service import CacheService
 
 router = APIRouter(prefix="/api/v1/ci-dashboard", tags=["ci-dashboard"])
 
@@ -116,6 +119,7 @@ async def get_scan_history(
 async def get_repository_trends(
     repository: str,
     db: Session = Depends(get_db),
+    force_refresh: bool = Query(False, description="Force cache refresh"),
 ) -> TrendMetricsResponse:
     """
     Get trend metrics for a specific repository.
@@ -126,12 +130,17 @@ async def get_repository_trends(
     - Platform breakdown
     - Average metrics per scan
 
+    **Caching:**
+    - Cached for 15 minutes
+    - Pass `force_refresh=true` to skip cache
+
     **Example:**
     ```bash
     curl "http://localhost:8000/api/v1/ci-dashboard/trends/my-repo"
+    curl "http://localhost:8000/api/v1/ci-dashboard/trends/my-repo?force_refresh=true"
     ```
     """
-    metrics = CIHistoryService.get_trend_metrics(db, repository)
+    metrics = CacheService.get_trend_metrics(db, repository, force_refresh=force_refresh)
 
     if not metrics:
         raise HTTPException(
@@ -146,6 +155,7 @@ async def get_repository_trends(
 async def get_dashboard_summary(
     db: Session = Depends(get_db),
     days: int = Query(30, description="Number of days to summarize"),
+    force_refresh: bool = Query(False, description="Force cache refresh"),
 ) -> DashboardSummary:
     """
     Get overall dashboard summary for all repositories.
@@ -156,12 +166,17 @@ async def get_dashboard_summary(
     - Per-repository statistics
     - Platform usage breakdown
 
+    **Caching:**
+    - Cached for 5 minutes
+    - Pass `force_refresh=true` to skip cache
+
     **Example:**
     ```bash
     curl "http://localhost:8000/api/v1/ci-dashboard/summary?days=7"
+    curl "http://localhost:8000/api/v1/ci-dashboard/summary?days=7&force_refresh=true"
     ```
     """
-    summary = CIHistoryService.get_dashboard_summary(db, days=days)
+    summary = CacheService.get_dashboard_summary(db, days=days, force_refresh=force_refresh)
     return DashboardSummary(**summary)
 
 
@@ -342,3 +357,89 @@ async def cleanup_old_scans(
         'deleted': count,
         'message': f"Deleted {count} scans older than {days} days",
     }
+
+
+@router.get("/export/csv")
+async def export_csv(
+    db: Session = Depends(get_db),
+    repository: Optional[str] = Query(None, description="Filter by repository"),
+    platform: Optional[str] = Query(None, description="Filter by platform"),
+    days: int = Query(30, description="Number of days to include"),
+) -> StreamingResponse:
+    """
+    Export scan history as CSV file.
+
+    **Parameters:**
+    - `repository`: Filter by repository (optional)
+    - `platform`: Filter by platform (optional)
+    - `days`: Look back period (default: 30)
+
+    **Response:**
+    CSV file download with columns: Repository, Branch, Platform, Status, Critical, Error, Warning, etc.
+
+    **Example:**
+    ```bash
+    curl "http://localhost:8000/api/v1/ci-dashboard/export/csv?days=7&platform=github" \
+      -o scan-report.csv
+    ```
+    """
+    try:
+        csv_output = ReportExportService.generate_csv_report(
+            db,
+            repository=repository,
+            platform=platform,
+            days=days,
+        )
+
+        filename = f"codepulse-scans-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}.csv"
+
+        return StreamingResponse(
+            iter([csv_output.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate CSV: {str(e)}")
+
+
+@router.get("/export/pdf")
+async def export_pdf(
+    db: Session = Depends(get_db),
+    repository: Optional[str] = Query(None, description="Filter by repository"),
+    platform: Optional[str] = Query(None, description="Filter by platform"),
+    days: int = Query(30, description="Number of days to include"),
+) -> StreamingResponse:
+    """
+    Export scan history as PDF report.
+
+    **Parameters:**
+    - `repository`: Filter by repository (optional)
+    - `platform`: Filter by platform (optional)
+    - `days`: Look back period (default: 30)
+
+    **Response:**
+    PDF file with summary, charts, and scan details.
+
+    **Example:**
+    ```bash
+    curl "http://localhost:8000/api/v1/ci-dashboard/export/pdf?days=7" \
+      -o scan-report.pdf
+    ```
+    """
+    try:
+        pdf_bytes = ReportExportService.generate_pdf_report(
+            db,
+            repository=repository,
+            platform=platform,
+            days=days,
+        )
+
+        filename = f"codepulse-report-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}.pdf"
+
+        return StreamingResponse(
+            iter([pdf_bytes]),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
