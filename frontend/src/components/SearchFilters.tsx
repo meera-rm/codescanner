@@ -7,46 +7,38 @@ import {
   Grid,
   Stack,
   Typography,
+  MenuItem,
 } from '@mui/material';
 
-interface SearchFilter {
-  q?: string;
-  repository?: string;
-  platform?: string;
-  status?: string;
-  branch?: string;
-  min_critical?: number;
-  max_critical?: number;
-  min_errors?: number;
-  max_errors?: number;
-  days?: number;
-  limit?: number;
-}
-
 interface SearchFiltersProps {
-  onSearch: (filters: SearchFilter) => void;
+  onSearch: (filters: Record<string, any>) => void;
   onClear?: () => void;
 }
 
-const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch, onClear }) => {
-  const [filters, setFilters] = useState<SearchFilter>({
-    q: '',
-    days: 30,
-    limit: 20,
-  });
+export function SearchFilters({ onSearch, onClear }: SearchFiltersProps) {
+  const [searchText, setSearchText] = useState('');
+  const [repository, setRepository] = useState('');
+  const [platform, setPlatform] = useState('');
   const [expanded, setExpanded] = useState(false);
 
   const handleSearch = () => {
+    const filters: Record<string, any> = {};
+    if (searchText) filters.q = searchText;
+    if (repository) filters.repository = repository;
+    if (platform) filters.platform = platform;
     onSearch(filters);
   };
 
   const handleClear = () => {
-    setFilters({ q: '', days: 30, limit: 20 });
+    setSearchText('');
+    setRepository('');
+    setPlatform('');
     onClear?.();
   };
 
   return (
     <Box sx={{ mb: 3 }}>
+      {/* Quick Search Bar */}
       <Paper
         sx={{
           p: 2,
@@ -59,11 +51,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch, onClear }) => {
           <Grid item xs={12} sm={8}>
             <TextField
               fullWidth
-              placeholder="Search repositories, branches, platforms..."
-              value={filters.q || ''}
-              onChange={(e) => {
-                setFilters(prev => ({ ...prev, q: e.target.value }));
-              }}
+              placeholder="Search repositories, branches..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
               variant="outlined"
               size="small"
               sx={{
@@ -86,6 +76,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch, onClear }) => {
                 variant="contained"
                 color="inherit"
                 onClick={handleSearch}
+                fullWidth
               >
                 Search
               </Button>
@@ -93,40 +84,68 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch, onClear }) => {
                 variant="outlined"
                 color="inherit"
                 onClick={() => setExpanded(!expanded)}
+                fullWidth
               >
-                Advanced
+                Filter
               </Button>
             </Stack>
           </Grid>
         </Grid>
       </Paper>
 
+      {/* Advanced Filters Panel */}
       {expanded && (
         <Paper sx={{ p: 2, mb: 2 }}>
           <Typography variant="h6" gutterBottom>
-            Advanced Filters Coming Soon
+            Advanced Filters
           </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Additional filtering options will be available in the next update.
-          </Typography>
-          <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-            <Button
-              variant="contained"
-              onClick={handleSearch}
-            >
-              Apply
+
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                select
+                label="Repository"
+                value={repository}
+                onChange={(e) => setRepository(e.target.value)}
+                fullWidth
+                size="small"
+              >
+                <MenuItem value="">All Repositories</MenuItem>
+                <MenuItem value="my-repo">my-repo</MenuItem>
+                <MenuItem value="backend">backend</MenuItem>
+                <MenuItem value="frontend">frontend</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                select
+                label="Platform"
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
+                fullWidth
+                size="small"
+              >
+                <MenuItem value="">All Platforms</MenuItem>
+                <MenuItem value="github">GitHub</MenuItem>
+                <MenuItem value="jenkins">Jenkins</MenuItem>
+                <MenuItem value="gitlab">GitLab</MenuItem>
+                <MenuItem value="circleci">CircleCI</MenuItem>
+              </TextField>
+            </Grid>
+          </Grid>
+
+          <Stack direction="row" spacing={1}>
+            <Button variant="contained" onClick={handleSearch}>
+              Apply Filters
             </Button>
-            <Button
-              variant="outlined"
-              onClick={handleClear}
-            >
-              Clear
+            <Button variant="outlined" onClick={handleClear}>
+              Clear All
             </Button>
           </Stack>
         </Paper>
       )}
     </Box>
   );
-};
+}
 
 export default SearchFilters;

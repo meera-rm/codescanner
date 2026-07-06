@@ -24,7 +24,7 @@ import {
   Badge,
 } from '@mui/material';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-// import SearchFilters from '../components/SearchFilters';
+import SearchFilters from '../components/SearchFilters';
 import useWebSocket from '../hooks/useWebSocket';
 
 interface ScanHistory {
@@ -316,8 +316,8 @@ const CIDashboard: React.FC = () => {
         </Alert>
       )}
 
-      {/* Search Filters - Temporarily disabled */}
-      {/* <SearchFilters onSearch={handleSearch} onClear={handleClearSearch} /> */}
+      {/* Search Filters */}
+      <SearchFilters onSearch={handleSearch} onClear={handleClearSearch} />
 
       {/* Time Filter & Export */}
       <Card sx={{ mb: 3 }}>
