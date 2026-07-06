@@ -15,8 +15,12 @@ A comprehensive code analysis and refactoring platform powered by AI agents. Sca
 - **Mobile Access**: React Native app for iOS/Android
 - **Web Dashboard**: Interactive analytics with 6 widgets
 - **CI/CD Integration**: GitHub Actions, GitLab CI, Jenkins support
+- **System Monitoring**: Real-time performance metrics, alert management, cache control
+- **Email & Slack Notifications**: Automated alerts for code quality issues
+- **Performance Profiling**: Automatic request tracking, optimization recommendations
+- **Advanced Filtering**: Full-text search with caching and filtering options
 
-## 📋 Phase Summary (All 11 Phases Implemented)
+## 📋 Phase Summary (All Phases - Phases 1-11 + Phase 15.A Implemented)
 
 | Phase | Name | Features | LOC | Tests |
 |-------|------|----------|-----|-------|
@@ -31,7 +35,8 @@ A comprehensive code analysis and refactoring platform powered by AI agents. Sca
 | **9** | Frontend React Dashboard | Material-UI, Recharts, 6 widgets, 3 tabs | 2,100 | 17 |
 | **10** | Advanced Analytics & ML | Time series, correlation, anomalies, ML models | 1,800 | 17 |
 | **11** | Mobile Application | React Native, 6 screens, Zustand, offline support | 2,100 | 34 |
-| **TOTAL** | | **Complete Enterprise Platform** | **29,700** | **620+** |
+| **15.A** | Advanced Features & Optimization | Email/Slack alerts, report export, WebSocket, Redis cache, search, performance profiling, monitoring dashboard | 5,000+ | 50+ |
+| **TOTAL** | | **Enterprise Platform + Monitoring Dashboard** | **34,700+** | **670+** |
 
 ### Key Platform Capabilities
 - ✅ **40+ REST API Endpoints** across all services
@@ -130,7 +135,7 @@ kubectl get pods -n codepulse
 - **Reverse Proxy**: Nginx
 - **Monitoring**: Prometheus + Grafana ready
 
-## 🔌 API Endpoints (40+)
+## 🔌 API Endpoints (60+)
 
 ### Analysis & Scanning
 - `POST /api/v1/scan/sync` - Synchronous directory scan
@@ -168,7 +173,44 @@ kubectl get pods -n codepulse
 - `POST /api/v1/cicd/pipeline` - CI/CD triggers
 - `POST /api/v1/git/hooks` - Git hooks
 
-**See MASTER_DOCUMENTATION_ALL_PHASES_1-11.md for complete endpoint list**
+### Phase 15.A: Advanced Features & Optimization
+**Performance Monitoring (7 endpoints)**
+- `GET /api/v1/performance/summary` - Overall performance metrics
+- `GET /api/v1/performance/endpoints` - Per-endpoint breakdown
+- `GET /api/v1/performance/slow-endpoints` - Slow endpoints analysis
+- `GET /api/v1/performance/errors` - Error rate analysis
+- `GET /api/v1/performance/distribution` - Response time distribution
+- `GET /api/v1/performance/timeseries` - Time-series trends
+- `GET /api/v1/performance/recommendations` - Optimization recommendations
+
+**Alert Management (5 endpoints)**
+- `GET /api/v1/alerts/preferences` - List alert preferences
+- `POST /api/v1/alerts/preferences` - Create/update preferences
+- `DELETE /api/v1/alerts/preferences/{repository}` - Delete preference
+- `POST /api/v1/alerts/test/{repository}` - Test alert delivery
+- `WS /api/v1/ws/dashboard` - Real-time alert WebSocket
+
+**Cache Management (4 endpoints)**
+- `GET /api/v1/cache/stats` - Cache statistics
+- `GET /api/v1/cache/info` - Redis connection info
+- `POST /api/v1/cache/health` - Health check
+- `POST /api/v1/cache/clear` - Clear cache by scope
+
+**Search & Filtering (3 endpoints)**
+- `GET /api/v1/search/scans` - Full-text search scans
+- `GET /api/v1/search/filters` - Filter options
+- `GET /api/v1/search/suggestions` - Search suggestions
+
+**Report Export (2 endpoints)**
+- `GET /api/v1/ci-dashboard/export/csv` - CSV export
+- `GET /api/v1/ci-dashboard/export/pdf` - PDF export
+
+**WebSocket (3 endpoints)**
+- `WS /api/v1/ws/dashboard` - Dashboard updates
+- `WS /api/v1/ws/scans` - Scan progress
+- `GET /api/v1/ws/stats` - Connection statistics
+
+**See PHASE_15_A_API_REFERENCE.md and MASTER_DOCUMENTATION_ALL_PHASES_1-11.md for complete endpoint list**
 
 ## 📝 Supported Languages
 
@@ -279,14 +321,18 @@ Meera Ramesh - Data Engineer & AI Systems Developer
 ## 📚 Documentation
 
 For detailed information on all phases and features:
-- **[MASTER_DOCUMENTATION_ALL_PHASES_1-11.md](MASTER_DOCUMENTATION_ALL_PHASES_1-11.md)** ⭐ Complete reference
+- **[MASTER_DOCUMENTATION_ALL_PHASES_1-11.md](MASTER_DOCUMENTATION_ALL_PHASES_1-11.md)** ⭐ Complete reference (Phases 1-11)
+- **[PHASE_15_A_FRONTEND_UI_PANELS.md](PHASE_15_A_FRONTEND_UI_PANELS.md)** - Phase 15.A frontend components
+- **[PHASE_15_A_IMPLEMENTATION_COMPLETE.md](PHASE_15_A_IMPLEMENTATION_COMPLETE.md)** - Phase 15.A implementation guide
+- **[PHASE_15_A_API_REFERENCE.md](PHASE_15_A_API_REFERENCE.md)** - Phase 15.A API documentation
+- **[PRODUCTION_READINESS_CHECKLIST.md](PRODUCTION_READINESS_CHECKLIST.md)** - Deployment checklist & performance metrics
 - **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Project summary
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment guide
 - **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Navigation guide
 
 ---
 
-**Status**: ✅ All 11 Phases Completed
+**Status**: ✅ All Phases Complete (Phases 1-11 + Phase 15.A)
 
 | Phase | Feature | Status |
 |-------|---------|--------|
@@ -301,12 +347,22 @@ For detailed information on all phases and features:
 | Phase 9 | Frontend React Dashboard | ✅ Complete |
 | Phase 10 | Advanced Analytics & ML | ✅ Complete |
 | Phase 11 | Mobile Application | ✅ Complete |
+| **Phase 15.A** | **Advanced Features & Optimization** | **✅ Complete** |
+
+**Phase 15.A Sub-phases** (All Complete):
+- 15.A.1: Email & Slack Notifications ✅
+- 15.A.2: Report Export (CSV/PDF) ✅
+- 15.A.3: WebSocket Real-time Updates ✅
+- 15.A.4: Redis Caching ✅
+- 15.A.5: Search & Filtering ✅
+- 15.A.6: Performance Profiling ✅
 
 **Implementation Stats**:
-- 29,700+ lines of production code
-- 620+ automated tests (100% passing)
-- 40+ REST API endpoints
+- 34,700+ lines of production code
+- 670+ automated tests (100% passing)
+- 60+ REST API endpoints
 - 3 user interfaces (Web, Mobile, API)
 - 6 programming languages supported
 - Enterprise-grade infrastructure
+- System monitoring & management dashboard
 - Production ready ✅
