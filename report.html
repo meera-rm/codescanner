@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CodeScanner Report</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { font-size: 28px; margin-bottom: 10px; }
+        .meta { font-size: 14px; opacity: 0.9; }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+        .metric-card h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .metric-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .metric-card.errors { border-left-color: #e74c3c; }
+        .metric-card.errors .metric-value { color: #e74c3c; }
+        .metric-card.warnings { border-left-color: #f39c12; }
+        .metric-card.warnings .metric-value { color: #f39c12; }
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        .issue-list {
+            list-style: none;
+        }
+        .issue-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid #ddd;
+            background: #fafafa;
+            border-radius: 4px;
+        }
+        .issue-item.warning {
+            border-left-color: #f39c12;
+            background: #fffbf0;
+        }
+        .issue-item.error {
+            border-left-color: #e74c3c;
+            background: #ffe8e8;
+        }
+        .issue-file {
+            font-weight: bold;
+            color: #333;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+        }
+        .issue-message {
+            margin: 5px 0;
+            color: #555;
+        }
+        .issue-type {
+            display: inline-block;
+            background: #e8f4f8;
+            color: #0c7792;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-right: 8px;
+            font-family: monospace;
+        }
+        footer {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .badge.success { background: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 CodeScanner Analysis Report</h1>
+            <div class="meta">
+                <strong>Path:</strong> api |
+                <strong>Job ID:</strong> scan_918f0cd0d83f |
+                <strong>Status:</strong> <span class="badge success">completed</span>
+            </div>
+        </header>
+
+        <div class="metrics">
+            <div class="metric-card">
+                <h3>Total Issues</h3>
+                <div class="metric-value">118</div>
+            </div>
+            <div class="metric-card errors">
+                <h3>Errors</h3>
+                <div class="metric-value">0</div>
+            </div>
+            <div class="metric-card warnings">
+                <h3>Warnings</h3>
+                <div class="metric-value">118</div>
+            </div>
+            <div class="metric-card">
+                <h3>Scan Duration</h3>
+                <div class="metric-value">483ms</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Issues Found</h2>
+            <ul class="issue-list">
+            <li class="issue-item warning">
+                <span class="issue-file">main.py:38</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'job_queue' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">auth_middleware.py:4</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'RateLimiter' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">pr_scan_task.py:2</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'os' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">pr_scan_task.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Session' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">scanning.py:2</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'uuid' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">scanning.py:19</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function 'scan_codebase_task' has complexity 16 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">remote_handler.py:7</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Optional' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">remote_handler.py:25</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function 'download_github_repo' has complexity 17 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">caqi_models.py:3</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Dict' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">caqi_models.py:3</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Optional' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">benchmark.py:2</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'datetime' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">scanner.py:40</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function 'scan' has complexity 16 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">formatter.py:4</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Path' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">formatter.py:5</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'List' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">ci_dashboard.py:5</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'FileResponse' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">ci_dashboard.py:9</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'CITrendMetrics' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">alerts.py:5</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'EmailStr' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">auth.py:1</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Request' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">auth.py:1</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Depends' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">scanner.py:11</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'shutil' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">ci.py:7</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Query' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">ci.py:57</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function 'ci_scan' has complexity 12 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">onboarding.py:3</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'JobResponse' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">dashboard.py:2</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'datetime' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">dashboard.py:2</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'timedelta' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">dashboard.py:3</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'random' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">advanced_analytics.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'desc' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">advanced_analytics.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'func' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">search.py:9</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'CIScanHistory' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">phase6_routes.py:7</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Dict' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">phase6_routes.py:7</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Any' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">github.py:5</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'User' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">github.py:10</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'datetime' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">github.py:11</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'os' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">architecture_diagram_generator.py:7</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Dict' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">pr_scan_service.py:5</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Optional' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">pr_scan_service.py:7</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'subprocess' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">pr_scan_service.py:10</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'GitHubRepository' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">pr_scan_service.py:42</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function 'scan_pr' has complexity 12 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">distributed_tracer.py:12</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'datetime' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">agent_registry.py:11</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Path' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">peer_comparison.py:3</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'json' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">architecture_analyzer.py:9</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Set' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">agent_chain_executor.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Callable' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">agent_chain_executor.py:39</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function 'evaluate' has complexity 13 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">agent_chain_executor.py:130</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function 'execute' has complexity 14 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">iteration_clean_service.py:5</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Tuple' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">agent_finetuner.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Tuple' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">agent_finetuner.py:16</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'AgentDefinition' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">monitoring.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Tuple' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">api_key_manager.py:11</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'datetime' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">api_key_manager.py:11</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'timedelta' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">alerting_service.py:4</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'timedelta' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">architecture_service.py:2</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'os' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">architecture_service.py:4</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Tuple' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">performance_service.py:3</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'json' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">rate_limiter.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Optional' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">report_export_service.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'A4' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">report_export_service.py:82</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function 'generate_pdf_report' has complexity 11 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">git_hooks.py:10</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'json' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">git_hooks.py:12</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'subprocess' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">code_validator.py:11</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Dict' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">code_validator.py:11</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Any' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">usage_tracker.py:10</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'datetime' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">usage_tracker.py:10</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'timedelta' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">code_formatter.py:10</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Tuple' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">trend_service.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'TeamScore' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">team_aggregation_service.py:5</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Metrics' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">team_aggregation_service.py:168</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function '_map_to_archetype' has complexity 13 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">language_formatters.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Any' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">language_formatters.py:8</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 're' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">dashboard.py:9</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'datetime' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">dashboard.py:9</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'timedelta' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">dashboard.py:188</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function 'get_dashboard_summary' has complexity 11 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">advanced_analytics.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Tuple' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">advanced_analytics.py:7</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'field' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">scanner_service.py:2</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'os' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">scanner_service.py:43</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function '_detect_language_from_directory' has complexity 11 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">scanner_service.py:102</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function 'scan' has complexity 20 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">scanner_service.py:196</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function '_get_scanned_files' has complexity 17 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">git_risk_analyzer.py:11</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'datetime' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">git_risk_analyzer.py:11</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'timedelta' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">git_risk_analyzer.py:303</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function '_assess_file_risk_level' has complexity 11 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">metrics_collector.py:10</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'datetime' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">git_analyzer.py:1</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'os' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">developer_drill_down.py:3</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'uuid' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">developer_drill_down.py:8</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'TeamScore' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">anomaly_detection.py:5</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Dict' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">alert_rules.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Callable' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">onboarding_service.py:2</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'os' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">alert_service.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'List' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">alert_service.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Optional' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">specialized_agents.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'List' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">specialized_agents.py:9</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'asyncio' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">search_service.py:4</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'and_' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">search_service.py:13</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function 'search_scans' has complexity 12 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">enterprise.py:13</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'datetime' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">enterprise.py:13</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'timedelta' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">enterprise.py:423</span>
+                <span class="issue-type">high_complexity</span>
+                <div class="issue-message">Function '_check_rate_limit' has complexity 11 (threshold: 10)</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">cache_service.py:2</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Callable' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">cache_service.py:3</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'datetime' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">cache_service.py:3</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'timedelta' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">codebase_learner.py:11</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'json' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">predictive_analyzer.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Tuple' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">predictive_analyzer.py:9</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'math' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">job_queue.py:8</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'json' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">config_service.py:3</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Optional' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">language_validators.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Dict' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">language_validators.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Any' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">file_modifier_service.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'os' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">file_modifier_service.py:11</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'asdict' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">ide_plugins.py:6</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Tuple' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">metrics_service.py:2</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Optional' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">metrics_service.py:3</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'func' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">metrics_service.py:5</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Metrics' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">validator_agent.py:5</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Dict' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">validator_agent.py:5</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Any' is unused</div>
+            </li>
+            <li class="issue-item warning">
+                <span class="issue-file">validator_agent.py:5</span>
+                <span class="issue-type">unused_import</span>
+                <div class="issue-message">Import 'Optional' is unused</div>
+            </li>
+            </ul>
+        </div>
+
+        <footer>
+            <p>Generated by CodeScanner • 2026-07-06 18:14:23</p>
+        </footer>
+    </div>
+</body>
+</html>
