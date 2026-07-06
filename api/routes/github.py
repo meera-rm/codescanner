@@ -5,6 +5,7 @@ from api.db.database import get_db
 from api.db.models import GitHubInstallation, GitHubRepository, User
 from api.services.github_service import GitHubService
 from api.services.pr_scan_service import PRScanService
+from api.services.job_queue import job_queue
 import uuid
 from datetime import datetime
 import os
@@ -368,6 +369,8 @@ async def handle_webhook(request: Request, db: Session = Depends(get_db)):
                 pr_number = pr_data.get("number")
                 repo_name = repo_data.get("full_name")
                 commit_sha = pr_data.get("head", {}).get("sha")
+                base_branch = pr_data.get("base", {}).get("ref", "main")
+                head_branch = pr_data.get("head", {}).get("ref", "HEAD")
 
                 # Get installation and access token
                 installation = (
@@ -379,12 +382,23 @@ async def handle_webhook(request: Request, db: Session = Depends(get_db)):
                 if installation:
                     token = github_service.decrypt_token(installation.token)
 
-                    # Queue scan (for now, just acknowledge)
+                    # Queue PR scan job
+                    job_id = job_queue.enqueue('pr_scan', {
+                        'repo_name': repo_name,
+                        'pr_number': pr_number,
+                        'access_token': token,
+                        'base_branch': base_branch,
+                        'head_branch': head_branch,
+                        'commit_sha': commit_sha,
+                        'installation_id': installation_id,
+                    })
+
                     return {
                         "status": "queued",
                         "event": event,
                         "action": action,
                         "message": "PR scan queued",
+                        "job_id": job_id,
                         "pr": {
                             "number": pr_number,
                             "repository": repo_name,
