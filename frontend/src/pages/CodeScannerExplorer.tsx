@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Button, TextField, Paper, Grid, Card, CardContent, Typography, List, ListItem, ListItemText, Chip, FormGroup, FormControlLabel, Checkbox, RadioGroup, FormControl, FormLabel, Radio } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 interface Issue {
   file: string;
@@ -110,11 +107,9 @@ const CodeScannerExplorer: React.FC = () => {
             {/* Data Source */}
             <Box sx={{ mb: 3, pb: 2, borderBottom: '1px solid #e0e0e0' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                {isLive ? (
-                  <CheckCircleIcon sx={{ color: '#10b981', fontSize: 16 }} />
-                ) : (
-                  <CheckCircleIcon sx={{ color: '#64748b', fontSize: 16 }} />
-                )}
+                <span style={{ fontSize: 16, color: isLive ? '#10b981' : '#64748b' }}>
+                  {isLive ? '✓' : '●'}
+                </span>
                 <Typography variant="caption" sx={{ fontWeight: 600 }}>
                   {isLive ? 'Live API Data' : 'Standalone (Demo Data)'}
                 </Typography>
@@ -130,15 +125,14 @@ const CodeScannerExplorer: React.FC = () => {
               <Button
                 fullWidth
                 variant="contained"
-                startIcon={<RefreshIcon />}
                 onClick={fetchLiveData}
                 disabled={loading}
               >
-                {loading ? 'Fetching...' : isLive ? 'Refresh Data' : 'Fetch Live Data'}
+                {loading ? '⏳ Fetching...' : isLive ? '🔄 Refresh Data' : '🔄 Fetch Live Data'}
               </Button>
               {error && (
                 <Box sx={{ mt: 1, p: 1, bgcolor: '#fee2e2', borderRadius: 1, display: 'flex', gap: 1 }}>
-                  <ErrorOutlineIcon sx={{ fontSize: 16, color: '#dc2626' }} />
+                  <span style={{ fontSize: 14, color: '#dc2626' }}>❌</span>
                   <Typography variant="caption" sx={{ color: '#7f1d1d' }}>
                     {error}
                   </Typography>
