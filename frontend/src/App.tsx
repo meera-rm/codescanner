@@ -18,6 +18,7 @@ import GitHubConnect from './pages/GitHubConnect';
 import GitHubCallback from './pages/GitHubCallback';
 import CIDashboard from './pages/CIDashboard';
 import MonitoringDashboard from './pages/MonitoringDashboard';
+import CodeScannerExplorer from './pages/CodeScannerExplorer';
 
 const App: React.FC = () => {
   return (
@@ -28,6 +29,7 @@ const App: React.FC = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/ci-dashboard" element={<CIDashboard />} />
           <Route path="/monitoring" element={<MonitoringDashboard />} />
+          <Route path="/explorer" element={<CodeScannerExplorer />} />
           <Route path="/security-dashboard" element={<SecurityDashboard />} />
           <Route path="/personality" element={<PersonalityProfiler />} />
           <Route path="/letter" element={<InheritanceLetter />} />

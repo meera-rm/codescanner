@@ -364,6 +364,14 @@ const CIDashboard: React.FC = () => {
               >
                 🔧 Monitoring & Management
               </Button>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => navigate('/explorer')}
+                sx={{ ml: 1 }}
+              >
+                🔍 Explorer
+              </Button>
             </Box>
           </Box>
         </CardContent>
