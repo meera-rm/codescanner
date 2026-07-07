@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Button, TextField, Paper, Grid, Card, CardContent, Typography, List, ListItem, ListItemText, Chip, FormGroup, FormControlLabel, Checkbox, RadioGroup, FormControl, FormLabel, Radio } from '@mui/material';
 
 interface Issue {
@@ -10,6 +11,7 @@ interface Issue {
 }
 
 const CodeScannerExplorer: React.FC = () => {
+  const navigate = useNavigate();
   const [issues, setIssues] = useState<Issue[]>([]);
   const [severity, setSeverity] = useState<'all' | 'warning' | 'error'>('all');
   const [selectedCategories, setSelectedCategories] = useState<string[]>(['unused_import', 'high_complexity']);
@@ -213,13 +215,23 @@ const CodeScannerExplorer: React.FC = () => {
   return (
     <Box sx={{ p: 3, maxWidth: '1400px', mx: 'auto' }}>
       {/* Header */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ mb: 1 }}>
-          🔍 CodeScanner Explorer
-        </Typography>
-        <Typography variant="body2" color="textSecondary">
-          Interactive analysis tool for exploring and filtering code scan results
-        </Typography>
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={() => navigate('/ci-dashboard')}
+          sx={{ height: 'fit-content' }}
+        >
+          ← Back to CI Dashboard
+        </Button>
+        <Box>
+          <Typography variant="h4" sx={{ mb: 1 }}>
+            🔍 CodeScanner Explorer
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            Interactive analysis tool for exploring and filtering code scan results
+          </Typography>
+        </Box>
       </Box>
 
       <Grid container spacing={3}>
