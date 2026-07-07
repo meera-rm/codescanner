@@ -212,6 +212,59 @@ kubectl get pods -n codepulse
 
 **See PHASE_15_A_API_REFERENCE.md and MASTER_DOCUMENTATION_ALL_PHASES_1-11.md for complete endpoint list**
 
+### 🔍 CodeScanner Explorer - Interactive Analysis Tool
+
+An interactive playground for exploring, filtering, and analyzing code scan results with dual-mode capability (standalone + live API).
+
+**Architecture Overview:**
+```
+📁 CodeScanner Project
+├── 🐍 FastAPI Backend (api/)
+│   └── POST /api/v1/scan/sync ← Provides live data
+│
+├── ⚛️  React Dashboard (frontend/)
+│   ├── /explorer ← CodeScannerExplorer component
+│   │   └── Fetches from /api/v1/scan/sync
+│   └── /ci-dashboard ← Links to explorer
+│
+└── 📄 Standalone Playground (HTML)
+    └── codescanner-explorer.html ← Works offline or with API
+```
+
+**Explorer Features:**
+- ✓ **Standalone mode** with demo data (works offline)
+- 🔄 **Live API fetch** capability (when API is running)
+- 🔍 **Interactive filtering** by severity (all/warnings/errors)
+- 📋 **Multi-category filtering** (unused_imports, high_complexity, security, documentation)
+- 📊 **Real-time statistics** (total, warnings, errors)
+- 🎯 **Preset configurations** (All Issues, High Impact, Quick Wins, Complexity Focus)
+- 📋 **Copy-to-clipboard** for `/codescanner` commands
+- ❌ **Graceful error handling** with fallback to demo data
+- 🌐 **Configurable API URL** with status indicator (Live/Offline)
+
+**Access Methods:**
+1. **HTML Playground** — Standalone, works offline
+   ```bash
+   open /Users/meera/Documents/codescanner/codescanner-explorer.html
+   ```
+
+2. **React Dashboard** — Full app context
+   - Start dev server: `npm run dev` (in frontend/)
+   - Navigate: CI Dashboard → 🔍 Explorer button
+   - Live fetch when API is running
+
+3. **CLI Skill** — Generate commands
+   ```bash
+   /codescanner scan api  # Get results
+   # Copy into Explorer's API URL field
+   ```
+
+**Real-Time Data:**
+- 118 issues from api directory scan included as demo data
+- Auto-updates when "🔄 Fetch Live Data" clicked
+- Shows live status indicator (✓ for live, ● for offline)
+- Handles API connection failures gracefully
+
 ## 📝 Supported Languages
 
 | Language   | Icon | Detection | Validation | Formatting |
