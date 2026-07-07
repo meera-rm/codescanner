@@ -17,6 +17,8 @@ const CodeScannerExplorer: React.FC = () => {
   const [isLive, setIsLive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [lastAttemptTime, setLastAttemptTime] = useState<number | null>(null);
 
   const defaultIssues: Issue[] = [
     { file: 'main.py', line: 38, type: 'unused_import', message: "Import 'job_queue' is unused", severity: 'WARNING' },
@@ -31,11 +33,83 @@ const CodeScannerExplorer: React.FC = () => {
     setIssues(defaultIssues);
   }, []);
 
-  const fetchLiveData = async () => {
+  const getErrorMessage = (error: any, statusCode?: number): string => {
+    if (error instanceof TypeError) {
+      if (error.message.includes('Failed to fetch')) {
+        return `Network Error: Unable to reach ${apiUrl}. Check if the API is running and the URL is correct.`;
+      }
+      return `Network Error: ${error.message}`;
+    }
+
+    if (statusCode === 400) return 'Bad Request: Invalid scan parameters. Check the API documentation.';
+    if (statusCode === 401) return 'Unauthorized: API key required or invalid.';
+    if (statusCode === 403) return 'Forbidden: Access denied to this endpoint.';
+    if (statusCode === 404) return 'Not Found: API endpoint not found. Ensure the API is running correctly.';
+    if (statusCode === 500) return 'Server Error: The API encountered an internal error. Check API logs.';
+    if (statusCode === 503) return 'Service Unavailable: The API is temporarily down. Try again in a moment.';
+
+    if (error.message.includes('timeout')) {
+      return `Timeout: API request took too long (>10s). The server may be overloaded.`;
+    }
+
+    return `API Error: ${error.message || 'Unknown error occurred'}`;
+  };
+
+  const getRecoverySuggestions = (error: string): string[] => {
+    const suggestions: string[] = [];
+
+    if (error.includes('Network Error') || error.includes('reach')) {
+      suggestions.push('✓ Ensure the CodeScanner API is running: python -m uvicorn api.main:app --host 0.0.0.0 --port 8000');
+      suggestions.push('✓ Check the API URL is correct (default: http://localhost:8000)');
+      suggestions.push('✓ Check your internet connection and firewall settings');
+    }
+
+    if (error.includes('Not Found')) {
+      suggestions.push('✓ Verify the API is running and responding to health checks');
+      suggestions.push('✓ Check that the /api/v1/scan/sync endpoint exists');
+    }
+
+    if (error.includes('Timeout')) {
+      suggestions.push('✓ The API is processing a large scan. Wait and try again.');
+      suggestions.push('✓ Check server resources (CPU, memory, disk space)');
+    }
+
+    if (suggestions.length === 0) {
+      suggestions.push('✓ Try refreshing the page');
+      suggestions.push('✓ Check the browser console for detailed error information');
+      suggestions.push('✓ Verify the API endpoint is accessible');
+    }
+
+    return suggestions;
+  };
+
+  const validateApiUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const fetchLiveData = async (retryAttempt = 0) => {
+    // Validate URL format
+    if (!validateApiUrl(apiUrl)) {
+      setError(`Invalid API URL: "${apiUrl}". Please enter a valid URL like http://localhost:8000`);
+      setIsLive(false);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
+    setLastAttemptTime(Date.now());
 
     try {
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch(`${apiUrl}/api/v1/scan/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -43,26 +117,74 @@ const CodeScannerExplorer: React.FC = () => {
           directory_path: 'api',
           language: 'python',
           options: { security: true, quality_score: true }
-        })
+        }),
+        signal: controller.signal
       });
 
-      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      clearTimeout(timeoutId);
 
-      const data = await response.json();
-      if (data.findings) {
-        const transformedIssues = data.findings.map((f: any) => ({
-          file: f.file.split('/').pop(),
-          line: f.line,
-          type: f.type,
-          message: f.message,
-          severity: f.severity
-        }));
-        setIssues(transformedIssues);
-        setIsLive(true);
+      // Check response status
+      if (!response.ok) {
+        const errorMsg = getErrorMessage(new Error(`HTTP ${response.status}`), response.status);
+        setError(errorMsg);
+        setIsLive(false);
+        return;
       }
-    } catch (err) {
-      setError(`Failed to fetch from ${apiUrl}: ${err}`);
+
+      // Parse response
+      const data = await response.json();
+
+      // Validate response structure
+      if (!data || typeof data !== 'object') {
+        setError('Invalid API Response: Expected JSON object from API');
+        setIsLive(false);
+        return;
+      }
+
+      if (!Array.isArray(data.findings)) {
+        setError('Invalid API Response: Missing or invalid "findings" array');
+        setIsLive(false);
+        return;
+      }
+
+      // Transform and set issues
+      const transformedIssues = data.findings
+        .map((f: any) => ({
+          file: f.file?.split('/').pop() || 'unknown',
+          line: f.line || 0,
+          type: f.type || 'unknown',
+          message: f.message || 'No message',
+          severity: f.severity || 'INFO'
+        }))
+        .filter((issue: Issue) => issue.file && issue.line >= 0);
+
+      if (transformedIssues.length === 0) {
+        setError('No issues found in scan results');
+        setIsLive(false);
+        return;
+      }
+
+      setIssues(transformedIssues);
+      setIsLive(true);
+      setRetryCount(0);
+      setError(null);
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
       setIsLive(false);
+
+      // Auto-retry logic for network errors (up to 2 retries)
+      if (retryAttempt < 2 && (err instanceof TypeError || err.name === 'AbortError')) {
+        const backoffMs = Math.pow(2, retryAttempt) * 1000; // Exponential backoff: 1s, 2s
+        console.log(`Auto-retrying in ${backoffMs}ms... (attempt ${retryAttempt + 1}/2)`);
+
+        setTimeout(() => {
+          setRetryCount(retryAttempt + 1);
+          fetchLiveData(retryAttempt + 1);
+        }, backoffMs);
+      } else {
+        setRetryCount(0);
+      }
     } finally {
       setLoading(false);
     }
@@ -131,11 +253,45 @@ const CodeScannerExplorer: React.FC = () => {
                 {loading ? '⏳ Fetching...' : isLive ? '🔄 Refresh Data' : '🔄 Fetch Live Data'}
               </Button>
               {error && (
-                <Box sx={{ mt: 1, p: 1, bgcolor: '#fee2e2', borderRadius: 1, display: 'flex', gap: 1 }}>
-                  <span style={{ fontSize: 14, color: '#dc2626' }}>❌</span>
-                  <Typography variant="caption" sx={{ color: '#7f1d1d' }}>
-                    {error}
-                  </Typography>
+                <Box sx={{ mt: 2, p: 2, bgcolor: '#fee2e2', borderRadius: 1, border: '1px solid #fecaca' }}>
+                  <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                    <span style={{ fontSize: 14, color: '#dc2626', flexShrink: 0 }}>❌</span>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="caption" sx={{ color: '#7f1d1d', fontWeight: 600, display: 'block', mb: 0.5 }}>
+                        Connection Error
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#991b1b', display: 'block', mb: 1 }}>
+                        {error}
+                      </Typography>
+                      {retryCount > 0 && (
+                        <Typography variant="caption" sx={{ color: '#92400e', display: 'block', mb: 1 }}>
+                          ⏳ Auto-retrying... (attempt {retryCount}/2)
+                        </Typography>
+                      )}
+                      <Box sx={{ mt: 1 }}>
+                        <Typography variant="caption" sx={{ color: '#7c2d12', fontWeight: 600, display: 'block', mb: 0.5 }}>
+                          Recovery suggestions:
+                        </Typography>
+                        {getRecoverySuggestions(error).map((suggestion, idx) => (
+                          <Typography
+                            key={idx}
+                            variant="caption"
+                            sx={{ color: '#92400e', display: 'block', fontSize: '11px', lineHeight: 1.4 }}
+                          >
+                            {suggestion}
+                          </Typography>
+                        ))}
+                      </Box>
+                    </Box>
+                  </Box>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => fetchLiveData()}
+                    sx={{ mt: 1, bgcolor: '#fff5f5', borderColor: '#fca5a5', color: '#991b1b', fontSize: '11px' }}
+                  >
+                    🔄 Retry Now
+                  </Button>
                 </Box>
               )}
             </Box>
