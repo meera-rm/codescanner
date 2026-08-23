@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeLens</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f0e0d;--s1:#161513;--s2:#1d1b19;--s3:#242220;--s4:#2b2926;
+  --ln:#302d2a;--ln2:#3d3a36;
+  --ink:#ede8e1;--ink2:#9e9890;--ink3:#5e5a54;
+  --coral:#ff6b6b;--cd:rgba(255,107,107,.12);--cg:rgba(255,107,107,.06);
+  --gold:#f5c842;--teal:#3ecfb2;--sky:#6eb5ff;--lilac:#b89eff;--green:#6dde9a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--ink);font-size:12px;display:flex;flex-direction:column;}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-thumb{background:var(--ln2);border-radius:2px;}
+
+/* ══ TOPBAR ══ */
+.topbar{
+  display:flex;align-items:center;height:46px;
+  background:var(--s1);border-bottom:1px solid var(--ln);
+  flex-shrink:0;z-index:30;
+}
+.tb-logo{
+  display:flex;align-items:center;gap:9px;
+  padding:0 18px;height:100%;border-right:1px solid var(--ln);flex-shrink:0;
+}
+.logo-hex{width:22px;height:22px;flex-shrink:0;}
+.tb-name{font-family:'Fraunces',serif;font-size:15px;font-weight:900;letter-spacing:-.3px;}
+.tb-name sup{font-family:'DM Mono',monospace;font-size:8px;color:var(--coral);font-weight:400;letter-spacing:1px;vertical-align:super;margin-left:2px;}
+.tb-crumb{display:flex;align-items:center;gap:5px;padding:0 16px;height:100%;border-right:1px solid var(--ln);font-size:11px;color:var(--ink3);}
+.tb-crumb .seg{color:var(--ink2);}
+.tb-status{display:flex;align-items:center;gap:7px;padding:0 16px;font-size:11px;}
+.pdot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(109,222,154,.5);animation:pdot 2.5s ease infinite;flex-shrink:0;}
+.pdot.amber{background:var(--gold);animation-name:pdotA;}
+@keyframes pdot{0%{box-shadow:0 0 0 0 rgba(109,222,154,.5);}60%{box-shadow:0 0 0 5px rgba(109,222,154,0);}100%{box-shadow:0 0 0 0 rgba(109,222,154,0);}}
+@keyframes pdotA{0%{box-shadow:0 0 0 0 rgba(245,200,66,.5);}60%{box-shadow:0 0 0 5px rgba(245,200,66,0);}100%{box-shadow:0 0 0 0 rgba(245,200,66,0);}}
+.sw{font-size:11px;color:var(--green);font-weight:500;}
+.sw.busy{color:var(--gold);}
+.tb-spacer{flex:1;}
+.tb-chips{display:flex;align-items:center;gap:4px;padding:0 14px;height:100%;border-left:1px solid var(--ln);flex-shrink:0;}
+.chip{padding:2px 7px;border-radius:3px;font-size:9px;background:var(--s3);border:1px solid var(--ln2);color:var(--ink3);}
+.chip.w{border-color:rgba(245,200,66,.3);color:var(--gold);}
+.tb-acts{display:flex;align-items:center;gap:6px;padding:0 14px;height:100%;border-left:1px solid var(--ln);flex-shrink:0;}
+.btn{padding:5px 13px;border-radius:4px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;border:none;}
+.btn-o{background:transparent;border:1px solid var(--ln2);color:var(--ink2);}
+.btn-o:hover{border-color:var(--coral);color:var(--coral);background:var(--cg);}
+.btn-p{background:var(--coral);color:#0f0e0d;font-weight:600;}
+.btn-p:hover{background:#ff8585;transform:translateY(-1px);}
+.btn-p:active{transform:none;}
+.btn-p.busy{background:var(--s3);color:var(--coral);border:1px solid var(--coral);animation:bpulse 1s ease infinite;}
+@keyframes bpulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+
+/* ══ BODY ══ */
+.body{display:flex;flex:1;overflow:hidden;}
+
+/* ══ LEFT RAIL ══ */
+.rail{
+  width:220px;flex-shrink:0;
+  background:var(--s1);border-right:1px solid var(--ln);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.rail-scroll{flex:1;overflow-y:auto;overflow-x:hidden;}
+
+.rs{border-bottom:1px solid var(--ln);}
+.rs-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px 7px;cursor:pointer;
+}
+.rs-lbl{font-size:9px;text-transform:uppercase;letter-spacing:1.3px;color:var(--ink3);font-weight:500;}
+.rs-tog{font-size:10px;color:var(--ink3);transition:transform .15s;}
+.rs-body{padding:0 0 6px;}
+
+/* source */
+.src-row{display:flex;align-items:center;gap:5px;padding:4px 14px 6px;}
+.src-field{
+  flex:1;padding:5px 8px;background:var(--s3);
+  border:1px solid var(--ln2);border-radius:3px;
+  font-family:'DM Mono',monospace;font-size:10px;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.bwrap{position:relative;}
+.bbtn{
+  padding:5px 9px;background:var(--coral);border:none;border-radius:3px;
+  color:#0f0e0d;font-family:'DM Mono',monospace;font-size:10px;
+  font-weight:600;cursor:pointer;white-space:nowrap;
+  display:flex;align-items:center;gap:3px;transition:background .15s;
+}
+.bbtn:hover{background:#ff8585;}
+.bdrop{
+  display:none;position:absolute;top:calc(100% + 3px);right:0;
+  background:var(--s2);border:1px solid var(--ln2);border-radius:5px;
+  min-width:108px;z-index:200;overflow:hidden;
+  box-shadow:0 10px 28px rgba(0,0,0,.6);
+}
+.bdrop.open{display:block;animation:din .12s ease;}
+@keyframes din{from{opacity:0;transform:translateY(-3px);}to{opacity:1;transform:none;}}
+.bdi{display:flex;align-items:center;gap:7px;padding:8px 12px;font-size:11px;color:var(--ink2);cursor:pointer;transition:background .1s;border-bottom:1px solid var(--ln);}
+.bdi:last-child{border-bottom:none;}
+.bdi:hover{background:var(--s3);color:var(--coral);}
+.dzone{
+  margin:0 14px 6px;border:1px dashed var(--ln2);border-radius:3px;
+  padding:9px;text-align:center;cursor:pointer;
+  transition:all .2s;font-size:10px;color:var(--ink3);line-height:1.7;
+}
+.dzone:hover{border-color:var(--coral);background:var(--cg);color:var(--ink2);}
+.dzone .dh{color:var(--coral);}
+
+/* checks */
+.ck{display:flex;align-items:center;gap:7px;padding:5px 14px;cursor:pointer;font-size:11px;color:var(--ink3);transition:color .12s;}
+.ck:hover{color:var(--ink);}
+.ck.on{color:var(--ink2);}
+.ckb{width:13px;height:13px;flex-shrink:0;border:1.5px solid var(--ln2);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8px;transition:all .15s;}
+.ck.on .ckb{background:var(--coral);border-color:var(--coral);color:#0f0e0d;font-weight:700;}
+.eng{display:flex;align-items:center;gap:7px;padding:5px 14px;cursor:pointer;font-size:11px;color:var(--ink3);transition:color .12s;}
+.eng.on{color:var(--ink2);}
+.rdo{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--ln2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.rdo-dot{width:5px;height:5px;border-radius:50%;background:var(--coral);display:none;}
+.eng.on .rdo{border-color:var(--coral);}
+.eng.on .rdo-dot{display:block;}
+.throw{display:flex;gap:4px;padding:5px 14px 8px;}
+.thb{flex:1;padding:4px 0;text-align:center;font-size:9px;border:1px solid var(--ln2);border-radius:3px;cursor:pointer;color:var(--ink3);transition:all .15s;}
+.thb.on{border-color:var(--coral);color:var(--coral);background:var(--cg);}
+
+/* file tree */
+.fi{
+  display:flex;align-items:center;gap:7px;
+  padding:6px 14px;cursor:pointer;
+  font-size:11px;color:var(--ink3);
+  transition:all .12s;position:relative;
+}
+.fi:hover{background:var(--s2);color:var(--ink);}
+.fi.on{background:var(--s3);color:var(--ink);}
+.fi.on::after{content:'';position:absolute;right:0;top:0;bottom:0;width:2px;background:var(--coral);}
+.fi-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.fi-dot.py{background:var(--sky);}
+.fi-dot.js{background:var(--gold);}
+.fi-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fi-loc{font-size:9px;color:var(--ink3);flex-shrink:0;}
+
+/* ══ RIGHT STAGE ══ */
+.stage{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+
+/* metrics band */
+.mband{
+  display:grid;grid-template-columns:repeat(6,1fr);
+  background:var(--s1);border-bottom:1px solid var(--ln);
+  flex-shrink:0;
+}
+.mc{
+  padding:12px 14px;border-right:1px solid var(--ln);
+  display:flex;flex-direction:column;gap:3px;
+  cursor:default;transition:background .15s;position:relative;overflow:hidden;
+}
+.mc:last-child{border-right:none;}
+.mc:hover{background:var(--s2);}
+.mc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1.5px;opacity:0;transition:opacity .2s;}
+.mc:hover::after{opacity:1;}
+.mc:nth-child(1)::after{background:var(--green);}
+.mc:nth-child(2)::after{background:var(--sky);}
+.mc:nth-child(3)::after{background:var(--gold);}
+.mc:nth-child(4)::after{background:var(--coral);}
+.mc:nth-child(5)::after{background:var(--teal);}
+.mc:nth-child(6)::after{background:var(--lilac);}
+.mc-lbl{font-size:8px;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink3);font-weight:500;}
+.mc-val{font-family:'Fraunces',serif;font-size:22px;font-weight:900;letter-spacing:-1px;line-height:1;}
+.mc:nth-child(1) .mc-val{color:var(--green);}
+.mc:nth-child(2) .mc-val{color:var(--sky);}
+.mc:nth-child(3) .mc-val{color:var(--gold);}
+.mc:nth-child(4) .mc-val{color:var(--coral);}
+.mc:nth-child(5) .mc-val{color:var(--teal);}
+.mc:nth-child(6) .mc-val{color:var(--lilac);}
+.mc-sub{font-size:9px;color:var(--ink3);}
+.mc-spark{display:flex;align-items:flex-end;gap:2px;height:14px;margin-top:2px;}
+.sp{width:4px;border-radius:1px;background:var(--ln2);}
+
+/* tab bar */
+.tabs{
+  display:flex;background:var(--s1);border-bottom:1px solid var(--ln);
+  flex-shrink:0;padding:0 14px;overflow-x:auto;
+}
+.tabs::-webkit-scrollbar{height:0;}
+.tab{padding:9px 14px;font-size:11px;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px;}
+.tab:hover{color:var(--ink);}
+.tab.on{color:var(--coral);border-bottom-color:var(--coral);}
+.tn{padding:1px 5px;border-radius:2px;background:var(--s3);font-size:9px;color:var(--ink3);}
+.tab.on .tn{background:var(--cd);color:var(--coral);}
+
+/* tab content panels */
+.tab-panels{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.tab-panel{display:none;flex:1;overflow:hidden;flex-direction:column;}
+.tab-panel.on{display:flex;}
+
+/* ── FILES PANEL ── */
+.files-panel{display:flex;flex-direction:column;overflow:hidden;}
+
+/* toolbar row above table */
+.tbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 16px;border-bottom:1px solid var(--ln);
+  background:var(--s1);flex-shrink:0;
+}
+.tbar-info{font-size:10px;color:var(--ink3);}
+.tbar-info strong{color:var(--ink2);}
+.tbar-right{display:flex;align-items:center;gap:6px;}
+.fmts{display:flex;gap:3px;}
+.fmt{padding:3px 7px;font-family:'DM Mono',monospace;font-size:9px;border:1px solid var(--ln2);border-radius:3px;background:transparent;color:var(--ink3);cursor:pointer;transition:all .12s;}
+.fmt:hover,.fmt.on{border-color:var(--coral);color:var(--coral);background:var(--cg);}
+
+/* the table */
+.table-wrap{flex:1;overflow:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--s2);position:sticky;top:0;z-index:5;}
+th{padding:8px 14px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:1.1px;color:var(--ink3);font-weight:500;border-bottom:1px solid var(--ln);white-space:nowrap;cursor:pointer;user-select:none;}
+th:hover{color:var(--ink);}
+th.sorted{color:var(--coral);}
+th .sa{margin-left:3px;font-size:8px;opacity:.5;}
+th.sorted .sa{opacity:1;}
+tbody tr{border-bottom:1px solid var(--ln);cursor:pointer;transition:background .1s;}
+tbody tr:hover{background:var(--s2);}
+tbody tr.sel{background:var(--s2);border-left:2px solid var(--coral);}
+td{padding:9px 14px;font-size:11px;}
+.td-f{display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:10px;color:var(--coral);}
+.fld{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.fld.py{background:var(--sky);}.fld.js{background:var(--gold);}
+.ltag{display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;font-size:10px;}
+.lt-py{background:rgba(110,181,255,.1);color:#93c5fd;}
+.lt-js{background:rgba(245,200,66,.1);color:#fcd34d;}
+td.num{font-variant-numeric:tabular-nums;color:var(--ink);}
+td.dim{color:var(--ink3);}
+.cxw{display:flex;align-items:center;gap:7px;}
+.cxt{width:50px;height:4px;background:var(--s4);border-radius:2px;overflow:hidden;flex-shrink:0;}
+.cxf{height:100%;border-radius:2px;}
+.cx-lo{background:var(--green);}.cx-mid{background:var(--gold);}.cx-hi{background:var(--coral);}
+.cx-n{font-size:10px;color:var(--ink3);}
+.gp{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:4px;font-family:'Fraunces',serif;font-size:13px;font-weight:900;}
+.gA{background:rgba(109,222,154,.12);color:var(--green);border:1px solid rgba(109,222,154,.25);}
+.gB{background:rgba(110,181,255,.12);color:var(--sky);border:1px solid rgba(110,181,255,.25);}
+.gC{background:rgba(245,200,66,.12);color:var(--gold);border:1px solid rgba(245,200,66,.25);}
+.gD{background:rgba(255,107,107,.12);color:var(--coral);border:1px solid rgba(255,107,107,.25);}
+.sev{padding:2px 7px;border-radius:3px;font-size:9px;font-weight:600;letter-spacing:.3px;}
+.sv-none{background:rgba(94,90,84,.15);color:var(--ink3);}
+.sv-lo{background:rgba(109,222,154,.1);color:var(--green);}
+.sv-md{background:rgba(245,200,66,.1);color:var(--gold);}
+.sv-hi{background:rgba(255,107,107,.1);color:var(--coral);}
+
+/* ── DETAIL PANEL (file clicked → shows here in Files tab) ── */
+.detail{
+  flex:1;display:flex;flex-direction:column;
+  border-top:1px solid var(--ln);overflow:hidden;
+  background:var(--bg);
+}
+.detail-tabs{
+  display:flex;background:var(--s2);
+  border-bottom:1px solid var(--ln);flex-shrink:0;
+  padding:0 16px;
+}
+.dtab{padding:8px 12px;font-size:10px;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+.dtab:hover{color:var(--ink);}
+.dtab.on{color:var(--teal);border-bottom-color:var(--teal);}
+.detail-body{flex:1;overflow:hidden;display:flex;}
+
+/* heatmap + suggestions + radar side by side */
+.d-hsr{display:flex;flex:1;overflow:hidden;}
+.d-col{flex:1;padding:14px 16px;border-right:1px solid var(--ln);overflow-y:auto;}
+.d-col:last-child{border-right:none;flex:0 0 160px;}
+.d-col-title{font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink3);margin-bottom:10px;font-weight:500;}
+
+/* fn heatmap */
+.fnl{display:flex;flex-direction:column;gap:5px;}
+.fn-r{display:flex;align-items:center;gap:8px;font-size:10px;}
+.fn-nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'DM Mono',monospace;color:var(--teal);}
+.fn-cx{width:20px;text-align:right;color:var(--ink3);font-size:9px;flex-shrink:0;}
+.fn-b{flex:0 0 60px;height:4px;background:var(--s4);border-radius:2px;overflow:hidden;}
+.fn-bf{height:100%;border-radius:2px;}
+
+/* suggestions */
+.sugl{display:flex;flex-direction:column;gap:5px;}
+.sugi{display:flex;gap:7px;align-items:flex-start;padding:7px 9px;border-radius:4px;background:var(--s2);border:1px solid var(--ln);font-size:10px;line-height:1.6;}
+.sugi-ic{flex-shrink:0;margin-top:1px;}
+.sugi-tx{color:var(--ink3);}
+.sugi-tx code{font-family:'DM Mono',monospace;background:rgba(62,207,178,.1);color:var(--teal);padding:1px 4px;border-radius:2px;}
+
+/* radar */
+.radar-z{display:flex;align-items:center;justify-content:center;padding:8px 0;}
+
+/* ── CLAUDE REFACTOR PANE ── */
+.refactor{
+  display:none;flex:1;flex-direction:column;overflow:hidden;
+}
+.refactor.on{display:flex;}
+.rp-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;background:var(--s2);border-bottom:1px solid var(--ln);flex-shrink:0;
+}
+.rp-title{display:flex;align-items:center;gap:8px;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink3);}
+.rp-icon{width:18px;height:18px;border-radius:3px;background:var(--cd);border:1px solid var(--coral);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--coral);flex-shrink:0;}
+.rp-tag{padding:3px 8px;border-radius:3px;background:var(--s3);border:1px solid var(--ln2);font-size:9px;color:var(--ink3);display:flex;align-items:center;gap:4px;}
+.rp-tag-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);}
+.run-btn{padding:6px 16px;background:var(--coral);border:none;border-radius:4px;color:#0f0e0d;font-family:'DM Mono',monospace;font-size:10px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;}
+.run-btn:hover{background:#ff8585;transform:translateY(-1px);}
+.run-btn:disabled{background:var(--s3);color:var(--coral);border:1px solid var(--coral);cursor:not-allowed;transform:none;animation:bpulse 1s ease infinite;}
+.run-btn .rspin{width:10px;height:10px;border:1.5px solid rgba(15,14,13,.3);border-top-color:#0f0e0d;border-radius:50%;animation:spin .7s linear infinite;display:none;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.run-btn.loading .rspin{display:inline-block;}
+.run-btn.loading .rl{display:none;}
+
+/* split diff */
+.rp-split{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
+.rp-pane{display:flex;flex-direction:column;border-right:1px solid var(--ln);overflow:hidden;}
+.rp-pane:last-child{border-right:none;}
+.rp-ph{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--ln);background:var(--s3);flex-shrink:0;}
+.rp-pl{display:flex;align-items:center;gap:6px;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--ink3);}
+.pb{padding:1px 6px;border-radius:2px;font-size:8px;}
+.pb-o{background:rgba(94,90,84,.2);color:var(--ink3);}
+.pb-r{background:rgba(109,222,154,.12);color:var(--green);}
+.cp-btn{font-size:9px;color:var(--ink3);cursor:pointer;padding:2px 6px;border-radius:2px;border:1px solid transparent;transition:all .12s;background:transparent;font-family:'DM Mono',monospace;}
+.cp-btn:hover{border-color:var(--ln2);color:var(--ink2);}
+.rp-code{flex:1;overflow:auto;position:relative;}
+.rp-code textarea{width:100%;height:100%;min-height:160px;background:transparent;border:none;outline:none;resize:none;font-family:'DM Mono',monospace;font-size:11px;color:var(--ink2);line-height:1.7;padding:12px 14px;caret-color:var(--coral);}
+.rp-code textarea::selection{background:rgba(255,107,107,.2);}
+.rp-code textarea:focus{color:var(--ink);}
+.rp-out{width:100%;min-height:160px;padding:12px 14px;font-family:'DM Mono',monospace;font-size:11px;line-height:1.7;color:var(--ink2);white-space:pre-wrap;overflow:auto;}
+.rp-out .cur{display:inline-block;width:2px;height:13px;background:var(--coral);margin-left:1px;vertical-align:middle;animation:blink .9s ease infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+.rp-es{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:7px;color:var(--ink3);padding:20px;text-align:center;}
+.rp-es-ic{font-size:20px;margin-bottom:2px;}
+.rp-es-tx{font-size:10px;line-height:1.7;}
+.rp-es-tx strong{color:var(--coral);}
+.rp-foot{display:flex;align-items:center;justify-content:space-between;padding:5px 14px;border-top:1px solid var(--ln);background:var(--s2);font-size:9px;color:var(--ink3);flex-shrink:0;}
+.rp-foot .tok{color:var(--teal);}
+
+/* placeholder panels */
+.ph-panel{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--ink3);}
+.ph-ic{font-size:26px;margin-bottom:4px;}
+.ph-t{font-family:'Fraunces',serif;font-size:14px;font-weight:700;color:var(--ink2);}
+.ph-s{font-size:10px;line-height:1.7;text-align:center;max-width:240px;}
+
+/* scan overlay */
+.scan-ov{position:absolute;inset:0;z-index:100;background:rgba(15,14,13,.88);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+.scan-ov.open{display:flex;}
+.sc-card{width:460px;max-width:90vw;background:var(--s2);border:1px solid var(--ln2);border-radius:8px;overflow:hidden;}
+.sc-hd{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--ln);}
+.sc-sp{width:14px;height:14px;border:2px solid var(--ln2);border-top-color:var(--coral);border-radius:50%;animation:spin .75s linear infinite;flex-shrink:0;}
+.sc-ti{font-family:'Fraunces',serif;font-size:13px;font-weight:700;}
+.sc-bd{padding:12px 16px;}
+.sc-tr{width:100%;height:2px;background:var(--ln2);border-radius:1px;overflow:hidden;margin-bottom:10px;}
+.sc-fi{height:100%;background:var(--coral);border-radius:1px;transition:width .25s ease;}
+.sc-lg{font-size:10px;color:var(--ink3);line-height:1.9;max-height:140px;overflow-y:auto;}
+.sl{display:flex;gap:8px;animation:slin .25s ease;}
+@keyframes slin{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:none;}}
+.sl-t{color:var(--ink3);}
+.sl-ok{color:var(--green);}.sl-warn{color:var(--gold);}.sl-err{color:var(--coral);}
+</style>
+</head>
+<body>
+
+<!-- ═══ TOPBAR ═══ -->
+<div class="topbar">
+  <div class="tb-logo">
+    <svg class="logo-hex" viewBox="0 0 22 22" fill="none">
+      <polygon points="11,1 21,6 21,16 11,21 1,16 1,6" stroke="#ff6b6b" stroke-width="1.5" fill="rgba(255,107,107,.08)"/>
+      <circle cx="11" cy="11" r="2.5" fill="#ff6b6b"/>
+    </svg>
+    <span class="tb-name">CodeLens<sup>BETA</sup></span>
+  </div>
+  <div class="tb-crumb">
+    <span>workspace</span><span style="opacity:.3;margin:0 2px;">/</span>
+    <span class="seg" id="hdr-file">balance_sheet_comparison.py</span>
+  </div>
+  <div class="tb-status">
+    <div class="pdot" id="pdot"></div>
+    <span class="sw" id="sw">Scan complete</span>
+    <span style="color:var(--ink3);font-size:10px;">· 0.24s</span>
+  </div>
+  <div class="tb-spacer"></div>
+  <div class="tb-chips">
+    <span class="chip">Python only</span>
+    <span class="chip w">Max 15k files</span>
+    <span class="chip">100 MB zip</span>
+  </div>
+  <div class="tb-acts">
+    <button class="btn btn-o" onclick="doExport()">↓ Export</button>
+    <button class="btn btn-p" id="scan-btn" onclick="doScan()">▶ Scan</button>
+  </div>
+</div>
+
+<!-- ═══ BODY ═══ -->
+<div class="body">
+
+  <!-- ═══ LEFT RAIL ═══ -->
+  <div class="rail">
+    <div class="rail-scroll">
+
+      <!-- source -->
+      <div class="rs">
+        <div class="rs-head" onclick="togRS(this)">
+          <span class="rs-lbl">1 · Source</span>
+          <span class="rs-tog">▾</span>
+        </div>
+        <div class="rs-body">
+          <div class="src-row">
+            <div class="src-field" id="src-lbl">balance_sheet_comparison.py</div>
+            <div class="bwrap">
+              <button class="bbtn" onclick="openBrowse(event)">Browse <span style="font-size:8px;opacity:.7;">▾</span></button>
+              <div class="bdrop" id="bdrop">
+                <div class="bdi" onclick="pickSrc('folder')">📁 Folder</div>
+                <div class="bdi" onclick="pickSrc('files')">📄 Files</div>
+                <div class="bdi" onclick="pickSrc('zip')">🗜 .zip</div>
+              </div>
+            </div>
+          </div>
+          <div class="dzone" onclick="pickSrc('files')">
+            Drop folder / file / .zip<br><span class="dh">Browse</span> · max 100 MB
+          </div>
+        </div>
+      </div>
+
+      <!-- files -->
+      <div class="rs">
+        <div class="rs-head" onclick="togRS(this)">
+          <span class="rs-lbl">Files (3)</span>
+          <span class="rs-tog">▾</span>
+        </div>
+        <div class="rs-body">
+          <div class="fi on" onclick="selFile(this,'balance_sheet_comparison.py')">
+            <div class="fi-dot py"></div><span class="fi-name">balance_sheet_comparison.py</span><span class="fi-loc">441</span>
+          </div>
+          <div class="fi" onclick="selFile(this,'etl_pipeline.py')">
+            <div class="fi-dot py"></div><span class="fi-name">etl_pipeline.py</span><span class="fi-loc">198</span>
+          </div>
+          <div class="fi" onclick="selFile(this,'api_handler.js')">
+            <div class="fi-dot js"></div><span class="fi-name">api_handler.js</span><span class="fi-loc">87</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- analyses -->
+      <div class="rs">
+        <div class="rs-head" onclick="togRS(this)">
+          <span class="rs-lbl">2 · Analyses</span>
+          <span class="rs-tog">▾</span>
+        </div>
+        <div class="rs-body">
+          <div class="ck on" onclick="togCk(this)"><div class="ckb">✓</div>Basic metrics</div>
+          <div class="ck on" onclick="togCk(this)"><div class="ckb">✓</div>Cyclomatic complexity</div>
+          <div class="ck on" onclick="togCk(this)"><div class="ckb">✓</div>Code smells</div>
+          <div class="ck on" onclick="togCk(this)"><div class="ckb">✓</div>Code duplication</div>
+          <div class="ck" onclick="togCk(this)"><div class="ckb"></div>Security scan</div>
+          <div class="ck" onclick="togCk(this)"><div class="ckb"></div>Type coverage</div>
+        </div>
+      </div>
+
+      <!-- engine -->
+      <div class="rs">
+        <div class="rs-head" onclick="togRS(this)">
+          <span class="rs-lbl">3 · Engine</span>
+          <span class="rs-tog">▾</span>
+        </div>
+        <div class="rs-body">
+          <div class="eng on" onclick="setEng(this)"><div class="rdo"><div class="rdo-dot"></div></div>Python analysis</div>
+          <div class="eng" onclick="setEng(this)"><div class="rdo"><div class="rdo-dot"></div></div>Claude Code analysis</div>
+        </div>
+      </div>
+
+      <!-- theme -->
+      <div class="rs">
+        <div class="rs-head" onclick="togRS(this)">
+          <span class="rs-lbl">Theme</span>
+          <span class="rs-tog">▾</span>
+        </div>
+        <div class="rs-body">
+          <div class="throw">
+            <div class="thb on" onclick="setTh(this)">Auto</div>
+            <div class="thb" onclick="setTh(this)">Light</div>
+            <div class="thb" onclick="setTh(this)">Dark</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ RIGHT STAGE ═══ -->
+  <div class="stage" style="position:relative;">
+
+    <!-- METRICS BAND -->
+    <div class="mband">
+      <div class="mc">
+        <div class="mc-lbl">Grade</div>
+        <div class="mc-val">B</div>
+        <div class="mc-sub">80 / 100</div>
+        <div class="mc-spark"><div class="sp" style="height:8px;background:var(--green);opacity:.4"></div><div class="sp" style="height:12px;background:var(--green);opacity:.6"></div><div class="sp" style="height:10px;background:var(--green);opacity:.5"></div><div class="sp" style="height:16px;background:var(--green)"></div></div>
+      </div>
+      <div class="mc">
+        <div class="mc-lbl">Lines of Code</div>
+        <div class="mc-val">441</div>
+        <div class="mc-sub">4.61 avg / fn</div>
+        <div class="mc-spark"><div class="sp" style="height:14px;background:var(--sky)"></div><div class="sp" style="height:6px;background:var(--sky);opacity:.4"></div><div class="sp" style="height:10px;background:var(--sky);opacity:.6"></div><div class="sp" style="height:8px;background:var(--sky);opacity:.5"></div></div>
+      </div>
+      <div class="mc">
+        <div class="mc-lbl">Total Findings</div>
+        <div class="mc-val">25</div>
+        <div class="mc-sub">21 low · 4 medium</div>
+        <div class="mc-spark"><div class="sp" style="height:16px;background:var(--gold)"></div><div class="sp" style="height:12px;background:var(--gold);opacity:.7"></div><div class="sp" style="height:8px;background:var(--gold);opacity:.5"></div><div class="sp" style="height:4px;background:var(--gold);opacity:.3"></div></div>
+      </div>
+      <div class="mc">
+        <div class="mc-lbl">High Severity</div>
+        <div class="mc-val">0</div>
+        <div class="mc-sub">no critical issues</div>
+        <div class="mc-spark"><div class="sp" style="height:4px"></div><div class="sp" style="height:4px"></div><div class="sp" style="height:4px"></div><div class="sp" style="height:4px"></div></div>
+      </div>
+      <div class="mc">
+        <div class="mc-lbl">Documented</div>
+        <div class="mc-val">100%</div>
+        <div class="mc-sub">full coverage</div>
+        <div class="mc-spark"><div class="sp" style="height:16px;background:var(--teal)"></div><div class="sp" style="height:16px;background:var(--teal)"></div><div class="sp" style="height:16px;background:var(--teal)"></div><div class="sp" style="height:16px;background:var(--teal)"></div></div>
+      </div>
+      <div class="mc">
+        <div class="mc-lbl">Dep-Cycles</div>
+        <div class="mc-val">0</div>
+        <div class="mc-sub">no circular deps</div>
+        <div class="mc-spark"><div class="sp" style="height:4px"></div><div class="sp" style="height:4px"></div><div class="sp" style="height:4px"></div><div class="sp" style="height:4px"></div></div>
+      </div>
+    </div>
+
+    <!-- TAB BAR -->
+    <div class="tabs">
+      <div class="tab" onclick="setTab(this,'t-ov')">Overview</div>
+      <div class="tab" onclick="setTab(this,'t-cx')">Complexity <span class="tn">3</span></div>
+      <div class="tab" onclick="setTab(this,'t-sm')">Smells <span class="tn">2</span></div>
+      <div class="tab" onclick="setTab(this,'t-dup')">Duplication</div>
+      <div class="tab" onclick="setTab(this,'t-sec')">Security</div>
+      <div class="tab" onclick="setTab(this,'t-doc')">Docs</div>
+      <div class="tab" onclick="setTab(this,'t-dep')">Dependencies <span class="tn">1</span></div>
+      <div class="tab on" onclick="setTab(this,'t-files')">Files</div>
+    </div>
+
+    <!-- TAB PANELS -->
+    <div class="tab-panels">
+
+      <!-- placeholder tabs -->
+      <div class="tab-panel" id="t-ov"><div class="ph-panel"><div class="ph-ic">📊</div><div class="ph-t">Overview</div><div class="ph-s">Aggregate summary across all scanned files.</div></div></div>
+      <div class="tab-panel" id="t-cx"><div class="ph-panel"><div class="ph-ic">🔀</div><div class="ph-t">Complexity</div><div class="ph-s">3 functions exceed threshold of 10.</div></div></div>
+      <div class="tab-panel" id="t-sm"><div class="ph-panel"><div class="ph-ic">👃</div><div class="ph-t">Smells</div><div class="ph-s">2 code smell patterns detected.</div></div></div>
+      <div class="tab-panel" id="t-dup"><div class="ph-panel"><div class="ph-ic">©</div><div class="ph-t">Duplication</div><div class="ph-s">No significant duplication found.</div></div></div>
+      <div class="tab-panel" id="t-sec"><div class="ph-panel"><div class="ph-ic">🔒</div><div class="ph-t">Security</div><div class="ph-s">0 security findings.</div></div></div>
+      <div class="tab-panel" id="t-doc"><div class="ph-panel"><div class="ph-ic">📝</div><div class="ph-t">Docs</div><div class="ph-s">100% docstring coverage.</div></div></div>
+      <div class="tab-panel" id="t-dep"><div class="ph-panel"><div class="ph-ic">🔗</div><div class="ph-t">Dependencies</div><div class="ph-s">1 outdated dependency found.</div></div></div>
+
+      <!-- FILES TAB -->
+      <div class="tab-panel on" id="t-files">
+
+        <!-- table toolbar -->
+        <div class="tbar">
+          <div class="tbar-info"><strong>3 files</strong> scanned · Python analysis · 0.24s</div>
+          <div class="tbar-right">
+            <div class="fmts" id="fmt-grp">
+              <button class="fmt on" onclick="setFmt(this)">JSON</button>
+              <button class="fmt" onclick="setFmt(this)">HTML</button>
+              <button class="fmt" onclick="setFmt(this)">Markdown</button>
+              <button class="fmt" onclick="setFmt(this)">PDF</button>
+            </div>
+            <button class="btn btn-o" onclick="doExport()" style="padding:4px 10px;font-size:10px;">↓ Download</button>
+          </div>
+        </div>
+
+        <!-- table -->
+        <div class="table-wrap" id="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="doSort(this)">Path <span class="sa">↕</span></th>
+                <th onclick="doSort(this)">Lang <span class="sa">↕</span></th>
+                <th onclick="doSort(this)">LoC <span class="sa">↕</span></th>
+                <th onclick="doSort(this)">FN <span class="sa">↕</span></th>
+                <th onclick="doSort(this)">CLS <span class="sa">↕</span></th>
+                <th onclick="doSort(this)">Complexity <span class="sa">↕</span></th>
+                <th onclick="doSort(this)">Grade <span class="sa">↕</span></th>
+                <th onclick="doSort(this)">Severity <span class="sa">↕</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr onclick="selRow(this,'balance_sheet_comparison.py')" class="sel" data-file="balance_sheet_comparison.py">
+                <td><div class="td-f"><div class="fld py"></div>balance_sheet_comparison.py</div></td>
+                <td><span class="ltag lt-py">py</span></td>
+                <td class="num">441</td><td class="num">2</td><td class="num">0</td>
+                <td><div class="cxw"><div class="cxt"><div class="cxf cx-mid" style="width:55%"></div></div><span class="cx-n">8.2</span></div></td>
+                <td><span class="gp gB">B</span></td>
+                <td><span class="sev sv-none">—</span></td>
+              </tr>
+              <tr onclick="selRow(this,'etl_pipeline.py')" data-file="etl_pipeline.py">
+                <td><div class="td-f"><div class="fld py"></div>etl_pipeline.py</div></td>
+                <td><span class="ltag lt-py">py</span></td>
+                <td class="num">198</td><td class="num">5</td><td class="num">1</td>
+                <td><div class="cxw"><div class="cxt"><div class="cxf cx-lo" style="width:28%"></div></div><span class="cx-n">3.8</span></div></td>
+                <td><span class="gp gA">A</span></td>
+                <td><span class="sev sv-lo">Low</span></td>
+              </tr>
+              <tr onclick="selRow(this,'api_handler.js')" data-file="api_handler.js">
+                <td><div class="td-f"><div class="fld js"></div>api_handler.js</div></td>
+                <td><span class="ltag lt-js">js</span></td>
+                <td class="num">87</td><td class="num">3</td><td class="num">0</td>
+                <td><div class="cxw"><div class="cxt"><div class="cxf cx-hi" style="width:82%"></div></div><span class="cx-n">14.1</span></div></td>
+                <td><span class="gp gC">C</span></td>
+                <td><span class="sev sv-md">Medium</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- DETAIL AREA — below table, changes when row is clicked -->
+        <div class="detail" id="detail">
+          <div class="detail-tabs">
+            <div class="dtab on" onclick="setDtab(this,'d-hsr')">Heatmap · Suggestions · Radar</div>
+            <div class="dtab" onclick="setDtab(this,'d-refactor')">✦ Claude Refactor</div>
+          </div>
+          <div class="detail-body">
+
+            <!-- HSR view -->
+            <div class="d-hsr on" id="d-hsr" style="flex:1;display:flex;">
+              <div class="d-col" id="d-heatmap">
+                <div class="d-col-title">Function Complexity Heatmap</div>
+                <div class="fnl" id="fn-list"></div>
+              </div>
+              <div class="d-col" id="d-sug">
+                <div class="d-col-title">Suggestions</div>
+                <div class="sugl" id="sug-list"></div>
+              </div>
+              <div class="d-col" id="d-radar" style="flex:0 0 160px;display:flex;flex-direction:column;">
+                <div class="d-col-title">Radar</div>
+                <div class="radar-z" id="radar-svg"></div>
+              </div>
+            </div>
+
+            <!-- REFACTOR view -->
+            <div class="refactor" id="d-refactor">
+              <div class="rp-head">
+                <div class="rp-title">
+                  <div class="rp-icon">✦</div>
+                  Claude Refactor
+                  <span style="color:var(--ink3);font-size:9px;text-transform:none;letter-spacing:0;">· paste code left, run to get refactored version right</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div class="rp-tag"><div class="rp-tag-dot"></div>claude-sonnet-4</div>
+                  <button class="run-btn" id="run-btn" onclick="runRefactor()">
+                    <div class="rspin"></div><span class="rl">▶ Refactor</span>
+                  </button>
+                </div>
+              </div>
+              <div class="rp-split">
+                <div class="rp-pane">
+                  <div class="rp-ph">
+                    <div class="rp-pl"><span class="pb pb-o">ORIGINAL</span><span id="rp-filename">balance_sheet_comparison.py</span></div>
+                    <button class="cp-btn" onclick="copyPane('rp-orig')">copy</button>
+                  </div>
+                  <div class="rp-code"><textarea id="rp-orig" spellcheck="false" placeholder="Paste your code here…"></textarea></div>
+                </div>
+                <div class="rp-pane">
+                  <div class="rp-ph">
+                    <div class="rp-pl"><span class="pb pb-r">REFACTORED</span><span id="rp-out-name">balance_sheet_comparison_refactored.py</span></div>
+                    <button class="cp-btn" onclick="copyPane('rp-out')">copy</button>
+                  </div>
+                  <div class="rp-code">
+                    <div class="rp-out" id="rp-out">
+                      <div class="rp-es">
+                        <div class="rp-es-ic">✦</div>
+                        <div class="rp-es-tx">Paste your code on the left and click <strong>▶ Refactor</strong><br>Claude will rewrite it based on the scan findings above</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="rp-foot">
+                <span id="rp-tok">Ready · 0 tokens used</span>
+                <span>Anthropic API · claude-sonnet-4-20250514</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SCAN OVERLAY -->
+    <div class="scan-ov" id="scan-ov">
+      <div class="sc-card">
+        <div class="sc-hd"><div class="sc-sp"></div><div class="sc-ti">Analyzing codebase…</div></div>
+        <div class="sc-bd">
+          <div class="sc-tr"><div class="sc-fi" id="sc-fi" style="width:0%"></div></div>
+          <div class="sc-lg" id="sc-lg"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ════ DATA ════ */
+const FILES = {
+  'balance_sheet_comparison.py':{
+    fns:[{n:'normalize_currency()',cx:12,p:75},{n:'process_data()',cx:18,p:95},{n:'load_report()',cx:6,p:38},{n:'validate_schema()',cx:4,p:25}],
+    sug:[{i:'⚠',t:'<code>process_data()</code> cyclomatic complexity 18 — split into smaller functions'},{i:'💡',t:'Extract currency normalization into a dedicated utility module'},{i:'✓',t:'All functions documented — 100% docstring coverage'}],
+    radar:[80,60,100,72,55,90],
+    code:`def process_data(data, country, currency, exchange_rate, schema, flags):
+    results = []
+    for row in data:
+        if country == 'US':
+            val = row['amount'] * exchange_rate
+            if flags.get('validate'):
+                if not schema.get(row['type']):
+                    continue
+                if row['amount'] < 0:
+                    if flags.get('allow_negative'):
+                        val = abs(val)
+                    else:
+                        continue
+            results.append({'country': country, 'value': val, 'type': row['type']})
+        elif country == 'UK':
+            val = row['amount'] * exchange_rate * 1.2
+            results.append({'country': country, 'value': val, 'type': row['type']})
+        else:
+            val = row['amount'] * exchange_rate
+            results.append({'country': country, 'value': val})
+    return results`
+  },
+  'etl_pipeline.py':{
+    fns:[{n:'extract()',cx:4,p:25},{n:'transform()',cx:6,p:38},{n:'load()',cx:3,p:19},{n:'run_pipeline()',cx:5,p:31},{n:'handle_error()',cx:2,p:13}],
+    sug:[{i:'✓',t:'Clean pipeline structure — low complexity across all functions'},{i:'💡',t:'Add retry logic in <code>load()</code> for production resilience'}],
+    radar:[95,88,100,95,80,92],
+    code:`def run_pipeline(source, dest, transform_fn, retries=0):
+    data = extract(source)
+    transformed = transform(data, transform_fn)
+    load(transformed, dest)
+    return transformed`
+  },
+  'api_handler.js':{
+    fns:[{n:'handleRequest()',cx:22,p:100},{n:'parseResponse()',cx:11,p:69},{n:'buildPayload()',cx:9,p:56}],
+    sug:[{i:'🔴',t:'<code>handleRequest()</code> complexity 22 — refactor into middleware chain'},{i:'⚠',t:'Missing error boundaries — unhandled promise rejections detected'},{i:'💡',t:'Split API handler into route-specific modules'}],
+    radar:[55,30,70,60,40,65],
+    code:`async function handleRequest(req, res) {
+  try {
+    const body = JSON.parse(req.body);
+    if (body.type === 'create') {
+      if (body.user && body.user.id) {
+        const user = await db.find(body.user.id);
+        if (user) {
+          if (user.active) {
+            const result = await db.create(body.data);
+            if (result) { res.json({ ok: true, data: result }); }
+            else { res.status(500).json({ ok: false }); }
+          } else { res.status(403).json({ ok: false, reason: 'inactive' }); }
+        } else { res.status(404).json({ ok: false }); }
+      } else { res.status(400).json({ ok: false }); }
+    } else { res.status(400).json({ ok: false, reason: 'unknown type' }); }
+  } catch(e) { res.status(500).json({ ok: false }); }
+}`
+  }
+};
+
+let currentFile = 'balance_sheet_comparison.py';
+
+/* ════ INIT ════ */
+window.addEventListener('DOMContentLoaded', () => {
+  loadDetail('balance_sheet_comparison.py');
+  document.getElementById('rp-orig').value = FILES['balance_sheet_comparison.py'].code;
+});
+
+/* ════ RAIL SECTIONS ════ */
+function togRS(head){
+  const body=head.nextElementSibling;
+  const tog=head.querySelector('.rs-tog');
+  const open=body.style.display!=='none';
+  body.style.display=open?'none':'';
+  tog.style.transform=open?'rotate(-90deg)':'';
+}
+
+/* ════ BROWSE ════ */
+function openBrowse(e){
+  e.stopPropagation();
+  document.getElementById('bdrop').classList.toggle('open');
+}
+function pickSrc(type){
+  document.getElementById('bdrop').classList.remove('open');
+  const inp=document.createElement('input');inp.type='file';
+  if(type==='folder') inp.webkitdirectory=true;
+  else if(type==='zip') inp.accept='.zip';
+  else inp.multiple=true;
+  inp.onchange=e=>{
+    if(e.target.files[0]){
+      const n=e.target.files[0].name;
+      document.getElementById('src-lbl').textContent=n;
+      document.getElementById('hdr-file').textContent=n;
+    }
+  };
+  inp.click();
+}
+document.addEventListener('click',()=>document.getElementById('bdrop').classList.remove('open'));
+
+/* ════ FILE SELECT (rail) ════ */
+function selFile(el, name){
+  document.querySelectorAll('.fi').forEach(f=>f.classList.remove('on'));
+  el.classList.add('on');
+  currentFile=name;
+  document.getElementById('hdr-file').textContent=name;
+  document.getElementById('src-lbl').textContent=name;
+  // also highlight table row
+  document.querySelectorAll('tbody tr').forEach(r=>{
+    r.classList.toggle('sel',r.dataset.file===name);
+  });
+  loadDetail(name);
+}
+
+/* ════ TABLE ROW SELECT ════ */
+function selRow(tr, name){
+  document.querySelectorAll('tbody tr').forEach(r=>r.classList.remove('sel'));
+  tr.classList.add('sel');
+  currentFile=name;
+  document.getElementById('hdr-file').textContent=name;
+  document.getElementById('src-lbl').textContent=name;
+  // also highlight rail
+  document.querySelectorAll('.fi').forEach(f=>{
+    f.classList.toggle('on',f.querySelector('.fi-name').textContent===name);
+  });
+  loadDetail(name);
+}
+
+/* ════ LOAD DETAIL ════ */
+function loadDetail(name){
+  const d=FILES[name];if(!d) return;
+  // heatmap
+  document.getElementById('fn-list').innerHTML=d.fns.map(f=>{
+    const col=f.p>70?'#ff6b6b':f.p>40?'#f5c842':'#6dde9a';
+    return`<div class="fn-r"><span class="fn-nm">${f.n}</span><span class="fn-cx">${f.cx}</span><div class="fn-b"><div class="fn-bf" style="width:${f.p}%;background:${col}"></div></div></div>`;
+  }).join('');
+  // suggestions
+  document.getElementById('sug-list').innerHTML=d.sug.map(s=>
+    `<div class="sugi"><span class="sugi-ic">${s.i}</span><span class="sugi-tx">${s.t}</span></div>`
+  ).join('');
+  // radar
+  document.getElementById('radar-svg').innerHTML=buildRadar(d.radar);
+  // refactor pane names
+  const ext=name.endsWith('.js')?'_refactored.js':'_refactored.py';
+  document.getElementById('rp-filename').textContent=name;
+  document.getElementById('rp-out-name').textContent=name.replace(/\.(py|js)$/,ext);
+  // pre-fill code
+  const ta=document.getElementById('rp-orig');
+  ta.value=d.code||'';
+  // reset output
+  document.getElementById('rp-out').innerHTML=`<div class="rp-es"><div class="rp-es-ic">✦</div><div class="rp-es-tx">Paste your code on the left and click <strong>▶ Refactor</strong></div></div>`;
+  document.getElementById('rp-tok').textContent='Ready · 0 tokens used';
+}
+
+/* ════ RADAR ════ */
+function buildRadar(s){
+  const labels=['CX','DUP','DOC','SMELLS','SEC','MAINT'];
+  const cx=68,cy=68,r=48,n=6;
+  const pts=s.map((v,i)=>{const a=(Math.PI*2/n)*i-Math.PI/2;const dist=(v/100)*r;return[cx+dist*Math.cos(a),cy+dist*Math.sin(a)];});
+  const grid=f=>Array.from({length:n},(_,i)=>{const a=(Math.PI*2/n)*i-Math.PI/2;return`${cx+f*r*Math.cos(a)},${cy+f*r*Math.sin(a)}`;}).join(' ');
+  const spokes=Array.from({length:n},(_,i)=>{
+    const a=(Math.PI*2/n)*i-Math.PI/2;
+    const lx=cx+(r+15)*Math.cos(a),ly=cy+(r+15)*Math.sin(a);
+    const ex=cx+r*Math.cos(a),ey=cy+r*Math.sin(a);
+    return`<line x1="${cx}" y1="${cy}" x2="${ex}" y2="${ey}" stroke="#302d2a" stroke-width="1"/>
+    <text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="#5e5a54" font-size="7" font-family="DM Mono">${labels[i]}</text>`;
+  }).join('');
+  const poly=pts.map(p=>p.join(',')).join(' ');
+  return`<svg width="136" height="136" viewBox="0 0 136 136">
+    <polygon points="${grid(1)}" fill="none" stroke="#302d2a" stroke-width="1"/>
+    <polygon points="${grid(.75)}" fill="none" stroke="#302d2a" stroke-width=".5" stroke-dasharray="2,3"/>
+    <polygon points="${grid(.5)}" fill="none" stroke="#302d2a" stroke-width=".5" stroke-dasharray="2,3"/>
+    <polygon points="${grid(.25)}" fill="none" stroke="#302d2a" stroke-width=".5" stroke-dasharray="2,3"/>
+    ${spokes}
+    <polygon points="${poly}" fill="rgba(255,107,107,.1)" stroke="#ff6b6b" stroke-width="1.5" stroke-linejoin="round"/>
+    ${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#ff6b6b"/>`).join('')}
+  </svg>`;
+}
+
+/* ════ DETAIL TABS ════ */
+function setDtab(el, target){
+  document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('d-hsr').style.display = target==='d-hsr'?'flex':'none';
+  const ref=document.getElementById('d-refactor');
+  ref.classList.toggle('on', target==='d-refactor');
+}
+
+/* ════ MAIN TABS ════ */
+function setTab(el, id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+
+/* ════ CONFIG ════ */
+function togCk(el){el.classList.toggle('on');el.querySelector('.ckb').textContent=el.classList.contains('on')?'✓':'';}
+function setEng(el){document.querySelectorAll('.eng').forEach(e=>e.classList.remove('on'));el.classList.add('on');}
+function setTh(el){document.querySelectorAll('.thb').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
+function setFmt(el){document.querySelectorAll('#fmt-grp .fmt').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
+function doSort(th){document.querySelectorAll('th').forEach(t=>t.classList.remove('sorted'));th.classList.add('sorted');}
+
+/* ════ COPY ════ */
+function copyPane(id){
+  const el=document.getElementById(id);
+  const text=el.tagName==='TEXTAREA'?el.value:el.innerText;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=el.closest('.rp-pane').querySelector('.cp-btn');
+    btn.textContent='copied!';setTimeout(()=>btn.textContent='copy',1500);
+  });
+}
+
+/* ════ CLAUDE REFACTOR ════ */
+async function runRefactor(){
+  const origEl=document.getElementById('rp-orig');
+  const outEl=document.getElementById('rp-out');
+  const btn=document.getElementById('run-btn');
+  const tokEl=document.getElementById('rp-tok');
+  const code=origEl.value.trim();
+  if(!code){
+    origEl.style.outline='1px solid var(--coral)';
+    setTimeout(()=>origEl.style.outline='',2000);
+    return;
+  }
+  btn.disabled=true;btn.classList.add('loading');
+  outEl.className='rp-out';outEl.innerHTML='<span class="cur"></span>';
+  tokEl.textContent='Sending to Claude…';
+
+  const d=FILES[currentFile]||{sug:[]};
+  const findings=d.sug.map(s=>s.t.replace(/<[^>]+>/g,'')).join('\n');
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`You are an expert code refactoring assistant. Return ONLY the refactored code — no explanation, no markdown fences, no preamble. Reduce cyclomatic complexity, extract helper functions, improve readability. Preserve all original behavior exactly.`,
+        messages:[{role:'user',content:`File: ${currentFile}\n\nStatic analysis findings:\n${findings}\n\nCode to refactor:\n${code}\n\nReturn ONLY the refactored code.`}],
+        stream:true
+      })
+    });
+    if(!res.ok){
+      const err=await res.json();
+      outEl.innerHTML=`<div class="rp-es"><div class="rp-es-ic">⚠</div><div class="rp-es-tx" style="color:var(--coral);">API ${res.status}: ${err.error?.message||'Unknown error'}</div></div>`;
+      tokEl.textContent='Error';btn.disabled=false;btn.classList.remove('loading');return;
+    }
+    const reader=res.body.getReader();const dec=new TextDecoder();
+    let full='',inTok=0,outTok=0;
+    outEl.innerHTML='<span class="cur"></span>';
+    while(true){
+      const{done,value}=await reader.read();if(done) break;
+      const lines=dec.decode(value,{stream:true}).split('\n');
+      for(const line of lines){
+        if(!line.startsWith('data:')) continue;
+        const data=line.slice(5).trim();if(data==='[DONE]') continue;
+        try{
+          const ev=JSON.parse(data);
+          if(ev.type==='content_block_delta'&&ev.delta?.type==='text_delta'){
+            full+=ev.delta.text;
+            const cur=outEl.querySelector('.cur');
+            if(cur) outEl.insertBefore(document.createTextNode(ev.delta.text),cur);
+            else outEl.appendChild(document.createTextNode(ev.delta.text));
+            outEl.scrollTop=outEl.scrollHeight;
+          }
+          if(ev.type==='message_delta'&&ev.usage) outTok=ev.usage.output_tokens||0;
+          if(ev.type==='message_start'&&ev.message?.usage) inTok=ev.message.usage.input_tokens||0;
+        }catch(e){}
+      }
+    }
+    outEl.querySelector('.cur')?.remove();
+    tokEl.innerHTML=`Done · <span class="tok">${inTok} in / ${outTok} out tokens</span>`;
+  }catch(err){
+    outEl.innerHTML=`<div class="rp-es"><div class="rp-es-ic">⚠</div><div class="rp-es-tx" style="color:var(--coral);">${err.message||'Network error'}</div></div>`;
+    tokEl.textContent='Connection error';
+  }
+  btn.disabled=false;btn.classList.remove('loading');
+}
+
+/* ════ EXPORT ════ */
+function doExport(){
+  const fmt=document.querySelector('#fmt-grp .fmt.on')?.textContent||'JSON';
+  alert(`Exporting as ${fmt}…`);
+}
+
+/* ════ SCAN ════ */
+const SCAN_LOG=[
+  ['00:00','ok','Initializing analysis engine…'],
+  ['00:02','ok','Detected 3 files · Python (2), JavaScript (1)'],
+  ['00:05','ok','Parsing AST: balance_sheet_comparison.py'],
+  ['00:08','warn','Cyclomatic complexity 18 in process_data()'],
+  ['00:11','ok','Parsing AST: etl_pipeline.py'],
+  ['00:14','ok','Parsing AST: api_handler.js'],
+  ['00:17','err','High complexity: handleRequest() → 22'],
+  ['00:20','ok','Running duplication analysis…'],
+  ['00:22','ok','Running documentation coverage…'],
+  ['00:24','ok','Scan complete · 25 findings · 0 critical'],
+];
+function doScan(){
+  const btn=document.getElementById('scan-btn');
+  const ov=document.getElementById('scan-ov');
+  const fi=document.getElementById('sc-fi');
+  const lg=document.getElementById('sc-lg');
+  const sw=document.getElementById('sw');
+  const dot=document.getElementById('pdot');
+  btn.className='btn btn-p busy';btn.textContent='⏸ Scanning';
+  sw.textContent='Scanning…';sw.className='sw busy';
+  dot.className='pdot amber';
+  ov.classList.add('open');lg.innerHTML='';fi.style.width='0%';
+  let i=0;
+  const iv=setInterval(()=>{
+    if(i>=SCAN_LOG.length){
+      clearInterval(iv);ov.classList.remove('open');
+      btn.className='btn btn-p';btn.textContent='▶ Scan';
+      sw.textContent='Scan complete';sw.className='sw';
+      dot.className='pdot';return;
+    }
+    const[t,type,msg]=SCAN_LOG[i];
+    fi.style.width=`${Math.round((i+1)/SCAN_LOG.length*100)}%`;
+    const div=document.createElement('div');div.className='sl';
+    const col=type==='ok'?'sl-ok':type==='warn'?'sl-warn':'sl-err';
+    const ic=type==='ok'?'✓':type==='warn'?'⚠':'✗';
+    div.innerHTML=`<span class="sl-t">${t}</span><span class="${col}">${ic}</span><span>${msg}</span>`;
+    lg.appendChild(div);lg.scrollTop=lg.scrollHeight;i++;
+  },220);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeScan · Analysis Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0d0f0e;
+  --s1:       #111510;
+  --s2:       #161b15;
+  --s3:       #1c2319;
+  --s4:       #232c1f;
+  --border:   #2a3326;
+  --border2:  #344030;
+  --text:     #d8e8d0;
+  --muted:    #5a7050;
+  --muted2:   #3d5035;
+  --lime:     #a3e635;
+  --lime2:    #84cc16;
+  --lime-dim: rgba(163,230,53,0.12);
+  --lime-glow:rgba(163,230,53,0.25);
+  --amber:    #fbbf24;
+  --red:      #f87171;
+  --cyan:     #34d399;
+  --blue:     #60a5fa;
+  --purple:   #a78bfa;
+  --scan-line:#a3e635;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+
+body {
+  font-family:'Fira Code',monospace;
+  background:var(--bg);
+  color:var(--text);
+  font-size:12px;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ─── TOPBAR ─── */
+.topbar{
+  display:flex;align-items:center;gap:0;
+  height:44px;
+  background:var(--s1);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  position:relative;
+  z-index:50;
+}
+.tb-logo{
+  display:flex;align-items:center;gap:10px;
+  padding:0 20px;
+  border-right:1px solid var(--border);
+  height:100%;
+  font-family:'Outfit',sans-serif;
+  font-weight:800;font-size:14px;
+  letter-spacing:-0.3px;color:var(--text);
+  flex-shrink:0;
+}
+.logo-hex{
+  width:24px;height:24px;
+  background:var(--lime);
+  clip-path:polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:#0d0f0e;font-weight:900;
+}
+.tb-breadcrumb{
+  display:flex;align-items:center;gap:6px;
+  padding:0 16px;
+  font-size:11px;color:var(--muted);
+  border-right:1px solid var(--border);
+  height:100%;
+}
+.tb-breadcrumb .crumb{color:var(--text);}
+.tb-breadcrumb .sep{opacity:0.4;}
+.tb-status{
+  display:flex;align-items:center;gap:8px;
+  padding:0 16px;font-size:11px;
+}
+.status-ring{
+  position:relative;width:14px;height:14px;flex-shrink:0;
+}
+.status-ring svg{width:14px;height:14px;transform:rotate(-90deg);}
+.status-ring circle{fill:none;stroke-width:2;}
+.status-ring .track{stroke:var(--border2);}
+.status-ring .fill{
+  stroke:var(--lime);stroke-dasharray:40 40;
+  stroke-linecap:round;
+  transition:stroke-dashoffset 1s ease;
+}
+.status-ring .pulse{
+  stroke:var(--lime);stroke-dasharray:40 40;
+  stroke-linecap:round;opacity:0;
+  animation:ringPulse 2s ease infinite;
+}
+@keyframes ringPulse{
+  0%{opacity:0.6;stroke-dashoffset:0;}
+  100%{opacity:0;stroke-dashoffset:-44;}
+}
+.status-word{color:var(--lime);font-weight:500;font-size:11px;}
+
+.tb-spacer{flex:1;}
+.tb-meta{
+  display:flex;align-items:center;gap:4px;
+  padding:0 14px;
+  font-size:10px;color:var(--muted);
+  border-left:1px solid var(--border);
+  height:100%;
+}
+.tb-meta .tag{
+  padding:2px 7px;border-radius:3px;
+  background:var(--s3);border:1px solid var(--border2);
+  font-size:9px;color:var(--muted);
+}
+.tb-meta .tag.warn{border-color:rgba(251,191,36,0.3);color:var(--amber);}
+.tb-actions{
+  display:flex;align-items:center;gap:6px;
+  padding:0 14px;
+  border-left:1px solid var(--border);
+  height:100%;
+}
+.btn-ghost{
+  padding:5px 12px;
+  background:transparent;
+  border:1px solid var(--border2);
+  border-radius:4px;
+  color:var(--muted);font-family:'Fira Code',monospace;
+  font-size:10px;cursor:pointer;
+  transition:all 0.15s;
+  display:flex;align-items:center;gap:5px;
+}
+.btn-ghost:hover{border-color:var(--lime);color:var(--lime);background:var(--lime-dim);}
+.btn-primary{
+  padding:5px 14px;
+  background:var(--lime);
+  border:none;border-radius:4px;
+  color:#0d0f0e;font-family:'Fira Code',monospace;
+  font-size:10px;font-weight:600;cursor:pointer;
+  transition:all 0.15s;
+  display:flex;align-items:center;gap:5px;
+}
+.btn-primary:hover{background:#b4f053;transform:translateY(-1px);}
+.btn-primary:active{transform:translateY(0);}
+.btn-primary.scanning{
+  background:var(--s3);color:var(--lime);
+  border:1px solid var(--lime);
+  animation:scanPulse 1s ease infinite;
+}
+@keyframes scanPulse{0%,100%{opacity:1;}50%{opacity:0.6;}}
+
+/* ─── LAYOUT ─── */
+.workspace{
+  display:flex;flex:1;overflow:hidden;
+}
+
+/* ─── ICON RAIL ─── */
+.rail{
+  width:48px;
+  background:var(--s1);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  align-items:center;
+  padding:8px 0;
+  gap:2px;
+  flex-shrink:0;
+  z-index:10;
+}
+.rail-btn{
+  width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:6px;cursor:pointer;
+  font-size:15px;
+  transition:all 0.15s;
+  color:var(--muted2);
+  position:relative;
+}
+.rail-btn:hover{background:var(--s3);color:var(--text);}
+.rail-btn.active{background:var(--lime-dim);color:var(--lime);}
+.rail-btn.active::before{
+  content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:2px;height:18px;background:var(--lime);border-radius:0 2px 2px 0;
+}
+.rail-sep{width:24px;height:1px;background:var(--border);margin:4px 0;}
+
+/* ─── PANEL ─── */
+.panel{
+  width:240px;
+  background:var(--s1);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  flex-shrink:0;
+  transition:width 0.2s ease;
+}
+.panel.collapsed{width:0;}
+.panel-head{
+  padding:14px 14px 10px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.panel-title{
+  font-family:'Outfit',sans-serif;
+  font-weight:700;font-size:11px;
+  letter-spacing:0.8px;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:10px;
+}
+/* Source input row */
+.source-row{
+  display:flex;align-items:center;gap:6px;
+  margin-bottom:8px;
+}
+.source-input{
+  flex:1;padding:5px 8px;
+  background:var(--s3);
+  border:1px solid var(--border2);
+  border-radius:4px;
+  font-family:'Fira Code',monospace;
+  font-size:10px;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.browse-wrap{position:relative;}
+.browse-btn{
+  padding:5px 9px;
+  background:var(--lime);border:none;border-radius:4px;
+  color:#0d0f0e;font-family:'Fira Code',monospace;
+  font-size:10px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;gap:3px;
+  transition:background 0.15s;
+  white-space:nowrap;
+}
+.browse-btn:hover{background:#b4f053;}
+.browse-arrow{font-size:8px;opacity:0.7;}
+.browse-menu{
+  display:none;
+  position:absolute;top:calc(100% + 4px);right:0;
+  background:var(--s2);
+  border:1px solid var(--border2);
+  border-radius:6px;min-width:120px;
+  z-index:100;overflow:hidden;
+  box-shadow:0 12px 32px rgba(0,0,0,0.6);
+}
+.browse-menu.open{display:block;animation:menuIn 0.12s ease;}
+@keyframes menuIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+.bm-item{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 12px;font-size:11px;color:var(--text);
+  cursor:pointer;transition:background 0.1s;
+  border-bottom:1px solid var(--border);
+}
+.bm-item:last-child{border-bottom:none;}
+.bm-item:hover{background:var(--s3);color:var(--lime);}
+.bm-icon{font-size:13px;}
+
+.drop-zone{
+  border:1px dashed var(--border2);
+  border-radius:6px;padding:14px;
+  text-align:center;cursor:pointer;
+  transition:all 0.2s;
+}
+.drop-zone:hover{border-color:var(--lime);background:var(--lime-dim);}
+.drop-zone p{color:var(--muted);font-size:10px;line-height:1.7;}
+.drop-zone .dz-hl{color:var(--lime);}
+
+/* file tree */
+.section-scroll{flex:1;overflow-y:auto;overflow-x:hidden;}
+.section-scroll::-webkit-scrollbar{width:3px;}
+.section-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.panel-section{border-bottom:1px solid var(--border);}
+.ps-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px 6px;cursor:pointer;
+}
+.ps-label{
+  font-size:9px;text-transform:uppercase;
+  letter-spacing:1.2px;color:var(--muted);font-weight:500;
+}
+.ps-toggle{font-size:10px;color:var(--muted2);transition:transform 0.15s;}
+.ps-body{padding:0 0 6px;}
+
+.ftree-item{
+  display:flex;align-items:center;gap:7px;
+  padding:5px 14px;cursor:pointer;
+  font-size:11px;color:var(--muted);
+  transition:all 0.12s;
+  position:relative;
+}
+.ftree-item:hover{background:var(--s2);color:var(--text);}
+.ftree-item.active{background:var(--s3);color:var(--lime);}
+.ftree-item.active::after{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:2px;background:var(--lime);
+}
+.ftree-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lang-dot{
+  width:6px;height:6px;border-radius:50%;flex-shrink:0;
+}
+.ld-py{background:#60a5fa;}
+.ld-js{background:#fbbf24;}
+.ld-ts{background:#34d399;}
+.ftree-loc{font-size:9px;color:var(--muted2);}
+
+/* analysis checks */
+.check-item{
+  display:flex;align-items:center;gap:8px;
+  padding:5px 14px;cursor:pointer;
+  font-size:11px;color:var(--muted);
+  transition:color 0.12s;
+}
+.check-item:hover{color:var(--text);}
+.check-item.on{color:var(--text);}
+.cbox{
+  width:14px;height:14px;flex-shrink:0;
+  border:1.5px solid var(--border2);border-radius:3px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;transition:all 0.15s;
+}
+.check-item.on .cbox{
+  background:var(--lime);border-color:var(--lime);color:#0d0f0e;font-weight:700;
+}
+
+/* engine */
+.eng-item{
+  display:flex;align-items:center;gap:8px;
+  padding:5px 14px;cursor:pointer;
+  font-size:11px;color:var(--muted);transition:color 0.12s;
+}
+.eng-item.active{color:var(--text);}
+.radio-o{
+  width:13px;height:13px;border-radius:50%;
+  border:1.5px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all 0.15s;
+}
+.eng-item.active .radio-o{border-color:var(--lime);}
+.radio-fill{width:6px;height:6px;border-radius:50%;background:var(--lime);display:none;}
+.eng-item.active .radio-fill{display:block;}
+
+/* ─── MAIN CONTENT ─── */
+.main-area{
+  flex:1;display:flex;flex-direction:column;overflow:hidden;
+}
+
+/* METRICS STRIP */
+.metrics-strip{
+  display:flex;gap:0;
+  background:var(--s1);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  overflow-x:auto;
+}
+.metrics-strip::-webkit-scrollbar{height:2px;}
+.metrics-strip::-webkit-scrollbar-thumb{background:var(--border2);}
+.mc{
+  flex:1;min-width:110px;
+  padding:14px 16px;
+  border-right:1px solid var(--border);
+  position:relative;
+  cursor:default;
+  transition:background 0.15s;
+}
+.mc:last-child{border-right:none;}
+.mc:hover{background:var(--s2);}
+.mc::after{
+  content:'';position:absolute;
+  bottom:0;left:0;right:0;height:2px;
+  opacity:0;transition:opacity 0.2s;
+}
+.mc:hover::after{opacity:1;}
+.mc.m-grade::after{background:var(--lime);}
+.mc.m-loc::after{background:var(--blue);}
+.mc.m-find::after{background:var(--amber);}
+.mc.m-sev::after{background:var(--red);}
+.mc.m-doc::after{background:var(--cyan);}
+.mc.m-dep::after{background:var(--purple);}
+.mc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;}
+.mc-label{
+  font-size:9px;text-transform:uppercase;
+  letter-spacing:1px;color:var(--muted);font-weight:500;
+}
+.mc-sparkline{display:flex;align-items:flex-end;gap:1px;height:14px;}
+.spark-bar{width:3px;border-radius:1px;background:var(--border2);}
+.mc.m-grade .spark-bar.hi{background:var(--lime);}
+.mc.m-loc .spark-bar.hi{background:var(--blue);}
+.mc.m-find .spark-bar.hi{background:var(--amber);}
+.mc.m-sev .spark-bar.hi{background:var(--red);}
+.mc.m-doc .spark-bar.hi{background:var(--cyan);}
+.mc.m-dep .spark-bar.hi{background:var(--purple);}
+.mc-val{
+  font-family:'Outfit',sans-serif;
+  font-size:24px;font-weight:800;line-height:1;
+  letter-spacing:-1px;
+}
+.mc.m-grade .mc-val{color:var(--lime);}
+.mc.m-loc .mc-val{color:var(--blue);}
+.mc.m-find .mc-val{color:var(--amber);}
+.mc.m-sev .mc-val{color:var(--red);}
+.mc.m-doc .mc-val{color:var(--cyan);}
+.mc.m-dep .mc-val{color:var(--purple);}
+.mc-sub{font-size:9px;color:var(--muted);margin-top:3px;}
+
+/* ARC GAUGE */
+.arc-gauge{
+  width:32px;height:18px;overflow:hidden;
+  position:relative;flex-shrink:0;
+}
+.arc-gauge svg{position:absolute;top:0;left:0;}
+
+/* ─── TAB BAR ─── */
+.tabbar{
+  display:flex;
+  background:var(--s1);
+  border-bottom:1px solid var(--border);
+  padding:0 16px;
+  gap:0;flex-shrink:0;
+  overflow-x:auto;
+}
+.tabbar::-webkit-scrollbar{height:0;}
+.tab{
+  padding:9px 14px;
+  font-size:11px;color:var(--muted);
+  cursor:pointer;border-bottom:2px solid transparent;
+  transition:all 0.15s;white-space:nowrap;
+  display:flex;align-items:center;gap:5px;
+}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--lime);border-bottom-color:var(--lime);}
+.tab-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:16px;height:15px;padding:0 4px;
+  border-radius:3px;background:var(--s3);
+  font-size:9px;color:var(--muted);
+}
+.tab.active .tab-badge{background:rgba(163,230,53,0.15);color:var(--lime);}
+
+/* ─── RESULTS ZONE ─── */
+.results-zone{
+  flex:1;display:flex;flex-direction:column;overflow:hidden;
+}
+
+/* SCAN OVERLAY */
+.scan-overlay{
+  display:none;
+  position:absolute;inset:0;z-index:20;
+  background:rgba(13,15,14,0.85);
+  flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;
+}
+.scan-overlay.active{display:flex;}
+.scan-block{
+  width:520px;max-width:90vw;
+  background:var(--s2);border:1px solid var(--border2);
+  border-radius:10px;overflow:hidden;
+}
+.scan-header{
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.scan-spinner{
+  width:16px;height:16px;border:2px solid var(--border2);
+  border-top-color:var(--lime);border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.scan-title{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:var(--text);}
+.scan-body{padding:14px 18px;}
+.scan-progress-track{
+  width:100%;height:3px;background:var(--border2);
+  border-radius:2px;overflow:hidden;margin-bottom:12px;
+}
+.scan-progress-fill{
+  height:100%;background:var(--lime);border-radius:2px;
+  transition:width 0.3s ease;
+}
+.scan-log{
+  font-size:10px;color:var(--muted);line-height:1.9;
+  font-family:'Fira Code',monospace;
+}
+.scan-log .sl-line{display:flex;gap:8px;animation:fadeUp 0.3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+.sl-time{color:var(--muted2);}
+.sl-ok{color:var(--lime);}
+.sl-warn{color:var(--amber);}
+.sl-err{color:var(--red);}
+
+/* RESULTS TABLE */
+.results-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 18px;border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.rh-info{font-size:10px;color:var(--muted);}
+.rh-info strong{color:var(--text);}
+.rh-right{display:flex;align-items:center;gap:8px;}
+.dl-format-row{display:flex;gap:3px;}
+.dl-fmt{
+  padding:3px 8px;font-family:'Fira Code',monospace;font-size:9px;
+  border:1px solid var(--border2);border-radius:3px;
+  background:transparent;color:var(--muted);cursor:pointer;
+  transition:all 0.12s;
+}
+.dl-fmt:hover,.dl-fmt.on{border-color:var(--lime);color:var(--lime);background:var(--lime-dim);}
+.dl-btn2{
+  padding:4px 10px;font-family:'Fira Code',monospace;font-size:10px;
+  background:var(--s3);border:1px solid var(--border2);border-radius:4px;
+  color:var(--text);cursor:pointer;transition:all 0.12s;
+  display:flex;align-items:center;gap:4px;
+}
+.dl-btn2:hover{border-color:var(--lime);color:var(--lime);}
+
+.table-wrap{flex:1;overflow:auto;}
+.table-wrap::-webkit-scrollbar{width:4px;height:4px;}
+.table-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--s2);}
+th{
+  padding:9px 14px;text-align:left;
+  font-size:9px;text-transform:uppercase;
+  letter-spacing:1.2px;color:var(--muted);font-weight:500;
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;cursor:pointer;
+  user-select:none;
+}
+th:hover{color:var(--text);}
+th .sort-arrow{opacity:0;font-size:8px;margin-left:3px;}
+th:hover .sort-arrow{opacity:0.5;}
+th.sorted .sort-arrow{opacity:1;color:var(--lime);}
+
+tbody tr{
+  border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background 0.1s;
+}
+tbody tr:hover{background:var(--s2);}
+tbody tr.expanded{background:var(--s2);}
+td{padding:10px 14px;font-size:11px;}
+
+.td-path{
+  font-family:'Fira Code',monospace;color:var(--lime);font-size:10px;
+  display:flex;align-items:center;gap:6px;
+}
+.path-icon{font-size:12px;}
+
+.lang-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 7px;border-radius:3px;font-size:10px;font-weight:500;
+}
+.lc-py{background:rgba(96,165,250,0.12);color:#93c5fd;}
+.lc-js{background:rgba(251,191,36,0.12);color:#fcd34d;}
+.lc-ts{background:rgba(52,211,153,0.12);color:#6ee7b7;}
+
+.num{font-variant-numeric:tabular-nums;color:var(--text);}
+.num-dim{color:var(--muted);}
+
+/* complexity bar */
+.cx-bar-wrap{
+  display:flex;align-items:center;gap:7px;
+}
+.cx-bar{
+  width:60px;height:5px;background:var(--s4);border-radius:3px;overflow:hidden;
+}
+.cx-fill{height:100%;border-radius:3px;transition:width 0.5s ease;}
+.cx-lo{background:var(--lime);}
+.cx-mid{background:var(--amber);}
+.cx-hi{background:var(--red);}
+
+/* grade pill */
+.gp{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;border-radius:5px;
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:800;
+}
+.gp-A{background:rgba(163,230,53,0.15);color:var(--lime);border:1px solid rgba(163,230,53,0.3);}
+.gp-B{background:rgba(96,165,250,0.15);color:var(--blue);border:1px solid rgba(96,165,250,0.3);}
+.gp-C{background:rgba(251,191,36,0.15);color:var(--amber);border:1px solid rgba(251,191,36,0.3);}
+.gp-D{background:rgba(248,113,113,0.15);color:var(--red);border:1px solid rgba(248,113,113,0.3);}
+
+/* severity */
+.sev{padding:2px 7px;border-radius:3px;font-size:9px;font-weight:600;}
+.sev-none{background:rgba(90,112,80,0.15);color:var(--muted);}
+.sev-low{background:rgba(163,230,53,0.1);color:var(--lime);}
+.sev-med{background:rgba(251,191,36,0.1);color:var(--amber);}
+.sev-hi{background:rgba(248,113,113,0.1);color:var(--red);}
+
+/* heatmap row */
+.heatmap-row{
+  background:var(--s2);
+  border-bottom:1px solid var(--border);
+}
+.heatmap-inner{
+  padding:14px 18px 16px;
+  display:grid;grid-template-columns:1fr 1fr 260px;gap:20px;
+}
+.hm-col-title{
+  font-size:9px;text-transform:uppercase;
+  letter-spacing:1px;color:var(--muted);
+  margin-bottom:8px;font-weight:500;
+}
+.fn-list{display:flex;flex-direction:column;gap:3px;}
+.fn-row{
+  display:flex;align-items:center;gap:8px;
+  font-size:10px;
+}
+.fn-name{color:var(--lime);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Fira Code',monospace;}
+.fn-cx{color:var(--muted);font-size:9px;width:20px;text-align:right;flex-shrink:0;}
+.fn-heat{flex:0 0 80px;height:5px;background:var(--s4);border-radius:3px;overflow:hidden;}
+.fn-heat-fill{height:100%;border-radius:3px;}
+
+/* radar chart placeholder */
+.radar-wrap{display:flex;align-items:center;justify-content:center;}
+
+/* suggestions */
+.suggest-list{display:flex;flex-direction:column;gap:6px;}
+.suggest-item{
+  display:flex;gap:8px;
+  padding:6px 10px;
+  border-radius:5px;
+  background:var(--s3);
+  border:1px solid var(--border);
+  font-size:10px;line-height:1.6;
+}
+.sug-icon{flex-shrink:0;margin-top:1px;}
+.sug-text{color:var(--muted);}
+.sug-text code{color:var(--cyan);background:rgba(52,211,153,0.1);padding:1px 4px;border-radius:3px;}
+
+/* EMPTY STATE */
+.empty-state{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:10px;
+  color:var(--muted);
+}
+.empty-hex{
+  width:48px;height:48px;
+  background:var(--s2);border:1px solid var(--border2);
+  clip-path:polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;margin-bottom:4px;
+}
+.empty-title{font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:var(--text);}
+.empty-sub{font-size:11px;color:var(--muted);text-align:center;max-width:280px;line-height:1.7;}
+
+/* TOOLTIP */
+.tip{
+  display:none;position:absolute;z-index:200;
+  background:var(--s2);border:1px solid var(--border2);
+  border-radius:6px;padding:8px 12px;
+  font-size:10px;color:var(--muted);
+  line-height:1.8;white-space:nowrap;
+  box-shadow:0 8px 24px rgba(0,0,0,0.5);
+}
+.tip.show{display:block;}
+
+/* SCAN LINE animation on table */
+@keyframes scanLine{
+  0%{top:-2px;opacity:1;}
+  100%{top:100%;opacity:0;}
+}
+.scan-line-effect{
+  position:absolute;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--lime),transparent);
+  animation:scanLine 1.5s ease-in-out infinite;
+  pointer-events:none;
+  display:none;
+}
+.scanning-table .scan-line-effect{display:block;}
+
+/* scrollbar global */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="tb-logo">
+    <div class="logo-hex">⬡</div>
+    CodeScan
+  </div>
+  <div class="tb-breadcrumb">
+    <span>workspace</span><span class="sep">/</span>
+    <span class="crumb">balance_sheet_comparison.py</span>
+  </div>
+  <div class="tb-status">
+    <div class="status-ring">
+      <svg viewBox="0 0 14 14"><circle class="track" cx="7" cy="7" r="5"/><circle class="fill" cx="7" cy="7" r="5" stroke-dasharray="31.4 31.4" stroke-dashoffset="0"/><circle class="pulse" cx="7" cy="7" r="5" stroke-dasharray="31.4 31.4" stroke-dashoffset="0"/></svg>
+    </div>
+    <span class="status-word" id="status-word">Scan complete</span>
+    <span style="color:var(--muted);font-size:10px;">· 0.24s</span>
+  </div>
+  <div class="tb-spacer"></div>
+  <div class="tb-meta">
+    <span class="tag">Python only</span>
+    <span class="tag warn">Max 15k files</span>
+    <span class="tag">100 MB zip</span>
+  </div>
+  <div class="tb-actions">
+    <button class="btn-ghost" id="dl-btn" onclick="downloadReport()">↓ Export</button>
+    <button class="btn-primary" id="scan-btn" onclick="runScan()">▶ Scan</button>
+  </div>
+</div>
+
+<!-- WORKSPACE -->
+<div class="workspace" style="position:relative;">
+
+  <!-- ICON RAIL -->
+  <div class="rail">
+    <div class="rail-btn active" onclick="togglePanel(this,'files')" title="Files">📁</div>
+    <div class="rail-btn" onclick="togglePanel(this,'config')" title="Config">⚙</div>
+    <div class="rail-sep"></div>
+    <div class="rail-btn" onclick="togglePanel(this,'history')" title="History">🕐</div>
+    <div class="rail-btn" onclick="togglePanel(this,'search')" title="Search">🔍</div>
+  </div>
+
+  <!-- SIDE PANEL -->
+  <div class="panel" id="side-panel">
+
+    <!-- SOURCE -->
+    <div class="panel-head">
+      <div class="panel-title">1 · Source</div>
+      <div class="source-row">
+        <div class="source-input" id="src-label">balance_sheet_comparison.py</div>
+        <div class="browse-wrap">
+          <button class="browse-btn" onclick="toggleBrowse(event)">Browse <span class="browse-arrow">▾</span></button>
+          <div class="browse-menu" id="browse-menu">
+            <div class="bm-item" onclick="pickSrc('folder')"><span class="bm-icon">📁</span>Folder</div>
+            <div class="bm-item" onclick="pickSrc('files')"><span class="bm-icon">📄</span>Files</div>
+            <div class="bm-item" onclick="pickSrc('zip')"><span class="bm-icon">🗜</span>.zip</div>
+          </div>
+        </div>
+      </div>
+      <div class="drop-zone" onclick="pickSrc('files')">
+        <p>Drop folder, file or .zip<br><span class="dz-hl">Browse</span> · max 100 MB</p>
+      </div>
+    </div>
+
+    <div class="section-scroll">
+      <!-- FILE TREE -->
+      <div class="panel-section">
+        <div class="ps-head" onclick="toggleSection(this)">
+          <span class="ps-label">Files (3)</span>
+          <span class="ps-toggle">▾</span>
+        </div>
+        <div class="ps-body">
+          <div class="ftree-item active" onclick="selectFile(this,'balance_sheet_comparison.py',441,'py')">
+            <div class="lang-dot ld-py"></div>
+            <span class="ftree-name">balance_sheet_comparison.py</span>
+            <span class="ftree-loc">441</span>
+          </div>
+          <div class="ftree-item" onclick="selectFile(this,'etl_pipeline.py',198,'py')">
+            <div class="lang-dot ld-py"></div>
+            <span class="ftree-name">etl_pipeline.py</span>
+            <span class="ftree-loc">198</span>
+          </div>
+          <div class="ftree-item" onclick="selectFile(this,'api_handler.js',87,'js')">
+            <div class="lang-dot ld-js"></div>
+            <span class="ftree-name">api_handler.js</span>
+            <span class="ftree-loc">87</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANALYSES -->
+      <div class="panel-section">
+        <div class="ps-head" onclick="toggleSection(this)">
+          <span class="ps-label">2 · Analyses</span>
+          <span class="ps-toggle">▾</span>
+        </div>
+        <div class="ps-body">
+          <div class="check-item on" onclick="toggleCheck(this)"><div class="cbox">✓</div>Basic metrics (always)</div>
+          <div class="check-item on" onclick="toggleCheck(this)"><div class="cbox">✓</div>Cyclomatic complexity</div>
+          <div class="check-item on" onclick="toggleCheck(this)"><div class="cbox">✓</div>Code smells</div>
+          <div class="check-item on" onclick="toggleCheck(this)"><div class="cbox">✓</div>Code duplication</div>
+          <div class="check-item" onclick="toggleCheck(this)"><div class="cbox"></div>Security scan</div>
+          <div class="check-item" onclick="toggleCheck(this)"><div class="cbox"></div>Type coverage</div>
+        </div>
+      </div>
+
+      <!-- ENGINE -->
+      <div class="panel-section">
+        <div class="ps-head" onclick="toggleSection(this)">
+          <span class="ps-label">3 · Engine</span>
+          <span class="ps-toggle">▾</span>
+        </div>
+        <div class="ps-body">
+          <div class="eng-item active" onclick="setEngine(this)">
+            <div class="radio-o"><div class="radio-fill"></div></div>
+            Python analysis
+          </div>
+          <div class="eng-item" onclick="setEngine(this)">
+            <div class="radio-o"><div class="radio-fill"></div></div>
+            Claude Code analysis
+          </div>
+        </div>
+      </div>
+
+      <!-- THEME -->
+      <div class="panel-section">
+        <div class="ps-head" onclick="toggleSection(this)">
+          <span class="ps-label">Theme</span>
+          <span class="ps-toggle">▾</span>
+        </div>
+        <div class="ps-body" style="padding:6px 14px 10px;display:flex;gap:5px;">
+          <div class="dl-fmt on" onclick="setTheme(this)">Auto</div>
+          <div class="dl-fmt" onclick="setTheme(this)">Light</div>
+          <div class="dl-fmt" onclick="setTheme(this)">Dark</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN AREA -->
+  <div class="main-area">
+
+    <!-- METRICS STRIP -->
+    <div class="metrics-strip">
+      <div class="mc m-grade">
+        <div class="mc-top">
+          <div class="mc-label">Grade</div>
+          <div class="arc-gauge" id="arc-grade"></div>
+        </div>
+        <div class="mc-val">B</div>
+        <div class="mc-sub">80 / 100 · overall</div>
+      </div>
+      <div class="mc m-loc">
+        <div class="mc-top">
+          <div class="mc-label">Lines of Code</div>
+          <div class="mc-sparkline">
+            <div class="spark-bar hi" style="height:6px"></div>
+            <div class="spark-bar" style="height:4px"></div>
+            <div class="spark-bar hi" style="height:10px"></div>
+            <div class="spark-bar" style="height:3px"></div>
+            <div class="spark-bar hi" style="height:14px"></div>
+          </div>
+        </div>
+        <div class="mc-val">441</div>
+        <div class="mc-sub">4.61 avg / fn</div>
+      </div>
+      <div class="mc m-find">
+        <div class="mc-top">
+          <div class="mc-label">Total Findings</div>
+          <div class="mc-sparkline">
+            <div class="spark-bar hi" style="height:14px"></div>
+            <div class="spark-bar hi" style="height:10px"></div>
+            <div class="spark-bar hi" style="height:8px"></div>
+            <div class="spark-bar hi" style="height:6px"></div>
+            <div class="spark-bar" style="height:3px"></div>
+          </div>
+        </div>
+        <div class="mc-val">25</div>
+        <div class="mc-sub">21 low · 4 medium</div>
+      </div>
+      <div class="mc m-sev">
+        <div class="mc-top">
+          <div class="mc-label">High Severity</div>
+          <div class="mc-sparkline">
+            <div class="spark-bar" style="height:4px"></div>
+            <div class="spark-bar" style="height:4px"></div>
+            <div class="spark-bar" style="height:4px"></div>
+            <div class="spark-bar" style="height:4px"></div>
+            <div class="spark-bar" style="height:4px"></div>
+          </div>
+        </div>
+        <div class="mc-val">0</div>
+        <div class="mc-sub">no critical issues</div>
+      </div>
+      <div class="mc m-doc">
+        <div class="mc-top">
+          <div class="mc-label">Documented</div>
+          <div class="mc-sparkline">
+            <div class="spark-bar hi" style="height:14px"></div>
+            <div class="spark-bar hi" style="height:14px"></div>
+            <div class="spark-bar hi" style="height:14px"></div>
+            <div class="spark-bar hi" style="height:14px"></div>
+            <div class="spark-bar hi" style="height:14px"></div>
+          </div>
+        </div>
+        <div class="mc-val">100%</div>
+        <div class="mc-sub">full doc coverage</div>
+      </div>
+      <div class="mc m-dep">
+        <div class="mc-top">
+          <div class="mc-label">Dep-Cycles</div>
+          <div class="mc-sparkline">
+            <div class="spark-bar" style="height:4px"></div>
+            <div class="spark-bar" style="height:4px"></div>
+            <div class="spark-bar" style="height:4px"></div>
+            <div class="spark-bar" style="height:4px"></div>
+            <div class="spark-bar" style="height:4px"></div>
+          </div>
+        </div>
+        <div class="mc-val">0</div>
+        <div class="mc-sub">no circular deps</div>
+      </div>
+    </div>
+
+    <!-- TAB BAR -->
+    <div class="tabbar">
+      <div class="tab" onclick="setTab(this,'overview')">Overview</div>
+      <div class="tab" onclick="setTab(this,'complexity')">Complexity <span class="tab-badge">3</span></div>
+      <div class="tab" onclick="setTab(this,'smells')">Smells <span class="tab-badge">2</span></div>
+      <div class="tab" onclick="setTab(this,'duplication')">Duplication</div>
+      <div class="tab" onclick="setTab(this,'security')">Security</div>
+      <div class="tab" onclick="setTab(this,'docs')">Docs</div>
+      <div class="tab" onclick="setTab(this,'deps')">Dependencies <span class="tab-badge">1</span></div>
+      <div class="tab active" onclick="setTab(this,'files')">Files</div>
+    </div>
+
+    <!-- RESULTS ZONE -->
+    <div class="results-zone" style="position:relative;">
+      <div class="scan-line-effect" id="scan-line"></div>
+
+      <!-- TABLE HEAD ROW -->
+      <div class="results-head">
+        <div class="rh-info"><strong>3 files</strong> · Python analysis engine · 0.24s</div>
+        <div class="rh-right">
+          <div class="dl-format-row" id="fmt-row">
+            <button class="dl-fmt on" onclick="setFmt(this)">JSON</button>
+            <button class="dl-fmt" onclick="setFmt(this)">HTML</button>
+            <button class="dl-fmt" onclick="setFmt(this)">Markdown</button>
+            <button class="dl-fmt" onclick="setFmt(this)">PDF</button>
+          </div>
+          <button class="dl-btn2" onclick="downloadReport()">↓ Download</button>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-wrap" id="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortBy('path')">Path <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('lang')">Lang <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('loc')">LoC <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('fn')">FN <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('cls')">CLS <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('cx')">Complexity <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('grade')">Grade <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('sev')">Severity <span class="sort-arrow">↕</span></th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr onclick="expandRow(this)" data-file="balance_sheet_comparison.py">
+              <td><div class="td-path"><span class="path-icon">🐍</span>balance_sheet_comparison.py</div></td>
+              <td><span class="lang-chip lc-py">py</span></td>
+              <td class="num">441</td>
+              <td class="num">2</td>
+              <td class="num">0</td>
+              <td>
+                <div class="cx-bar-wrap">
+                  <div class="cx-bar"><div class="cx-fill cx-mid" style="width:55%"></div></div>
+                  <span class="num-dim" style="font-size:10px">8.2</span>
+                </div>
+              </td>
+              <td><span class="gp gp-B">B</span></td>
+              <td><span class="sev sev-none">—</span></td>
+            </tr>
+            <tr onclick="expandRow(this)" data-file="etl_pipeline.py">
+              <td><div class="td-path"><span class="path-icon">🐍</span>etl_pipeline.py</div></td>
+              <td><span class="lang-chip lc-py">py</span></td>
+              <td class="num">198</td>
+              <td class="num">5</td>
+              <td class="num">1</td>
+              <td>
+                <div class="cx-bar-wrap">
+                  <div class="cx-bar"><div class="cx-fill cx-lo" style="width:28%"></div></div>
+                  <span class="num-dim" style="font-size:10px">3.8</span>
+                </div>
+              </td>
+              <td><span class="gp gp-A">A</span></td>
+              <td><span class="sev sev-low">Low</span></td>
+            </tr>
+            <tr onclick="expandRow(this)" data-file="api_handler.js">
+              <td><div class="td-path"><span class="path-icon">📜</span>api_handler.js</div></td>
+              <td><span class="lang-chip lc-js">js</span></td>
+              <td class="num">87</td>
+              <td class="num">3</td>
+              <td class="num">0</td>
+              <td>
+                <div class="cx-bar-wrap">
+                  <div class="cx-bar"><div class="cx-fill cx-hi" style="width:82%"></div></div>
+                  <span class="num-dim" style="font-size:10px">14.1</span>
+                </div>
+              </td>
+              <td><span class="gp gp-C">C</span></td>
+              <td><span class="sev sev-med">Medium</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCAN OVERLAY -->
+  <div class="scan-overlay" id="scan-overlay">
+    <div class="scan-block">
+      <div class="scan-header">
+        <div class="scan-spinner"></div>
+        <div class="scan-title">Analyzing files…</div>
+      </div>
+      <div class="scan-body">
+        <div class="scan-progress-track">
+          <div class="scan-progress-fill" id="scan-prog" style="width:0%"></div>
+        </div>
+        <div class="scan-log" id="scan-log"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="tip" id="global-tip"></div>
+
+<script>
+// ── PANEL TOGGLE ──
+let activePanel = 'files';
+function togglePanel(btn, name) {
+  const panel = document.getElementById('side-panel');
+  document.querySelectorAll('.rail-btn').forEach(b => b.classList.remove('active'));
+  if (activePanel === name) {
+    panel.classList.add('collapsed');
+    activePanel = null;
+  } else {
+    panel.classList.remove('collapsed');
+    btn.classList.add('active');
+    activePanel = name;
+  }
+}
+
+// ── SECTION TOGGLE ──
+function toggleSection(head) {
+  const body = head.nextElementSibling;
+  const arrow = head.querySelector('.ps-toggle');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  arrow.style.transform = open ? 'rotate(-90deg)' : '';
+}
+
+// ── BROWSE ──
+function toggleBrowse(e) {
+  e.stopPropagation();
+  document.getElementById('browse-menu').classList.toggle('open');
+}
+function pickSrc(type) {
+  document.getElementById('browse-menu').classList.remove('open');
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  if (type === 'folder') inp.webkitdirectory = true;
+  else if (type === 'zip') inp.accept = '.zip';
+  else inp.multiple = true;
+  inp.onchange = e => {
+    if (e.target.files[0]) {
+      document.getElementById('src-label').textContent = e.target.files[0].name;
+      document.querySelector('.tb-breadcrumb .crumb').textContent = e.target.files[0].name;
+    }
+  };
+  inp.click();
+}
+document.addEventListener('click', () => {
+  document.getElementById('browse-menu').classList.remove('open');
+});
+
+// ── FILE SELECT ──
+function selectFile(el, name, loc, lang) {
+  document.querySelectorAll('.ftree-item').forEach(f => f.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('src-label').textContent = name;
+  document.querySelector('.tb-breadcrumb .crumb').textContent = name;
+}
+
+// ── TABS ──
+function setTab(el, tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── CHECKS ──
+function toggleCheck(el) {
+  el.classList.toggle('on');
+  const cb = el.querySelector('.cbox');
+  cb.textContent = el.classList.contains('on') ? '✓' : '';
+}
+
+// ── ENGINE ──
+function setEngine(el) {
+  document.querySelectorAll('.eng-item').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── THEME ──
+function setTheme(el) {
+  document.querySelectorAll('#side-panel .dl-fmt').forEach(b => {
+    if (['Auto','Light','Dark'].some(t => b.textContent === t)) b.classList.remove('on');
+  });
+  el.classList.add('on');
+}
+
+// ── FORMAT ──
+function setFmt(el) {
+  document.querySelectorAll('#fmt-row .dl-fmt').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+
+// ── SORT ──
+let sortState = {};
+function sortBy(col) {
+  document.querySelectorAll('th').forEach(t => t.classList.remove('sorted'));
+  event.currentTarget.classList.add('sorted');
+}
+
+// ── EXPAND ROW ──
+const expandData = {
+  'balance_sheet_comparison.py': {
+    fns: [
+      {name:'normalize_currency()', cx:12, pct:75},
+      {name:'process_data()', cx:18, pct:95},
+      {name:'load_report()', cx:6, pct:38},
+      {name:'validate_schema()', cx:4, pct:25},
+    ],
+    suggests: [
+      {icon:'⚠', text:'<code>process_data()</code> has cyclomatic complexity 18 — split into smaller functions'},
+      {icon:'💡', text:'Extract currency normalization into a dedicated utility module'},
+      {icon:'✓', text:'All functions documented — docstring coverage 100%'},
+    ]
+  },
+  'etl_pipeline.py': {
+    fns: [
+      {name:'extract()', cx:4, pct:25},
+      {name:'transform()', cx:6, pct:38},
+      {name:'load()', cx:3, pct:19},
+      {name:'run_pipeline()', cx:5, pct:31},
+      {name:'handle_error()', cx:2, pct:13},
+    ],
+    suggests: [
+      {icon:'✓', text:'Clean pipeline structure — low complexity across all functions'},
+      {icon:'💡', text:'Consider adding retry logic in <code>load()</code> for production resilience'},
+    ]
+  },
+  'api_handler.js': {
+    fns: [
+      {name:'handleRequest()', cx:22, pct:100},
+      {name:'parseResponse()', cx:11, pct:69},
+      {name:'buildPayload()', cx:9, pct:56},
+    ],
+    suggests: [
+      {icon:'🔴', text:'<code>handleRequest()</code> complexity 22 — refactor into middleware chain'},
+      {icon:'⚠', text:'Missing error boundaries — unhandled promise rejections detected'},
+      {icon:'💡', text:'Consider splitting API handler into route-specific modules'},
+    ]
+  }
+};
+
+function expandRow(tr) {
+  const existing = tr.nextElementSibling;
+  if (existing && existing.classList.contains('expand-row')) {
+    existing.remove();
+    tr.classList.remove('expanded');
+    return;
+  }
+  document.querySelectorAll('.expand-row').forEach(r => r.remove());
+  document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('expanded'));
+  tr.classList.add('expanded');
+
+  const file = tr.dataset.file;
+  const data = expandData[file] || {fns:[],suggests:[]};
+
+  // build heatmap colors
+  const fnHtml = data.fns.map(f => {
+    const cl = f.pct > 70 ? '#f87171' : f.pct > 40 ? '#fbbf24' : '#a3e635';
+    return `<div class="fn-row">
+      <span class="fn-name">${f.name}</span>
+      <span class="fn-cx">${f.cx}</span>
+      <div class="fn-heat"><div class="fn-heat-fill" style="width:${f.pct}%;background:${cl}"></div></div>
+    </div>`;
+  }).join('');
+
+  const sugHtml = data.suggests.map(s =>
+    `<div class="suggest-item"><span class="sug-icon">${s.icon}</span><span class="sug-text">${s.text}</span></div>`
+  ).join('');
+
+  // SVG radar for this file
+  const radarSvg = buildRadar(file);
+
+  const expand = document.createElement('tr');
+  expand.classList.add('expand-row', 'heatmap-row');
+  expand.innerHTML = `<td colspan="8">
+    <div class="heatmap-inner">
+      <div>
+        <div class="hm-col-title">Function Complexity Heatmap</div>
+        <div class="fn-list">${fnHtml}</div>
+      </div>
+      <div>
+        <div class="hm-col-title">Suggestions</div>
+        <div class="suggest-list">${sugHtml}</div>
+      </div>
+      <div class="radar-wrap">
+        ${radarSvg}
+      </div>
+    </div>
+  </td>`;
+  tr.parentNode.insertBefore(expand, tr.nextSibling);
+}
+
+function buildRadar(file) {
+  const scores = {
+    'balance_sheet_comparison.py': [80,60,100,72,55,90],
+    'etl_pipeline.py':             [95,88,100,95,80,92],
+    'api_handler.js':              [55,30,70,60,40,65],
+  };
+  const labels = ['Complexity','Duplication','Docs','Smells','Security','Maintainability'];
+  const s = scores[file] || [70,70,70,70,70,70];
+  const cx=70, cy=70, r=50;
+  const n=6;
+  const pts = s.map((v,i) => {
+    const angle = (Math.PI*2/n)*i - Math.PI/2;
+    const dist = (v/100)*r;
+    return [cx + dist*Math.cos(angle), cy + dist*Math.sin(angle)];
+  });
+  const gridPts = (frac) => Array.from({length:n},(_,i)=>{
+    const angle=(Math.PI*2/n)*i-Math.PI/2;
+    return `${cx+frac*r*Math.cos(angle)},${cy+frac*r*Math.sin(angle)}`;
+  }).join(' ');
+  const spokesSvg = Array.from({length:n},(_,i)=>{
+    const angle=(Math.PI*2/n)*i-Math.PI/2;
+    const lx=cx+(r+14)*Math.cos(angle), ly=cy+(r+14)*Math.sin(angle);
+    const ex=cx+r*Math.cos(angle), ey=cy+r*Math.sin(angle);
+    return `<line x1="${cx}" y1="${cy}" x2="${ex}" y2="${ey}" stroke="#2a3326" stroke-width="1"/>
+            <text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="#5a7050" font-size="7" font-family="Fira Code">${labels[i]}</text>`;
+  }).join('');
+  const polyPts = pts.map(p=>p.join(',')).join(' ');
+  return `<svg width="140" height="140" viewBox="0 0 140 140">
+    <polygon points="${gridPts(1)}" fill="none" stroke="#2a3326" stroke-width="1"/>
+    <polygon points="${gridPts(0.75)}" fill="none" stroke="#2a3326" stroke-width="0.5" stroke-dasharray="2,2"/>
+    <polygon points="${gridPts(0.5)}" fill="none" stroke="#2a3326" stroke-width="0.5" stroke-dasharray="2,2"/>
+    <polygon points="${gridPts(0.25)}" fill="none" stroke="#2a3326" stroke-width="0.5" stroke-dasharray="2,2"/>
+    ${spokesSvg}
+    <polygon points="${polyPts}" fill="rgba(163,230,53,0.12)" stroke="#a3e635" stroke-width="1.5" stroke-linejoin="round"/>
+    ${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#a3e635"/>`).join('')}
+  </svg>`;
+}
+
+// ── SCAN ──
+const scanLines = [
+  ['00:00','ok','Initializing analysis engine…'],
+  ['00:02','ok','Detected 3 files · Python (2), JavaScript (1)'],
+  ['00:05','ok','Parsing AST: balance_sheet_comparison.py'],
+  ['00:08','warn','Cyclomatic complexity 18 in process_data()'],
+  ['00:11','ok','Parsing AST: etl_pipeline.py'],
+  ['00:14','ok','Parsing AST: api_handler.js'],
+  ['00:17','err','High complexity detected: handleRequest() → 22'],
+  ['00:20','ok','Running duplication analysis…'],
+  ['00:22','ok','Running documentation coverage…'],
+  ['00:24','ok','Scan complete · 25 findings · 0 critical'],
+];
+
+function runScan() {
+  const btn = document.getElementById('scan-btn');
+  const overlay = document.getElementById('scan-overlay');
+  const prog = document.getElementById('scan-prog');
+  const log = document.getElementById('scan-log');
+  const sw = document.getElementById('status-word');
+
+  btn.className = 'btn-primary scanning';
+  btn.textContent = '⏸ Scanning';
+  sw.textContent = 'Scanning…';
+  sw.style.color = 'var(--amber)';
+  overlay.classList.add('active');
+  log.innerHTML = '';
+  prog.style.width = '0%';
+
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i >= scanLines.length) {
+      clearInterval(interval);
+      overlay.classList.remove('active');
+      btn.className = 'btn-primary';
+      btn.textContent = '▶ Scan';
+      sw.textContent = 'Scan complete';
+      sw.style.color = 'var(--lime)';
+      return;
+    }
+    const [t, type, msg] = scanLines[i];
+    prog.style.width = `${Math.round((i+1)/scanLines.length*100)}%`;
+    const div = document.createElement('div');
+    div.className = 'sl-line';
+    const col = type==='ok'?'sl-ok':type==='warn'?'sl-warn':'sl-err';
+    div.innerHTML = `<span class="sl-time">${t}</span><span class="${col}">${type==='ok'?'✓':type==='warn'?'⚠':'✗'}</span><span>${msg}</span>`;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+    i++;
+  }, 220);
+}
+
+// ── DOWNLOAD ──
+function downloadReport() {
+  const fmt = document.querySelector('#fmt-row .dl-fmt.on')?.textContent || 'JSON';
+  alert(`Exporting report as ${fmt}…\n(connect your backend to enable real exports)`);
+}
+</script>
+</body>
+</html>
