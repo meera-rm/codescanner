@@ -369,7 +369,7 @@ MIT License - see LICENSE file for details
 
 ## 👤 Author
 
-Meera Ramesh - Data Engineer & AI Systems Developer
+Meera Ramesh 
 
 ## 📚 Documentation
 
