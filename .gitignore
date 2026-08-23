@@ -53,3 +53,9 @@ PLAN_OPTION_B.md
 # Pre-commit examples
 examples-cautious/
 examples-clean/
+
+# Dependencies & data
+node_modules/
+*.db
+*.rdb
+
