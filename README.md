@@ -369,7 +369,7 @@ MIT License - see LICENSE file for details
 
 ## 👤 Author
 
-Meera Ramesh - Data Engineer & AI Systems Developer
+Meera Ramesh -  Inspired by my AI training as part of a hackathon on my Data Engineering Team, built as a personal project idea to understand the use of Claude and AI concepts.
 
 ## 📚 Documentation
 
