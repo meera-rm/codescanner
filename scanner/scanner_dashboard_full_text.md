@@ -497,7 +497,7 @@ Setup hooks:
 If you install pre-commit fails (e.g., externally-managed-environment or permission errors):
 Use a Virtual Environment
 ```bash
-cd /Users/ramesh/.dev/POSIX_training/hackathon python3 -m venv venv/source venv/bin/activate pip install pre-commit pre-commit install
+cd ~/codescanner python3 -m venv venv/source venv/bin/activate pip install pre-commit pre-commit install
 ```
 
 Sanity check (staged files):
@@ -526,7 +526,7 @@ Setup hooks:
 If you install pre-commit fails (e.g., externally-managed-environment or permission errors):
 Use a Virtual Environment
 ```bash
-cd /Users/ramesh/.dev/POSIX_training/hackathon python3 -m venv venv/source venv/bin/activate pip install pre-commit pre-commit install
+cd ~/codescanner python3 -m venv venv/source venv/bin/activate pip install pre-commit pre-commit install
 ```
 
 Sanity check (staged files):

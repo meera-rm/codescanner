@@ -58,7 +58,7 @@ A comprehensive code analysis and refactoring platform powered by AI agents. Sca
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/meera-ramesh19/codescanner-hackathon.git
+git clone https://github.com/meera-rm/codescanner.git
 cd codescanner
 ```
 
@@ -370,7 +370,7 @@ MIT License - see LICENSE file for details
 ## 👤 Author
 
 
-Meera Ramesh -  Inspired by my AI training as part of a hackathon on my Data Engineering Team, built as a personal project idea to understand the use of Claude and AI concepts.
+Meera Ramesh -  Inspired by my AI training on my Data Engineering Team, built as a personal project idea to understand the use of Claude and AI concepts.
 
 ## 📚 Documentation
 

@@ -15,9 +15,9 @@ _**User (2026-06-06 02:59:32Z)**_
 
 <ide_selection>The user selected the lines 1 to 26 from /Users/meera/Documents/codescanner/design_doc_v2.md:
 Code Scanner — Design Document V2
-Based on: Hackathon_Training_Guide.md Core Requirements
-Status: Design complete — Phases 1-4 defined; align with "Hackathon_Part_II_guide.md"
-Approach: PDLC (Design → Plan → Implement)
+Based on: Training_Guide.md Core Requirements
+Status: Design complete — Phases 1-4 defined; align with "Part_II_guide.md"
+Approach: Workflow (Design → Plan → Implement)
 
 What You're Building
 A code scanner that:
@@ -29,7 +29,7 @@ Focuses on correctness and testability, not polish
 
 Scope: Keep it small. Get core features working reliably. Save advanced visualizations for bonus rounds.
 
-Core Requirements (From Hackathon Guide)
+Core Requirements (From Project Guide)
 Analysis Capability
 
 Extract metrics from code files:
@@ -70,9 +70,9 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 02:59:35Z)**_
 ```text
 1	# Code Scanner — Design Document V2
 2	
-3	**Based on:** Hackathon_Training_Guide.md Core Requirements  
-4	**Status:** Design complete — Phases 1-4 defined; align with Hackathon_Part_II_guide.md  
-5	**Approach:** PDLC (Design → Plan → Implement)
+3	**Based on:** Training_Guide.md Core Requirements  
+4	**Status:** Design complete — Phases 1-4 defined; align with Part_II_guide.md  
+5	**Approach:** Workflow (Design → Plan → Implement)
 6	
 7	---
 8	
@@ -291,7 +291,7 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 02:59:35Z)**_
 221	
 222	- CLAUDE.md has 2-3 specific, actionable rules
 223	- At least one bonus requirement attempted (tests, CSV, RESEARCH.md, etc.)
-224	- Part I checkpoint passed per Hackathon_Part_II_guide.md
+224	- Part I checkpoint passed per Part_II_guide.md
 225	- Committed to git
 226	
 227	---
@@ -399,7 +399,7 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 02:59:35Z)**_
 329	## File Structure (Grow As Needed)
 330	
 331	```text
-332	hackathon/
+332	project/
 333	├── CLAUDE.md
 334	├── design_doc.md
 335	├── design_doc_v2.md
@@ -552,7 +552,7 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 02:59:35Z)**_
 482	
 483	- CLAUDE.md has 2-3 meaningful rules
 484	- At least one bonus requirement attempted
-485	- Part I checkpoint passed per Hackathon_Part_II_guide.md
+485	- Part I checkpoint passed per Part_II_guide.md
 486	- Committed to git
 487	
 488	---
@@ -598,7 +598,7 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 02:59:35Z)**_
 528	
 529	## Resources
 530	
-531	- `Hackathon_Part_II_Guide.md` — Part I exercise brief
+531	- `Part_II_Guide.md` — Part I exercise brief
 532	- `CLAUDE.md` — Agent ground rules
 533	- `PLAN.md` — Implementation plan
 534

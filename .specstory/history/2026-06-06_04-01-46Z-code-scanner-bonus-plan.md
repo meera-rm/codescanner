@@ -19,7 +19,7 @@ code Scanner - Bonus Plan
 Extends: Part I (Phases 1-4 complete)
 Scopes: 4 bonus analysis features + quality scoring dashboard
 Duration: Bonus Phase B1 (~45 min) + B2 (~45 min) + B2.5 (~45 min) + B3 (~45 min)
-Approach: PDLC (Design bonus metrics → Plan implementation → Iterate & test)
+Approach: Workflow (Design bonus metrics → Plan implementation → Iterate & test)
 Overview
 After completing Part I (core scanner + ground rules), we’re adding 3 bonus features that synthesize and extend:
 
@@ -294,7 +294,7 @@ code Scanner - Bonus Plan
 Extends: Part I (Phases 1-4 complete)
 Scopes: 4 bonus analysis features + quality scoring dashboard
 Duration: Bonus Phase B1 (~45 min) + B2 (~45 min) + B2.5 (~45 min) + B3 (~45 min)
-Approach: PDLC (Design bonus metrics → Plan implementation → Iterate & test)
+Approach: Workflow (Design bonus metrics → Plan implementation → Iterate & test)
 Overview
 After completing Part I (core scanner + ground rules), we’re adding 3 bonus features that synthesize and extend:
 
@@ -590,7 +590,7 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 04:01:51Z)**_
 3	Extends: Part I (Phases 1-4 complete)
 4	Scopes: 4 bonus analysis features + quality scoring dashboard
 5	Duration: Bonus Phase B1 (~45 min) + B2 (~45 min) + B2.5 (~45 min) + B3 (~45 min)
-6	Approach: PDLC (Design bonus metrics → Plan implementation → Iterate & test)
+6	Approach: Workflow (Design bonus metrics → Plan implementation → Iterate & test)
 7	Overview
 8	After completing Part I (core scanner + ground rules), we’re adding 3 bonus features that synthesize and extend:
 9	
@@ -962,9 +962,9 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 04:01:51Z)**_
 375	## Resources
 376	
 377	- **design_doc_v2.md** - Architecture including bonus feature menu
-378	- **PDLC.md** - Part I phases 1-4
+378	- **WORKFLOW.md** - Part I phases 1-4
 379	- **CLAUDE.md** - Ground rules (extend in Phase 4 bonus if needed)
-380	- **Hackathon_Part_II_Guide.md** - Part II guidance
+380	- **Part_II_Guide.md** - Part II guidance
 ```
 </details></tool-use>
 
@@ -1066,7 +1066,7 @@ code Scanner - Bonus Plan
 Extends: Part I (Phases 1-4 complete)
 Scopes: 4 bonus analysis features + quality scoring dashboard
 Duration: Bonus Phase B1 (~45 min) + B2 (~45 min) + B2.5 (~45 min) + B3 (~45 min)
-Approach: PDLC (Design bonus metrics → Plan implementation → Iterate & test)
+Approach: Workflow (Design bonus metrics → Plan implementation → Iterate & test)
 Overview
 After completing Part I (core scanner + ground rules), we’re adding 3 bonus features that synthesize and extend:
 
@@ -1363,7 +1363,7 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 04:16:10Z)**_
 3	**Extends:** Part I (Phases 1-4 complete)  
 4	**Scope:** 4 bonus analysis features + quality scoring dashboard  
 5	**Duration:** Bonus Phase B1 (~45 min) + B2 (~60 min) + B2.5 (~45 min) + B3 (~45 min)  
-6	**Approach:** PDLC (Design bonus metrics → Plan implementation → Iterate & test)
+6	**Approach:** Workflow (Design bonus metrics → Plan implementation → Iterate & test)
 7	
 8	## Overview
 9	

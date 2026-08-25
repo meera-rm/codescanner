@@ -249,7 +249,7 @@ POST /repos/{owner}/{repo}/pulls
   "body": "[PR template above]",
   "head": "codepulse-refactor-20260606-scanner",
   "base": "main",
-  "assignees": ["meera-ramesh19", "team-lead"],
+  "assignees": ["meera-rm", "team-lead"],
   "labels": ["refactor", "high-priority"],
   "draft": true  // Start as draft for review
 }
@@ -269,7 +269,7 @@ New PR ready for review:
    • Functions extracted: 3
    • Risk level: LOW
 
-👥 Assigned to: @meera-ramesh19, @team-lead
+👥 Assigned to: @meera-rm, @team-lead
 
 🔗 Review: [Link to PR]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -560,7 +560,7 @@ export function DiffViewer({
 **1. GitHub Token**
 ```env
 GITHUB_TOKEN=ghp_...
-GITHUB_REPO_OWNER=meera-ramesh19
+GITHUB_REPO_OWNER=meera-rm
 GITHUB_REPO_NAME=codescanner
 ```
 
@@ -574,7 +574,7 @@ PyGithub==1.58.0  # GitHub API wrapper
 ```python
 # api/config.py
 github_token = os.getenv("GITHUB_TOKEN")
-github_owner = os.getenv("GITHUB_REPO_OWNER", "meera-ramesh19")
+github_owner = os.getenv("GITHUB_REPO_OWNER", "meera-rm")
 github_repo = os.getenv("GITHUB_REPO_NAME", "codescanner")
 ```
 
@@ -765,7 +765,7 @@ GitHub: Notifications sent to assignees
 8. Clicks "Create Pull Request"
 9. PR created on GitHub:
    - Branch: codepulse-refactor-20260606-scanner
-   - Assigned to: @meera-ramesh19
+   - Assigned to: @meera-rm
    - Label: high-priority
    - Description: Shows metrics improvement
 10. Slack notification sent to #code-refactoring

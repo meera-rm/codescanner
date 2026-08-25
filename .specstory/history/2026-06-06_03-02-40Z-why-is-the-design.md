@@ -15,9 +15,9 @@ _**User (2026-06-06 03:02:40Z)**_
 
 <ide_selection>The user selected the lines 1 to 37 from /Users/meera/Documents/codescanner/design_doc_v2.md:
 Code Scanner — Design Document V2
-Based on: Hackathon_Training_Guide.md Core Requirements
-Status: Design complete — Phases 1-4 defined; align with "Hackathon_Part_II_guide.md"
-Approach: PDLC (Design → Plan → Implement)
+Based on: Training_Guide.md Core Requirements
+Status: Design complete — Phases 1-4 defined; align with "Part_II_guide.md"
+Approach: Workflow (Design → Plan → Implement)
 
 What You're Building
 A code scanner that:
@@ -29,7 +29,7 @@ Focuses on correctness and testability, not polish
 
 Scope: Keep it small. Get core features working reliably. Save advanced visualizations for bonus rounds.
 
-Core Requirements (From Hackathon Guide)
+Core Requirements (From Project Guide)
 Analysis Capability
 
 Extract metrics from code files:
@@ -66,9 +66,9 @@ The user is asking why the design file isn't being formatted in markdown format.
 Looking at the selection, I can see it starts with:
 ```
 Code Scanner — Design Document V2
-Based on: Hackathon_Training_Guide.md Core Requirements
-Status: Design complete — Phases 1-4 defined; align with "Hackathon_Part_II_guide.md"
-Approach: PDLC (Design → Plan → Implement)
+Based on: Training_Guide.md Core Requirements
+Status: Design complete — Phases 1-4 defined; align with "Part_II_guide.md"
+Approach: Workflow (Design → Plan → Implement)
 
 What You're Building
 A code scanner that:
@@ -80,7 +80,7 @@ Focuses on correctness and testability, not polish
 
 Scope: Keep it small. Get core features working reliably. Save advanced visualizations for bonus rounds.
 
-Core Requirements (From Hackathon Guide)
+Core Requirements (From Project Guide)
 Analysis Capability
 
 Extract metrics from code files:
@@ -105,9 +105,9 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 03:02:44Z)**_
 
 ```text
 1	Code Scanner — Design Document V2
-2	Based on: Hackathon_Training_Guide.md Core Requirements
-3	Status: Design complete — Phases 1-4 defined; align with "Hackathon_Part_II_guide.md"
-4	Approach: PDLC (Design → Plan → Implement)
+2	Based on: Training_Guide.md Core Requirements
+3	Status: Design complete — Phases 1-4 defined; align with "Part_II_guide.md"
+4	Approach: Workflow (Design → Plan → Implement)
 5	
 6	What You're Building
 7	A code scanner that:
@@ -119,7 +119,7 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 03:02:44Z)**_
 13	
 14	Scope: Keep it small. Get core features working reliably. Save advanced visualizations for bonus rounds.
 15	
-16	Core Requirements (From Hackathon Guide)
+16	Core Requirements (From Project Guide)
 17	Analysis Capability
 18	
 19	Extract metrics from code files:
@@ -295,7 +295,7 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 03:02:44Z)**_
 189	
 190	 CLAUDE.md has 2-3+ specific, actionable rules
 191	 At least one bonus requirement attempted (tests, CSV, RESEARCH.md, etc.)
-192	 Part I checkpoint passed (see Hackathon_Part_II_guide.md)
+192	 Part I checkpoint passed (see Part_II_guide.md)
 193	 Committed to git
 194	
 195	
@@ -364,10 +364,10 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 03:02:44Z)**_
 258	- Logging calls: 12
 259	
 260	File Structure (Grow As Needed)
-261	hackathon/
+261	project/
 262	├── CLAUDE.md                         # Ground rules
 263	├── design_doc.md                     # Original design
-264	├── design_doc_v2.md                  # This file (hackathon-focused)
+264	├── design_doc_v2.md                  # This file (project-focused)
 265	├── PLAN.md                           # Create via /plan
 266	├── scanner.py                        # Single file for Phase 1 (OK to start here)
 267	│   or
@@ -480,7 +480,7 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 03:02:44Z)**_
 374	
 375	 CLAUDE.md has 2-3+ meaningful encoded rules
 376	 At least one bonus requirement attempted (tests, CSV, RESEARCH.md, etc.)
-377	 Part I checkpoint passed (see Hackathon_Part_II_guide.md)
+377	 Part I checkpoint passed (see Part_II_guide.md)
 378	 Committed to git
 379	
 380	
@@ -513,7 +513,7 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 03:02:44Z)**_
 407	
 408	Resources
 409	
-410	Hackathon_Part_II_Guide.md — Part I exercise brief (Phases 1-4)
+410	Part_II_Guide.md — Part I exercise brief (Phases 1-4)
 411	CLAUDE.md — Agent ground rules (expand in Phase 4)
 412	PLAN.md — Implementation plan
 ```
@@ -552,9 +552,9 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 03:03:46Z)**_
 ```md
 # Code Scanner — Design Document V2
 
-**Based on:** Hackathon_Training_Guide.md Core Requirements  
-**Status:** Design complete — Phases 1-4 defined; align with "Hackathon_Part_II_guide.md"  
-**Approach:** PDLC (Design → Plan → Implement)
+**Based on:** Training_Guide.md Core Requirements  
+**Status:** Design complete — Phases 1-4 defined; align with "Part_II_guide.md"  
+**Approach:** Workflow (Design → Plan → Implement)
 
 ## What You're Building
 
@@ -567,7 +567,7 @@ A code scanner that:
 
 **Scope:** Keep it small. Get core features working reliably. Save advanced visualizations for bonus rounds.
 
-## Core Requirements (From Hackathon Guide)
+## Core Requirements (From Project Guide)
 
 ### Analysis Capability
 
@@ -735,7 +735,7 @@ Extract metrics from code files:
 **Part I Definition of Done (bonus):**
 - CLAUDE.md has 2-3+ specific, actionable rules
 - At least one bonus requirement attempted (tests, CSV, RESEARCH.md, etc.)
-- Part I checkpoint passed (see Hackathon_Part_II_guide.md)
+- Part I checkpoint passed (see Part_II_guide.md)
 - Committed to git
 
 ## Design Decisions
@@ -844,10 +844,10 @@ metrics = {
 ### File Structure (Grow As Needed)
 
 \```
-hackathon/
+project/
 ├── CLAUDE.md                         # Ground rules
 ├── design_doc.md                     # Original design
-├── design_doc_v2.md                  # This file (hackathon-focused)
+├── design_doc_v2.md                  # This file (project-focused)
 ├── PLAN.md                           # Create via /plan
 ├── scanner.py                        # Single file for Phase 1 (OK to start here)
 │   or
@@ -976,7 +976,7 @@ Codify in CLAUDE.md after Phases 1-3:
 
 - CLAUDE.md has 2-3+ meaningful encoded rules
 - At least one bonus requirement attempted (tests, CSV, RESEARCH.md, etc.)
-- Part I checkpoint passed (see Hackathon_Part_II_guide.md)
+- Part I checkpoint passed (see Part_II_guide.md)
 - Committed to git
 
 ## Obstacles to Watch
@@ -1014,7 +1014,7 @@ Save these for after Phases 1-4 or Part II:
 
 ## Resources
 
-- Hackathon_Part_II_Guide.md — Part I exercise brief (Phases 1-4)
+- Part_II_Guide.md — Part I exercise brief (Phases 1-4)
 - CLAUDE.md — Agent ground rules (expand in Phase 4)
 - PLAN.md — Implementation plan
 

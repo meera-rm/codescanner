@@ -337,7 +337,7 @@ project: codescanner
 
 ### 🔵 MINOR ISSUES
 
-1. **Line 9:** "PDLC" acronym not defined (assume PDLC = Plan → Design → Implement → Verify?)
+1. **Line 9:** "Workflow" acronym not defined (assume Workflow = Plan → Design → Implement → Verify?)
 2. **Line 83:** "Yours [apologies / cautiously / confidently]," — inconsistent pluralization
 3. **Line 337:** Missing comma in "Markdown + HTML" (should be "Markdown + HTML generation")
 4. **Lines 462-468:** Session management refers to `—inheritance-letter` (em-dash) instead of `--inheritance-letter`
@@ -583,7 +583,7 @@ project: codescanner
   Migration from Personality Profiler to Onboarding Profile:
   
   Both use same trait calculations but different output formats:
-  - Personality: Memorable archetypes (hackathon demo)
+  - Personality: Memorable archetypes (project demo)
   - Onboarding: Professional dimensions (hiring/onboarding)
   
   Strategy:
@@ -694,8 +694,8 @@ project: codescanner
 
 **Issue #5: Path F (Multi-Agent) Worktree Path Is Wrong**
 - **Location:** Lines 1073-1077
-- **Problem:** Says `git worktree add ../hackathon-agent1 -b feat/debt-radar`
-  - This creates worktree at `../hackathon-agent1` (parent directory)
+- **Problem:** Says `git worktree add ../project-agent1 -b feat/debt-radar`
+  - This creates worktree at `../project-agent1` (parent directory)
   - Probably should be within project or clearly specified
 - **Fix:** Clarify:
   ```
