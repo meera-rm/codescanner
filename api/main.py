@@ -111,7 +111,7 @@ async def root():
         "status": "running",
         "docs": "/docs",
         "openapi": "/openapi.json",
-        "api_reference": "https://github.com/meera-ramesh19/codescanner",
+        "api_reference": "https://github.com/meera-rm/codescanner",
         "endpoints": {
             "creative_suite": "/api/v1/creative-suite",
             "caqi": "/api/v1/caqi",

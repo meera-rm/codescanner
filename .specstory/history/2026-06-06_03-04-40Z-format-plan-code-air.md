@@ -37,7 +37,7 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 03:04:42Z)**_
 3	Extends: Part I (Phases 1-4) + Bonus MVP (B1-B3) + optional bonus flags
 4	Design reference: RESEARCH.md (add CAQI section in Q1)
 5	Duration: Q1 (~25 min) + Q2 (~50 min) + Q3 (~45 min demo polish)
-6	Approach: PDLC (Design → Implement → Verify)
+6	Approach: Workflow (Design → Implement → Verify)
 7	
 8	Design Decision: Why CAQI?
 9	The pitch: One number for codebase health — like weather or air quality. Everyone understands "CAQI 287 — Unhealthy."
@@ -195,7 +195,7 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 03:04:42Z)**_
 161	Session Management
 162	
 163	File Structure (Target After Q4)
-164	hackathon/
+164	project/
 165	├── caqi.py                         # Generated
 166	├── caqi_dashboard.html             # Generated
 167	├── DEMO_CAQI.md                    # This file
@@ -249,7 +249,7 @@ Creative Path I (Custom — not A-F; complements Path G & H)
 Extends: Part I (Phases 1-4) + Bonus MVP (B1-B3) + optional bonus flags
 Design reference: RESEARCH.md (add CAQI section in Q1)
 Duration: Q1 (~25 min) + Q2 (~50 min) + Q3 (~45 min demo polish)
-Approach: PDLC (Design → Implement → Verify)
+Approach: Workflow (Design → Implement → Verify)
 
 Design Decision: Why CAQI?
 The pitch: One number for codebase health — like weather or air quality. Everyone understands "CAQI 287 — Unhealthy."
@@ -286,7 +286,7 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 03:05:58Z)**_
 
 **Status:** Design & Implementation Plan  
 **Duration:** Q1 (~25 min) + Q2 (~50 min) + Q3 (~45 min) + Q4 (~25 min polish)  
-**Approach:** PDLC (Design → Implement → Verify)  
+**Approach:** Workflow (Design → Implement → Verify)  
 **Design Reference:** RESEARCH.md (add CAQI section in Q1)
 
 ---
@@ -540,7 +540,7 @@ When `--caqi` + `--report-md`:
 ## File Structure (Target After Q4)
 
 \```
-hackathon/
+project/
 ├── caqi.py                         # Generated
 ├── caqi_dashboard.html             # Generated
 ├── DEMO_CAQI.md                    # This file
