@@ -338,7 +338,7 @@ REDIS_PASSWORD=  # Optional
 ### Optional (for Slack alerts)
 ```bash
 # Users provide per-repository via API
-# Example: https://hooks.slack.com/services/T000/B000/XXX
+# Example: <your-slack-webhook-url>
 ```
 
 ---
