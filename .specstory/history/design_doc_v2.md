@@ -7,9 +7,9 @@ project: codescanner
 
 # Code Scanner — Design Document V2
 
-**Based on:** Hackathon_Training_Guide.md Core Requirements  
-**Status:** Design complete — Phases 1-4 defined; align with "Hackathon_Part_II_guide.md"  
-**Approach:** PDLC (Design → Plan → Implement)
+**Based on:** Training_Guide.md Core Requirements  
+**Status:** Design complete — Phases 1-4 defined; align with "Part_II_guide.md"  
+**Approach:** Workflow (Design → Plan → Implement)
 
 ## What You're Building
 
@@ -22,7 +22,7 @@ A code scanner that:
 
 **Scope:** Keep it small. Get core features working reliably. Save advanced visualizations for bonus rounds.
 
-## Core Requirements (From Hackathon Guide)
+## Core Requirements (From Project Guide)
 
 ### Analysis Capability
 
@@ -190,7 +190,7 @@ Extract metrics from code files:
 **Part I Definition of Done (bonus):**
 - CLAUDE.md has 2-3+ specific, actionable rules
 - At least one bonus requirement attempted (tests, CSV, RESEARCH.md, etc.)
-- Part I checkpoint passed (see Hackathon_Part_II_guide.md)
+- Part I checkpoint passed (see Part_II_guide.md)
 - Committed to git
 
 ## Design Decisions
@@ -299,10 +299,10 @@ metrics = {
 ### File Structure (Grow As Needed)
 
 ```
-hackathon/
+project/
 ├── CLAUDE.md                         # Ground rules
 ├── design_doc.md                     # Original design
-├── design_doc_v2.md                  # This file (hackathon-focused)
+├── design_doc_v2.md                  # This file (project-focused)
 ├── PLAN.md                           # Create via /plan
 ├── scanner.py                        # Single file for Phase 1 (OK to start here)
 │   or
@@ -431,7 +431,7 @@ Codify in CLAUDE.md after Phases 1-3:
 
 - CLAUDE.md has 2-3+ meaningful encoded rules
 - At least one bonus requirement attempted (tests, CSV, RESEARCH.md, etc.)
-- Part I checkpoint passed (see Hackathon_Part_II_guide.md)
+- Part I checkpoint passed (see Part_II_guide.md)
 - Committed to git
 
 ## Obstacles to Watch
@@ -469,6 +469,6 @@ Save these for after Phases 1-4 or Part II:
 
 ## Resources
 
-- Hackathon_Part_II_Guide.md — Part I exercise brief (Phases 1-4)
+- Part_II_Guide.md — Part I exercise brief (Phases 1-4)
 - CLAUDE.md — Agent ground rules (expand in Phase 4)
 - PLAN.md — Implementation plan

@@ -387,7 +387,7 @@ docker-compose up -d
 apt-get install nodejs npm postgresql redis-server nginx
 
 # 2. Clone repo
-git clone https://github.com/meera-ramesh19/codescanner.git
+git clone https://github.com/meera-rm/codescanner.git
 cd codescanner
 
 # 3. Setup frontend

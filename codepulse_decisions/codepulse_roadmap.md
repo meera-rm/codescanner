@@ -201,7 +201,7 @@ TechnicalDebtPredictor    |    MultiAgent System
   - Consistent naming
   - Add docstrings to key functions
 
-**Deliverable**: Polished demo + slides ready for hackathon presentation
+**Deliverable**: Polished demo + slides ready for presentation
 **Hours**: 8-10
 
 ---
@@ -393,10 +393,10 @@ TechnicalDebtPredictor (ML)              | Advanced
 - [ ] Docker image builds + runs locally
 - [ ] `.env` configuration (no hardcoded secrets)
 - [ ] README with install instructions
-- [ ] GitHub repo public (or shared for hackathon)
+- [ ] GitHub repo public (or shared)
 - [ ] Demo video (3-5 min) uploaded
 
-### v1.1 (Post-hackathon)
+### v1.1 (Next phase)
 - [ ] Deploy to Heroku / Vercel / AWS
 - [ ] CI/CD pipeline (GitHub Actions)
 - [ ] Monitoring (Sentry for errors, basic analytics)
@@ -440,7 +440,7 @@ TechnicalDebtPredictor (ML)              | Advanced
 ## QUESTIONS TO RESOLVE BEFORE DAY 1
 
 1. **Team size & experience**? (5 devs? all full-stack?)
-2. **Target language/tech?** (Hackathon specific?)
+2. **Target language/tech?** (Project specific?)
 3. **Deployment target?** (Docker? Cloud-ready?)
 4. **LLM integration?** (Claude API key available?)
 5. **Repo size limit?** (Max 10K files? 100K?)
@@ -451,7 +451,7 @@ TechnicalDebtPredictor (ML)              | Advanced
 
 ## FINAL RECOMMENDATION
 
-**For Hackathon MVP**: Build the simplest possible path to a working demo
+**For MVP**: Build the simplest possible path to a working demo
 1. ✅ 3 working analyzers (already done)
 2. ✅ Upload + run flow (Days 1-2)
 3. ✅ Beautiful dashboard (Day 3)
