@@ -88,11 +88,11 @@ def sample_insecure_file():
     return '''
 """File with security vulnerabilities."""
 
-api_key = "sk_live_1234567890abcdef"
+api_key = "REDACTED_FOR_TEST"
 password = "MyPassword123"
 db_user = "admin"
 db_password = "admin123"
-aws_secret = "AKIAIOSFODNN7EXAMPLE"
+aws_secret = "REDACTED_FOR_TEST"
 
 def connect_database():
     """Connect to database with hardcoded credentials."""
