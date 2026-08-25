@@ -21,7 +21,7 @@ class TestSecurityAuditor:
     async def test_detect_hardcoded_secrets(self):
         """Test detecting hardcoded secrets"""
         code = """
-api_key = "sk_live_4eC39HqLyjWDarhtT663B57e"
+api_key = "sk_test_fake_key_for_testing_only"
 password = "super_secret_password"
 """
 
