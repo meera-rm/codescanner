@@ -212,7 +212,7 @@ curl "http://localhost:8000/api/v1/search/suggestions?q=git&field=platform"
   "email_enabled": true,
   "email_address": "team@company.com",
   "slack_enabled": true,
-  "slack_webhook": "https://hooks.slack.com/services/T000/B000/XXX",
+  "slack_webhook": "<your-slack-webhook-url>",
   "alert_frequency": "immediate",
   "is_active": true
 }

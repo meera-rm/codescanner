@@ -136,7 +136,7 @@ def main():
         with tempfile.TemporaryDirectory() as tmpdir:
             file1 = Path(tmpdir) / "insecure.py"
             file1.write_text('''
-api_key = "sk_live_1234567890"
+api_key = "REDACTED_FOR_TEST"
 password = "my_password"
 token = "secret_token"
 ''')
