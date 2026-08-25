@@ -104,7 +104,7 @@ SMTP_PASSWORD=your-ses-password
 2. Save to `.env`:
    ```bash
    # Not needed in env, users provide per repository
-   # Example: https://hooks.slack.com/services/T00000000/B00000000/XXXXXXX
+   # Example: <your-slack-webhook-url>
    ```
 
 ---
@@ -266,7 +266,7 @@ curl -X POST "http://localhost:8000/api/v1/alerts/preferences" \
     "email_enabled": true,
     "email_address": "oncall@company.com",
     "slack_enabled": true,
-    "slack_webhook": "https://hooks.slack.com/services/T000/B000/XXX",
+    "slack_webhook": "<your-slack-webhook-url>",
     "alert_frequency": "immediate",
     "is_active": true
   }'
