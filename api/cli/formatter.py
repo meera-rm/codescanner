@@ -1,4 +1,4 @@
-"""CodePulse CLI formatter for converting reports to different formats."""
+n"""CodePulse CLI formatter for converting reports to different formats."""
 import argparse
 import json
 from pathlib import Path
@@ -33,7 +33,7 @@ class ReportFormatter:
                         },
                         'region': {
                             'startLine': finding.get('line', 1),
-                            'startColumn': finding.get('column', 1),
+                            'startColumn': finding.get('column', 0) + 1,
                         },
                     },
                 }],
