@@ -1,0 +1,712 @@
+<title>Iteration Until Clean</title>
+<style>
+  :root {
+    --bg: #f6f4ee;
+    --surface: #ffffff;
+    --surface-2: #efece2;
+    --ink: #201d18;
+    --muted: #6d6a60;
+    --line: #ddd8cb;
+    --accent: #c1571f;
+    --accent-ink: #ffffff;
+    --accent-soft: #f3ddc9;
+    --safe: #3c6e5a;
+    --safe-soft: #dde9e2;
+    --risk-low: #3c6e5a;
+    --risk-medium: #b8862c;
+    --risk-high: #b3402f;
+    --code-bg: #201d18;
+    --code-ink: #f0ece0;
+    --shadow: 0 1px 2px rgba(32,29,24,0.06), 0 8px 24px -12px rgba(32,29,24,0.18);
+  }
+
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #15130f;
+      --surface: #1d1a15;
+      --surface-2: #262219;
+      --ink: #eeeae0;
+      --muted: #9a9488;
+      --line: #35301f;
+      --accent: #e57f3e;
+      --accent-ink: #1a1108;
+      --accent-soft: #3a2818;
+      --safe: #7fb89c;
+      --safe-soft: #23332b;
+      --risk-low: #7fb89c;
+      --risk-medium: #d9a648;
+      --risk-high: #e08267;
+      --code-bg: #0f0d0a;
+      --code-ink: #e8e3d6;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 32px -16px rgba(0,0,0,0.6);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #15130f;
+    --surface: #1d1a15;
+    --surface-2: #262219;
+    --ink: #eeeae0;
+    --muted: #9a9488;
+    --line: #35301f;
+    --accent: #e57f3e;
+    --accent-ink: #1a1108;
+    --accent-soft: #3a2818;
+    --safe: #7fb89c;
+    --safe-soft: #23332b;
+    --risk-low: #7fb89c;
+    --risk-medium: #d9a648;
+    --risk-high: #e08267;
+    --code-bg: #0f0d0a;
+    --code-ink: #e8e3d6;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 32px -16px rgba(0,0,0,0.6);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+    margin: 0;
+    padding: 0 24px 96px;
+    line-height: 1.55;
+  }
+
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  header.page-head {
+    padding: 64px 0 40px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 48px;
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 600;
+    font-size: clamp(1.9rem, 4vw, 2.6rem);
+    letter-spacing: -0.01em;
+    margin: 0 0 16px;
+    text-wrap: balance;
+  }
+
+  .dek {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 62ch;
+    margin: 0;
+  }
+
+  h2 {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    margin: 0 0 6px;
+  }
+
+  .section-label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+
+  section.block {
+    margin-bottom: 64px;
+  }
+
+  .section-intro {
+    color: var(--muted);
+    max-width: 68ch;
+    margin: 0 0 28px;
+  }
+
+  /* ---- loop diagram ---- */
+
+  .loop {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow-x: auto;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+
+  .loop-step {
+    flex: 1 1 150px;
+    min-width: 150px;
+    padding: 22px 18px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .loop-step:not(:last-child) {
+    border-right: 1px dashed var(--line);
+  }
+
+  .loop-step .num {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+  }
+
+  .loop-step .step-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .loop-step .step-desc {
+    font-size: 0.83rem;
+    color: var(--muted);
+  }
+
+  .loop-step.fanout {
+    background: var(--accent-soft);
+  }
+
+  .loop-repeat {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 18px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .loop-repeat svg { flex: none; }
+
+  /* ---- agent cards ---- */
+
+  .agent-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .agent-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .agent-tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .agent-card h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 700;
+  }
+
+  .agent-card .strategy {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: -6px 0 0;
+  }
+
+  .agent-card .optimizes {
+    font-size: 0.88rem;
+    border-top: 1px solid var(--line);
+    padding-top: 12px;
+    margin-top: auto;
+  }
+
+  .agent-card .optimizes b {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .agent-card code {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: var(--surface-2);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* ---- funnel: evaluation + validation ---- */
+
+  .funnel {
+    display: flex;
+    align-items: stretch;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .funnel .arrow-col {
+    display: flex;
+    align-items: center;
+    color: var(--muted);
+    flex: 0 0 auto;
+  }
+
+  .funnel-card {
+    flex: 1 1 260px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+
+  .funnel-card h3 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+  }
+
+  .funnel-card .role {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: 0 0 16px;
+  }
+
+  .weights {
+    display: grid;
+    gap: 8px;
+  }
+
+  .weight-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 42px;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.82rem;
+  }
+
+  .weight-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+
+  .weight-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px;
+  }
+
+  .weight-pct {
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    color: var(--muted);
+  }
+
+  .checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 9px;
+  }
+
+  .checklist li {
+    display: flex;
+    gap: 9px;
+    align-items: baseline;
+    font-size: 0.86rem;
+  }
+
+  .checklist li::before {
+    content: "✓";
+    color: var(--safe);
+    font-weight: 700;
+    flex: none;
+  }
+
+  /* ---- contract ---- */
+
+  .contract {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .contract pre {
+    margin: 0;
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 12px;
+    padding: 20px 22px;
+    overflow-x: auto;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    box-shadow: var(--shadow);
+  }
+
+  .contract .field { color: #e8b073; }
+  .contract .type { color: #8fb9a8; }
+  .contract .cmt { color: #8b8577; }
+
+  /* ---- platform layer ---- */
+
+  .platform {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 26px;
+    box-shadow: var(--shadow);
+  }
+
+  .platform-modules {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+  }
+
+  .module {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    background: var(--surface-2);
+  }
+
+  .module code {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.78rem;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .module .desc {
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  .standalone-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+
+  .pill {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.76rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 14px;
+    color: var(--muted);
+    background: var(--surface-2);
+  }
+
+  /* ---- file map ---- */
+
+  .filemap {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 14px;
+    padding: 26px 28px;
+    overflow-x: auto;
+    box-shadow: var(--shadow);
+  }
+
+  .filemap pre {
+    margin: 0;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.82rem;
+    line-height: 1.75;
+  }
+
+  .filemap .dir { color: #8fb9a8; }
+  .filemap .file { color: #e8e3d6; }
+  .filemap .note { color: #8b8577; }
+
+  footer {
+    margin-top: 60px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+
+  @media (max-width: 720px) {
+    .agent-grid { grid-template-columns: 1fr; }
+    .contract { grid-template-columns: 1fr; }
+    .weight-row { grid-template-columns: 82px 1fr 38px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<div class="wrap">
+
+  <header class="page-head">
+    <p class="eyebrow">CodeScanner &middot; System Architecture</p>
+    <h1>Iteration Until Clean</h1>
+    <p class="dek">CodeScanner doesn't just flag issues — it iterates on the code itself. Three agents propose competing fixes, an evaluator picks the best one, a validator confirms it's safe, and the loop repeats until the code hits a target grade.</p>
+  </header>
+
+  <section class="block">
+    <p class="section-label">01 &middot; The Core Loop</p>
+    <h2>Scan → Propose → Score → Validate → Apply → Rescan</h2>
+    <p class="section-intro">Every iteration runs the same six-step cycle. It only stops once the target grade is reached — or the run hits its iteration cap.</p>
+
+    <div class="loop">
+      <div class="loop-step">
+        <span class="num">01</span>
+        <span class="step-title">Scan</span>
+        <span class="step-desc">Analyzers surface complexity, duplication, and structural issues.</span>
+      </div>
+      <div class="loop-step fanout">
+        <span class="num">02</span>
+        <span class="step-title">Propose (×3)</span>
+        <span class="step-desc">Agents A, B, C each draft a fix — independently, in parallel.</span>
+      </div>
+      <div class="loop-step">
+        <span class="num">03</span>
+        <span class="step-title">Evaluate</span>
+        <span class="step-desc">One suggestion is scored highest and selected.</span>
+      </div>
+      <div class="loop-step">
+        <span class="num">04</span>
+        <span class="step-title">Validate</span>
+        <span class="step-desc">The winner is checked for safety before touching code.</span>
+      </div>
+      <div class="loop-step">
+        <span class="num">05</span>
+        <span class="step-title">Apply</span>
+        <span class="step-desc">The change is written to the codebase.</span>
+      </div>
+      <div class="loop-step">
+        <span class="num">06</span>
+        <span class="step-title">Rescan</span>
+        <span class="step-desc">Grade is recalculated against the new state.</span>
+      </div>
+    </div>
+
+    <div class="loop-repeat">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M13.5 4.5A6 6 0 1 0 14 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        <path d="M11 2.5L13.6 4.6L11.5 7.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      repeats until grade target is met
+    </div>
+  </section>
+
+  <section class="block">
+    <p class="section-label">02 &middot; Three Agents, One Problem</p>
+    <h2>Why 3 agents, not 1</h2>
+    <p class="section-intro">Each agent optimizes for a different goal, so they don't compete on the same axis — they compete on philosophy. That gives the evaluator real tradeoffs to score instead of a single opinion.</p>
+
+    <div class="agent-grid">
+      <div class="agent-card">
+        <span class="agent-tag">Agent A</span>
+        <h3>Simplicity First</h3>
+        <p class="strategy">Minimal changes, maximum clarity, low risk.</p>
+        <div class="optimizes">
+          <b>Optimizes for</b>
+          Smallest, lowest-risk diff — <code>agent_a_simplicity.py</code>
+        </div>
+      </div>
+      <div class="agent-card">
+        <span class="agent-tag">Agent B</span>
+        <h3>Architecture Focused</h3>
+        <p class="strategy">Long-term structure and maintainability.</p>
+        <div class="optimizes">
+          <b>Optimizes for</b>
+          Design patterns, decoupling — <code>agent_b_architecture.py</code>
+        </div>
+      </div>
+      <div class="agent-card">
+        <span class="agent-tag">Agent C</span>
+        <h3>Performance Optimized</h3>
+        <p class="strategy">Speed and resource efficiency.</p>
+        <div class="optimizes">
+          <b>Optimizes for</b>
+          Parallelization, caching — <code>agent_c_performance.py</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <p class="section-label">03 &middot; Judgment, Then Safety</p>
+    <h2>Picking the winner, then checking it twice</h2>
+    <p class="section-intro">Evaluation answers "is this a good idea?" Validation answers "is this safe to run?" — two different failure modes, two different checks, run in sequence.</p>
+
+    <div class="funnel">
+      <div class="funnel-card">
+        <h3>Evaluation Agent</h3>
+        <p class="role">Scores all 3 suggestions on a weighted rubric and returns the highest.</p>
+        <div class="weights">
+          <div class="weight-row">
+            <span>Risk of errors</span>
+            <div class="weight-bar"><div class="weight-fill" style="width:100%"></div></div>
+            <span class="weight-pct">40%</span>
+          </div>
+          <div class="weight-row">
+            <span>Complexity ↓</span>
+            <div class="weight-bar"><div class="weight-fill" style="width:75%"></div></div>
+            <span class="weight-pct">30%</span>
+          </div>
+          <div class="weight-row">
+            <span>Clarity</span>
+            <div class="weight-bar"><div class="weight-fill" style="width:50%"></div></div>
+            <span class="weight-pct">20%</span>
+          </div>
+          <div class="weight-row">
+            <span>Impl. time</span>
+            <div class="weight-bar"><div class="weight-fill" style="width:25%"></div></div>
+            <span class="weight-pct">10%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arrow-col" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path d="M4 11H18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M13 6L18 11L13 16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <div class="funnel-card">
+        <h3>Validator Agent</h3>
+        <p class="role">Independently re-checks the winning suggestion before it's applied.</p>
+        <ul class="checklist">
+          <li>Syntax validity</li>
+          <li>Import availability</li>
+          <li>Logic preservation</li>
+          <li>Test regression, if tests exist</li>
+          <li>Performance impact</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <p class="section-label">04 &middot; Shared Contract</p>
+    <h2>Why agents are interchangeable</h2>
+    <p class="section-intro">All three strategy agents inherit from a common <code style="background:var(--surface-2);padding:1px 6px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:0.85em;">RefactoringAgent</code> base and speak the same two data shapes — a strategy pattern where each strategy is agent-driven.</p>
+
+    <div class="contract">
+      <pre><span class="cmt"># the problem found by the scanner</span>
+<span class="field">Issue</span>
+  issue_type      <span class="type">str</span>
+  file_path       <span class="type">str</span>
+  line_number     <span class="type">int</span>
+  severity        <span class="type">str</span>
+  description     <span class="type">str</span></pre>
+      <pre><span class="cmt"># the fix an agent proposes</span>
+<span class="field">Suggestion</span>
+  agent               <span class="type">str</span>
+  description         <span class="type">str</span>
+  changes             <span class="type">list[str]</span>
+  complexity_reduction <span class="type">float</span>
+  risk_level          <span class="type">str</span>
+  clarity_improvement <span class="type">str</span>
+  estimated_time      <span class="type">str</span></pre>
+    </div>
+  </section>
+
+  <section class="block">
+    <p class="section-label">05 &middot; Beyond the Loop</p>
+    <h2>A general-purpose agent framework underneath</h2>
+    <p class="section-intro">Separate from the refactor loop, a registry and executor layer can run any agent — concurrently or chained — including three standalone agents that never touch the iteration cycle.</p>
+
+    <div class="platform">
+      <div class="platform-modules">
+        <div class="module">
+          <code>agent_registry.py</code>
+          <div class="desc">Defines, loads, and executes agents — including custom YAML-defined ones.</div>
+        </div>
+        <div class="module">
+          <code>parallel_agent_executor.py</code>
+          <div class="desc">Runs multiple agents concurrently.</div>
+        </div>
+        <div class="module">
+          <code>agent_chain_executor.py</code>
+          <div class="desc">Chains agents sequentially — one's output feeds the next.</div>
+        </div>
+        <div class="module">
+          <code>agent_finetuner.py</code>
+          <div class="desc">Tuning and calibration logic for agent behavior.</div>
+        </div>
+      </div>
+
+      <div class="standalone-row">
+        <span class="pill">SecurityAuditor</span>
+        <span class="pill">PerformanceOptimizer</span>
+        <span class="pill">DocumentationGenerator</span>
+        <span class="pill" style="color:var(--muted);opacity:0.7;">— specialized_agents.py</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" style="margin-bottom:0;">
+    <p class="section-label">06 &middot; File Map</p>
+    <h2>Where it lives</h2>
+    <div class="filemap">
+      <pre><span class="dir">api/services/</span>
+├── <span class="dir">agents/</span>
+│   ├── <span class="file">refactoring_agent.py</span>       <span class="note"># base class + Issue/Suggestion</span>
+│   ├── <span class="file">agent_a_simplicity.py</span>      <span class="note"># Agent A</span>
+│   ├── <span class="file">agent_b_architecture.py</span>    <span class="note"># Agent B</span>
+│   ├── <span class="file">agent_c_performance.py</span>     <span class="note"># Agent C</span>
+│   ├── <span class="file">evaluation_agent.py</span>        <span class="note"># scores, picks winner</span>
+│   └── <span class="file">validator_agent.py</span>         <span class="note"># validates before applying</span>
+├── <span class="file">specialized_agents.py</span>          <span class="note"># Security / Performance / Docs</span>
+├── <span class="file">agent_registry.py</span>              <span class="note"># definitions, loading, execution</span>
+├── <span class="file">parallel_agent_executor.py</span>     <span class="note"># concurrent execution</span>
+├── <span class="file">agent_chain_executor.py</span>        <span class="note"># sequential chaining</span>
+└── <span class="file">agent_finetuner.py</span>             <span class="note"># tuning / calibration</span></pre>
+    </div>
+  </section>
+
+  <footer>
+    codescanner / api / services / agents — 99 tests passing
+  </footer>
+
+</div>
