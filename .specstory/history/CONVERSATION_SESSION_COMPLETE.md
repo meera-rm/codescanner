@@ -235,7 +235,7 @@ This document archives the complete conversation for the final session where we:
 **Status: READY FOR GITHUB PUSH** ⏳
 
 All code committed locally. Awaiting authentication token to push to:
-`https://github.com/meera-ramesh19/codescanner.git`
+`https://github.com/meera-rm/codescanner.git`
 
 ---
 

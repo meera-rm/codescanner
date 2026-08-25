@@ -30,9 +30,9 @@ Parses and handles GitHub URLs:
 
 **Usage Examples:**
 ```
-Input: https://github.com/meera-ramesh19/codescanner
+Input: https://github.com/meera-rm/codescanner
 ↓ Parses & detects Python
-Output: 🔗 GitHub: meera-ramesh19/codescanner (🐍 python)
+Output: 🔗 GitHub: meera-rm/codescanner (🐍 python)
 
 Input: git@github.com:facebook/react.git
 ↓ Parses & detects JavaScript
@@ -123,7 +123,7 @@ Click Browse → Select folder → Auto-detects path & language
 
 ### 2. **Paste GitHub URL**
 ```
-Input: https://github.com/meera-ramesh19/nba-etl-pipeline
+Input: https://github.com/meera-rm/nba-etl-pipeline
 ↓
 Parse → Detect Python → Show "Ready to download"
 ```

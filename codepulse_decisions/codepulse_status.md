@@ -251,7 +251,7 @@
 
 ## WORK BREAKDOWN BY PRIORITY
 
-### MVP (Hackathon Scope – 5-7 days)
+### MVP (Initial Scope – 5-7 days)
 Must-have features for demo:
 
 | Component | Status | Est. Hours | Priority |

@@ -262,7 +262,7 @@ _**Agent (claude-haiku-4-5-20251001 2026-06-06 16:50:52Z)**_
 228	**Status: READY FOR GITHUB PUSH** ⏳
 229	
 230	All code committed locally. Awaiting authentication token to push to:
-231	`https://github.com/meera-ramesh19/codescanner.git`
+231	`https://github.com/meera-rm/codescanner.git`
 232	
 233	---
 234	
