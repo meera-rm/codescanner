@@ -16,7 +16,6 @@ import APIDocumentation from './pages/APIDocumentation';
 import IterationDashboard from './pages/IterationDashboard';
 import GitHubConnect from './pages/GitHubConnect';
 import GitHubCallback from './pages/GitHubCallback';
-import CIDashboard from './pages/CIDashboard';
 import MonitoringDashboard from './pages/MonitoringDashboard';
 import CodeScannerExplorer from './pages/CodeScannerExplorer';
 
@@ -27,7 +26,6 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/ci-dashboard" element={<CIDashboard />} />
           <Route path="/monitoring" element={<MonitoringDashboard />} />
           <Route path="/explorer" element={<CodeScannerExplorer />} />
           <Route path="/security-dashboard" element={<SecurityDashboard />} />

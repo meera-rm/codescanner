@@ -235,37 +235,6 @@ class TestPhase6Routes:
         data = json.loads(response.data)
         assert 'logs' in data
 
-    # ========== CI/CD Integration Tests ==========
-
-    def test_list_pipelines(self, client):
-        """Test listing pipelines"""
-        response = client.get('/api/v1/phase6/cicd/pipelines')
-        
-        assert response.status_code == 200
-        data = json.loads(response.data)
-        assert 'pipelines' in data
-
-    def test_get_pipeline_template(self, client):
-        """Test getting pipeline template"""
-        response = client.get('/api/v1/phase6/cicd/pipelines/github_actions')
-        
-        assert response.status_code == 200
-        data = json.loads(response.data)
-        assert 'template' in data
-
-    def test_get_invalid_pipeline(self, client):
-        """Test getting invalid pipeline"""
-        response = client.get('/api/v1/phase6/cicd/pipelines/invalid')
-        
-        assert response.status_code == 400
-
-    def test_get_pipeline_runs(self, client):
-        """Test getting pipeline runs"""
-        response = client.get('/api/v1/phase6/cicd/runs')
-        
-        assert response.status_code == 200
-        data = json.loads(response.data)
-        assert 'runs' in data
 
     # ========== Git Hooks Tests ==========
 
