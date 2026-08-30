@@ -319,7 +319,7 @@ Diff Generation   →  DiffGenerator (Phase 4.2d)
     ↓
 GitHub PR         →  IterationPRManager (Phase 4.3) ✓
     ↓
-Approval/Merge    →  GitHub Actions (manual/auto)
+Approval/Merge    →  (manual)
 ```
 
 ---

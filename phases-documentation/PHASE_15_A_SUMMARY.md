@@ -48,7 +48,7 @@
 ## Phase 15.A.5: Search & Advanced Filtering
 
 ### What It Does
-Comprehensive search and filtering system for CI/CD scan history. Users can find specific scans using:
+Comprehensive search and filtering system for scan history. Users can find specific scans using:
 - **Full-text search** across repository names, branches, platforms
 - **Exact filters** by platform, status, branch
 - **Range filters** for critical/error counts
@@ -127,7 +127,7 @@ curl "http://localhost:8000/api/v1/search/suggestions?q=my&field=repository"
 ## Phase 15.A.3: Real-time WebSocket Updates
 
 ### What It Does
-Live auto-refresh of CI/CD dashboard without page reloads. Dashboard updates automatically when:
+Live auto-refresh of Dashboard without page reloads. Dashboard updates automatically when:
 - New scans complete
 - Dashboard summary changes
 - Alerts are triggered
@@ -372,9 +372,6 @@ brew install redis
 
 # Linux
 sudo apt-get install redis-server
-
-# Or use Docker
-docker run -d -p 6379:6379 redis:latest
 ```
 
 **2. Start Redis**

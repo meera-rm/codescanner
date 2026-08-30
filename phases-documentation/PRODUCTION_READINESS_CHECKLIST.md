@@ -192,80 +192,6 @@ ExecStart=/usr/bin/gunicorn \
   api.main:app
 ```
 
-### Option C: Docker Deployment
-
-#### Dockerfile (Frontend)
-```dockerfile
-FROM node:18-alpine AS build
-WORKDIR /app
-COPY frontend/package*.json ./
-RUN npm ci
-COPY frontend/ .
-RUN npm run build
-
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-#### Dockerfile (Backend)
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-EXPOSE 8000
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0"]
-```
-
-#### Docker Compose
-```yaml
-version: '3.8'
-services:
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      - backend
-    
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://user:pass@db/codescanner
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - db
-      - redis
-    
-  db:
-    image: postgres:15-alpine
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: codescanner
-      POSTGRES_USER: codescanner
-      POSTGRES_PASSWORD: secure_password
-  
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - redis_data:/data
-
-volumes:
-  postgres_data:
-  redis_data:
-```
-
 ---
 
 ## 4. Pre-Deployment Checklist
@@ -365,20 +291,6 @@ Monitoring | ✅ Ready | Performance metrics dashboard live
 vercel deploy --prod
 
 # Result: https://codescanner.vercel.app
-```
-
-### For AWS/GCP
-```bash
-# 1. Build Docker images
-docker build -t codescanner-frontend -f Dockerfile.frontend .
-docker build -t codescanner-backend -f Dockerfile.backend .
-
-# 2. Push to registry
-docker push your-registry/codescanner-frontend
-docker push your-registry/codescanner-backend
-
-# 3. Deploy with docker-compose or Kubernetes
-docker-compose up -d
 ```
 
 ### For Linux Server

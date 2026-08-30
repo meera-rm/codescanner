@@ -2,7 +2,7 @@
 
 ## Overview
 
-Full-text search and advanced filtering for CI/CD scan dashboard. Users can search across repositories, filter by platform/status, and save filter presets.
+Full-text search and advanced filtering for scan dashboard. Users can search across repositories, filter by platform/status, and save filter presets.
 
 **Status:** ✅ Fixed & Production Ready  
 **Fix Date:** July 6, 2026  
