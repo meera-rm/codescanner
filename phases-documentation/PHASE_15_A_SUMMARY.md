@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Phase 15.A** transforms the CI/CD Dashboard from a basic data viewer into a production-grade analytics platform. Three coordinated features provide search, real-time updates, and high-performance caching.
+**Phase 15.A** transforms the Dashboard from a basic data viewer into a production-grade analytics platform. Three coordinated features provide search, real-time updates, and high-performance caching.
 
 **Timeline:** Completed July 5-6, 2026  
 **Status:** ✅ All three sub-phases complete  
@@ -353,14 +353,14 @@ All endpoints now support optional `force_refresh` parameter:
 
 ```bash
 # Use cache (5-10ms response)
-curl http://localhost:8000/api/v1/ci-dashboard/summary
+curl http://localhost:8000/api/v1/dashboard/summary
 
 # Skip cache, get fresh data (200-500ms response)
-curl http://localhost:8000/api/v1/ci-dashboard/summary?force_refresh=true
+curl http://localhost:8000/api/v1/dashboard/summary?force_refresh=true
 
 # Same for trends
-curl http://localhost:8000/api/v1/ci-dashboard/trends/my-repo
-curl http://localhost:8000/api/v1/ci-dashboard/trends/my-repo?force_refresh=true
+curl http://localhost:8000/api/v1/dashboard/trends/my-repo
+curl http://localhost:8000/api/v1/dashboard/trends/my-repo?force_refresh=true
 ```
 
 ### Setup Instructions
@@ -442,7 +442,7 @@ python api/main.py
 
 ### Search Workflow
 ```
-1. User opens CI/CD Dashboard
+1. User opens Dashboard
 2. SearchFilters component renders with quick search bar
 3. User types search term (e.g., "payment-service")
    → Autocomplete suggestions appear (cached)
@@ -459,7 +459,7 @@ python api/main.py
 
 ### Real-time Update Workflow
 ```
-1. User opens CI/CD Dashboard
+1. User opens Dashboard
 2. Dashboard connects to WebSocket
    → Shows "Live" status indicator
 3. CI pipeline completes a scan
@@ -795,7 +795,7 @@ PHASE_15_A_SUMMARY.md                       (this file, 800+ lines)
 ### For End Users
 
 **Search Dashboard:**
-1. Open CI/CD Dashboard at `http://localhost:3000/ci-dashboard`
+1. Open Dashboard at `http://localhost:3000/dashboard`
 2. Type in quick search box (e.g., "my-repo")
 3. See autocomplete suggestions
 4. Click "Advanced" for more filter options
@@ -878,7 +878,7 @@ redis-cli INFO stats
 # Look for keyspace_hits vs keyspace_misses
 
 # Check response times
-time curl http://localhost:8000/api/v1/ci-dashboard/summary
+time curl http://localhost:8000/api/v1/dashboard/summary
 
 # Clear cache if needed
 curl -X POST http://localhost:8000/api/v1/cache/clear?scope=all
@@ -888,7 +888,7 @@ curl -X POST http://localhost:8000/api/v1/cache/clear?scope=all
 
 ## Conclusion
 
-**Phase 15.A** successfully transforms the CI/CD Dashboard from a basic analytics tool into a modern, high-performance platform with advanced search, real-time updates, and intelligent caching.
+**Phase 15.A** successfully transforms the Dashboard from a basic analytics tool into a modern, high-performance platform with advanced search, real-time updates, and intelligent caching.
 
 The three coordinated features work seamlessly together:
 - **Search** lets users find specific scans quickly

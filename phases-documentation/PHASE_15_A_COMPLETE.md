@@ -11,21 +11,19 @@
 
 ## 🎯 Phase 15.A Overview
 
-Advanced features and optimizations for CI/CD dashboard. Includes real-time updates, search/filtering, notifications, export, and performance optimization.
+Advanced features and optimizations for Dashboard. Includes real-time updates, search/filtering, notifications, export, and performance optimization.
 
 ### Original Plan
 1. 15.A.1: Email & Slack Notifications
-2. 15.A.2: Report Export (PDF & CSV)
-3. 15.A.3: Real-time WebSocket Updates
-4. 15.A.4: Redis Caching
-5. 15.A.5: Search & Advanced Filtering
-6. 15.A.6: Performance Profiling
+2. 15.A.3: Real-time WebSocket Updates
+3. 15.A.4: Redis Caching
+4. 15.A.5: Search & Advanced Filtering
+5. 15.A.6: Performance Profiling
 
 ### Completion Status
 | Phase | Status | Implementation |
 |-------|--------|-----------------|
-| 15.A.1 | ✅ Complete | Email/Slack alerts on scan completion |
-| 15.A.2 | ✅ Complete | PDF & CSV export with analysis |
+| 15.A.1 | ✅ Complete | Email/Slack alerts (manual trigger only) |
 | 15.A.3 | ✅ **Fixed** | WebSocket real-time, exponential backoff |
 | 15.A.4 | ✅ Complete | Redis caching 5-100x speedup |
 | 15.A.5 | ✅ **Fixed** | Search with full-text & advanced filters |
@@ -63,40 +61,6 @@ POST   /api/v1/alerts/test/{repo}      Test alert configuration
 - Backend: `api/services/alert_service.py`, `api/routes/alerts.py`
 - Database: `AlertPreference` model
 - Docs: `PHASE_15_A1_NOTIFICATIONS.md`
-
----
-
-### 15.A.2: Report Export (PDF & CSV) ✅
-
-**What It Does:**
-- Export scan history as CSV (spreadsheet format)
-- Export detailed report as PDF (with summary & analysis)
-- Filter exports by repository, platform, date range
-- Professional PDF formatting with tables and statistics
-
-**Key Features:**
-- ✅ CSV with 13 columns (repo, branch, platform, status, issues, files, timestamp)
-- ✅ PDF with executive summary, repository breakdown, platform analysis
-- ✅ Caching for filter options (1 hour TTL)
-- ✅ Professional formatting (ReportLab)
-- ✅ Pagination support (limit + offset)
-
-**API Endpoints:**
-```
-GET    /api/v1/ci-dashboard/export/csv    Export as CSV
-GET    /api/v1/ci-dashboard/export/pdf    Export as PDF
-```
-
-**Files:**
-- Backend: `api/services/report_export_service.py`
-- Integration: `api/routes/ci_dashboard.py`
-- Frontend: Export buttons in `CIDashboard.tsx`
-- Docs: `PHASE_15_A2_REPORT_EXPORT.md`
-
-**Performance:**
-- CSV generation: <500ms
-- PDF generation: 1-3 seconds
-- File sizes: 50-200KB
 
 ---
 
@@ -236,7 +200,6 @@ GET    /api/v1/search/suggestions    Autocomplete
 ### Documentation
 - **API Reference:** 875 lines
 - **Notifications Docs:** 430 lines
-- **Report Export Docs:** 560 lines
 - **WebSocket Docs:** 520 lines
 - **Search Docs:** 560 lines
 - **Quick Reference:** 475 lines
@@ -265,8 +228,7 @@ api/services/
 ├── alert_service.py                (Email/Slack alerts)
 ├── cache_service.py                (Redis caching)
 ├── search_service.py               (Full-text search)
-├── websocket_service.py            (Real-time updates)
-└── report_export_service.py        (PDF/CSV export)
+└── websocket_service.py            (Real-time updates)
 ```
 
 ### Backend Routes
@@ -364,16 +326,12 @@ All documentation is in Markdown format with:
 ## 🔄 Integration Summary
 
 ### Backend Integration Points
-1. **Alert Service** → Called from `ci_history_service.record_scan()`
-2. **Cache Service** → Integrated into all dashboard/search routes
-3. **WebSocket Service** → Connected to scan completion
-4. **Search Service** → Standalone search routes
-5. **Report Export** → Dashboard export endpoints
+1. **Alert Service** → Manual trigger only (`POST /api/v1/alerts/test/{repo}`)
+2. **Cache Service** → Integrated into dashboard/search routes
+3. **Search Service** → Standalone search routes
 
 ### Frontend Integration Points
-1. **SearchFilters Component** → Integrated into `CIDashboard.tsx`
-2. **useWebSocket Hook** → Integrated into `CIDashboard.tsx`
-3. **Export Buttons** → Already in `CIDashboard.tsx`
+No UI currently consumes search or WebSocket — both are backend-only, reachable directly via their API routes.
 
 ### Database Integration
 - `AlertPreference` model for storing alert configurations

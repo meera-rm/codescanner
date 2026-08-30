@@ -2,9 +2,9 @@
 
 ## Overview
 
-Complete email and Slack notification system for CI/CD scan alerts. Users receive real-time notifications when scans complete with critical issues, customizable by repository and severity threshold.
+Email and Slack notification system for scan alerts. Alerts are manually triggered per repository via the test endpoint — there is no automatic "scan finished → notify" trigger, since scans in this repo aren't run on a schedule or from CI.
 
-**Status:** ✅ Complete  
+**Status:** ✅ Complete (manual trigger only)  
 **Implementation Date:** July 6, 2026  
 **Total Implementation:** ~1,200 LOC (backend), 400 LOC (docs)
 
@@ -12,12 +12,10 @@ Complete email and Slack notification system for CI/CD scan alerts. Users receiv
 
 ## Architecture
 
-### Alert Flow
+### Alert Flow (manual)
 
 ```
-Scan Completes
-    ↓
-CIHistoryService.record_scan()
+POST /api/v1/alerts/test/{repository}
     ↓
 AlertService.process_alerts(db, scan)
     ↓
@@ -26,8 +24,6 @@ Get AlertPreferences for repository
 Check threshold (critical_count >= critical_threshold)
     ↓
 Send Email & Slack if enabled
-    ↓
-User receives notification instantly
 ```
 
 ### Components
@@ -49,10 +45,6 @@ User receives notification instantly
    - List preferences
    - Test alerts
    - Delete preferences
-
-4. **Integration Point** (`api/services/ci_history_service.py`)
-   - Calls `AlertService.process_alerts()` after each scan
-   - Non-blocking, async-friendly
 
 ---
 
@@ -318,7 +310,7 @@ Body:
     * Warnings: N (yellow)
   - Files scanned
   - Scan timestamp
-  - Link to CI/CD Dashboard
+  - Link to Dashboard
 ```
 
 ---
@@ -339,7 +331,7 @@ Fields:
   - Warnings (count)
   - Files Scanned
   - Timestamp
-Footer: CodePulse CI/CD Dashboard
+Footer: CodePulse Dashboard
 ```
 
 ---
@@ -410,17 +402,14 @@ CREATE TABLE alert_preferences (
 
 ---
 
-## Integration with CI/CD
+## Triggering Alerts
 
-Alerts are automatically triggered in `CIHistoryService.record_scan()`:
+There is no automatic scan-completion trigger. Call `AlertService.process_alerts()` directly, or use the manual test endpoint:
 
 ```python
-# Send alerts if thresholds triggered
 from api.services.alert_service import AlertService
 alert_results = AlertService.process_alerts(db, scan)
 ```
-
-This happens for every scan, checking all active preferences.
 
 ---
 
@@ -481,7 +470,7 @@ This happens for every scan, checking all active preferences.
 
 4. **Create actual scan with critical issue:**
    ```bash
-   curl -X POST "http://localhost:8000/api/v1/ci-dashboard/record-scan" \
+   curl -X POST "http://localhost:8000/api/v1/dashboard/record-scan" \
      -H "Content-Type: application/json" \
      -d '{
        "repository": "test-repo",
@@ -634,7 +623,6 @@ IS_ACTIVE = True                    # Default: active
 - [x] Slack integration implemented
 - [x] Alert preferences CRUD endpoints
 - [x] Threshold logic working
-- [x] Integration with CI/CD scan recording
 - [x] Test alert endpoint
 - [x] HTML email templates
 - [x] Slack message formatting
