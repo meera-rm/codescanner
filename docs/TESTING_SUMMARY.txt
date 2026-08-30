@@ -177,7 +177,6 @@ TESTING.md              — 300+ lines
   • Quick start guide
   • Test organization
   • Fixture reference
-  • CI/CD integration examples
   • Debugging tips
 
 TEST_STATUS.md          — 250+ lines

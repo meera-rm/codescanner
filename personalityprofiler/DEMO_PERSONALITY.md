@@ -315,7 +315,6 @@ python -m scanner ./your-project \
 2. **Discuss the archetype** — does it match team perception?
 3. **Act on the tips** — prioritize the top 1-3 recommendations
 4. **Measure progress** — re-scan after fixes to see trait changes
-5. **Integrate into CI/CD** — add personality check to PR workflow
 
 ---
 

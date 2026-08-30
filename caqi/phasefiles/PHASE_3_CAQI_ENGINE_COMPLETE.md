@@ -295,7 +295,6 @@ Now that CAQI engine is complete, Phase 4 will:
 1. Wire `--caqi` flag into scanner.py
 2. Integration tests (end-to-end)
 3. Documentation and examples
-4. CI/CD setup
 
 ---
 

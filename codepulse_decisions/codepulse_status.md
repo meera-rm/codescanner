@@ -4,7 +4,7 @@
 - **Backend Analyzers**: 50% complete (Complexity, Security, Documentation done; Git Risk & Debt Prediction not started)
 - **AI Skills & Orchestration**: 20% complete (Refactor & Validation designed but not implemented)
 - **Frontend**: 10% complete (Basic upload UI exists; Dashboard tabs not built)
-- **DevOps Integration**: 0% complete (Pre-commit & MCP server not started)
+- **CLI/MCP Integration**: 0% complete (Pre-commit & MCP server not started)
 - **Overall**: ~25% code complete, ~40% designed
 
 ---
@@ -185,7 +185,7 @@
 
 ---
 
-## 4. DEVOPS & INTEGRATION (0% Done)
+## 4. CLI & MCP INTEGRATION (0% Done)
 
 ### ⚙️ DESIGNED
 1. **Pre-Commit Hook**
@@ -209,13 +209,6 @@
    - Estimated effort: 20 hours
    - Priority: HIGH (enables Claude Desktop / Cursor integration)
 
-4. **CI/CD Integration**
-   - GitHub Actions example ❌
-   - GitLab CI example ❌
-   - JSON quality gate parsing ❌
-   - Estimated effort: 15 hours
-   - Priority: MEDIUM (documentation + templates)
-
 ---
 
 ## 5. INFRASTRUCTURE & CONFIG (0% Done)
@@ -226,12 +219,6 @@
    - Route definitions ❌
    - Error handling ❌
    - Estimated effort: 20 hours
-
-2. **Docker Setup**
-   - Dockerfile ❌
-   - docker-compose.yml ❌
-   - Volume mounts (git, uploads) ❌
-   - Estimated effort: 10 hours
 
 3. **Testing**
    - Unit tests for analyzers ❌
@@ -382,7 +369,7 @@ Promise: "Future versions add AI refactoring, dependency analysis, git risk, and
 | Backend 2 | Finish analyzers, integration | 30 |
 | Frontend Lead | Dashboard Overview, upload UI | 40 |
 | Frontend 2 | Report downloads, styling | 25 |
-| DevOps/ML | Pre-commit, MCP, testing | 35 |
+| CLI/ML | Pre-commit, MCP, testing | 35 |
 
 ---
 
@@ -402,11 +389,10 @@ Promise: "Future versions add AI refactoring, dependency analysis, git risk, and
 
 1. **Today**: Assign backend/frontend leads
 2. **Day 1**: Spin up FastAPI + React boilerplate
-3. **Day 1**: Set up GitHub Actions for CI/CD
-4. **Day 2**: Deploy basic upload + scan endpoint
-5. **Day 3**: Build Overview dashboard tab
-6. **Day 5**: Polish UI + write tests
-7. **Day 7**: Record demo video
+3. **Day 2**: Deploy basic upload + scan endpoint
+4. **Day 3**: Build Overview dashboard tab
+5. **Day 5**: Polish UI + write tests
+6. **Day 7**: Record demo video
 
 ---
 

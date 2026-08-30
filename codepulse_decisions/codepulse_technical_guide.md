@@ -8,8 +8,6 @@ codepulse-ai/
 │   ├── app.py                          # FastAPI entry point
 │   ├── requirements.txt
 │   ├── .env.example
-│   ├── Dockerfile
-│   ├── docker-compose.yml
 │   ├── api/
 │   │   ├── __init__.py
 │   │   ├── routes.py                   # API endpoints
@@ -64,8 +62,7 @@ codepulse-ai/
 │   ├── public/
 │   │   └── index.html
 │   ├── package.json
-│   ├── vite.config.js
-│   └── Dockerfile
+│   └── vite.config.js
 │
 ├── cli/
 │   ├── __init__.py
@@ -73,9 +70,6 @@ codepulse-ai/
 │   └── commands.py                     # Commands (scan, report)
 │
 ├── .pre-commit-hooks.yaml              # Pre-commit configuration
-├── .github/
-│   └── workflows/
-│       └── ci.yml                      # GitHub Actions
 ├── README.md
 ├── CONTRIBUTING.md
 └── ROADMAP.md
@@ -665,65 +659,6 @@ pre-commit install
 
 ---
 
-## Docker Configuration
-
-```dockerfile
-# backend/Dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-```dockerfile
-# frontend/Dockerfile
-FROM node:18-alpine as build
-WORKDIR /app
-COPY package*.json .
-RUN npm install
-COPY . .
-RUN npm run build
-
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-```yaml
-# docker-compose.yml
-version: '3.8'
-
-services:
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=sqlite:///./codepulse.db
-    volumes:
-      - ./backend:/app
-      - uploads:/tmp/uploads
-    
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      - backend
-
-volumes:
-  uploads:
-```
-
----
-
 ## Dependencies & Requirements
 
 ```txt
@@ -858,7 +793,6 @@ describe("Upload to Dashboard Flow", () => {
 - [ ] Backend runs on http://localhost:8000
 - [ ] Frontend runs on http://localhost:3000
 - [ ] API calls work end-to-end
-- [ ] Docker Compose works
 
 ### Testing
 - [ ] All unit tests pass

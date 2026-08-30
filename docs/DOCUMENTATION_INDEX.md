@@ -18,7 +18,6 @@
 |----------|---------|-------|
 | [README.md](README.md) | Project overview & quick start | Phases 1-5 |
 | [PHASES_6-11_IMPLEMENTATION.md](PHASES_6-11_IMPLEMENTATION.md) | Complete phase breakdown | **Phases 6.3-11** |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | Docker & Kubernetes setup | Phase 8 |
 
 ---
 
@@ -55,15 +54,6 @@
 - Analytics reports (7-day analysis)
 - KPI aggregation
 - **Tests**: 18 passing tests
-
-### Phase 8 - Deployment & Infrastructure
-**Files**: `Dockerfile`, `docker-compose.yml`, `k8s/*`, `DEPLOYMENT.md`
-- Multi-stage Docker build
-- 5-service Docker Compose stack
-- Kubernetes deployment (StatefulSet, Deployment, HPA)
-- Database persistence (50GB PVC)
-- Production deployment guide
-- **Tests**: 16 validation tests
 
 ### Phase 9 - Frontend React Dashboard
 **Files**: `frontend/src/pages/Dashboard.tsx`, `frontend/src/components/`
@@ -116,7 +106,6 @@
 Backend: Flask, Python 3.8+, PostgreSQL, Redis
 Frontend: React 18, TypeScript, Material-UI, Recharts
 Mobile: React Native, TypeScript, Zustand, Axios
-Infra: Docker, Kubernetes, GitHub Actions
 ```
 
 ---
@@ -149,24 +138,6 @@ npm start         # Start dev
 npm run ios       # iOS simulator
 npm run android   # Android emulator
 ```
-
-### Deployment
-
-**Docker**
-```bash
-docker build -t codepulse:latest .
-docker-compose up
-```
-
-**Kubernetes**
-```bash
-kubectl apply -f k8s/
-kubectl get pods -n codepulse
-```
-
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
-
----
 
 ## 🧪 Testing
 
@@ -226,13 +197,6 @@ codescanner/
 │   ├── jest.config.js
 │   ├── babel.config.js
 │   └── PHASE11.md
-├── k8s/
-│   ├── namespace.yaml
-│   ├── api-deployment.yaml
-│   └── postgres-statefulset.yaml
-├── Dockerfile
-├── docker-compose.yml
-├── DEPLOYMENT.md
 ├── PHASES_6-11_IMPLEMENTATION.md     # Main reference ⭐
 ├── README.md
 └── DOCUMENTATION_INDEX.md            # This file
@@ -274,7 +238,6 @@ codescanner/
 | Mobile Test Speed | <1s | ✅ 0.2s |
 | Test Pass Rate | 100% | ✅ 143/143 |
 | Code Coverage | 70%+ | ✅ Achieved |
-| Docker Image Size | <500MB | ✅ ~300MB |
 
 ---
 
@@ -321,9 +284,6 @@ codescanner/
 - Babel
 
 ### Infrastructure
-- Docker
-- Kubernetes
-- GitHub Actions
 - AWS (optional)
 
 ---
@@ -340,11 +300,6 @@ npm start                       # Start mobile dev
 pytest tests/ -v               # Backend tests
 npm test                       # Frontend/mobile tests
 npm test -- --coverage        # With coverage
-
-# Deployment
-docker build -t codepulse .   # Build image
-docker-compose up             # Start all services
-kubectl apply -f k8s/         # Deploy to K8s
 
 # Git
 git log --oneline             # View commits
@@ -364,17 +319,11 @@ git push origin main          # Push changes
 ### For Frontend Development
 - See `frontend/src/pages/Dashboard.tsx` for main page
 - See `frontend/src/components/` for reusable widgets
-- See `DEPLOYMENT.md` for frontend-specific deployment
 
 ### For Mobile Development
 - See `mobile/PHASE11.md` for complete mobile documentation
 - See `mobile/src/screens/` for screen implementations
 - See `mobile/src/store/` for state management examples
-
-### For Infrastructure
-- See `DEPLOYMENT.md` for complete deployment guide
-- See `Dockerfile` for containerization
-- See `k8s/` directory for Kubernetes manifests
 
 ---
 
@@ -420,11 +369,9 @@ git push origin main          # Push changes
 
 ## 🎯 Next Steps
 
-1. **Deploy to Production**: Follow [DEPLOYMENT.md](DEPLOYMENT.md)
-2. **Integrate with CI/CD**: Setup GitHub Actions
-3. **Monitor with Prometheus**: Setup metrics dashboard
-4. **Launch Mobile Apps**: Deploy to App Store/Play Store
-5. **Phase 12**: Advanced mobile features (coming next)
+1. **Monitor with Prometheus**: Setup metrics dashboard
+2. **Launch Mobile Apps**: Deploy to App Store/Play Store
+3. **Phase 12**: Advanced mobile features (coming next)
 
 ---
 

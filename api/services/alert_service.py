@@ -72,7 +72,7 @@ class AlertService:
 
                 <hr>
                 <p style="font-size: 12px; color: #666;">
-                  View full report: <a href="http://localhost:3000/ci-dashboard">CI/CD Dashboard</a>
+                  View full report: <a href="http://localhost:3000/dashboard">Dashboard</a>
                 </p>
               </body>
             </html>

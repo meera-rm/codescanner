@@ -399,7 +399,6 @@ Final verification:
 3. Share with team — Email the HTML card
 4. Act on tips — Pick top 1-3 relationship tips
 5. Measure progress — Re-scan after improvements
-6. Integrate to CI/CD — Add --personality to PR workflows
 
 ---
 

@@ -1,1 +1,1 @@
-"""CodePulse CLI module for CI/CD integration."""
+"""CodePulse CLI module for repository scanning."""

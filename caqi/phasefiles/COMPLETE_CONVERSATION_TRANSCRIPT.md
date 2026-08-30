@@ -53,7 +53,6 @@ A code scanner can provide value across 8 core capabilities:
 **6. Incremental Scanning**
 - Pre-commit hook integration
 - Only scan changed files
-- Enable CI/CD integration
 - Provide fast feedback
 
 **7. Language Support**
@@ -79,7 +78,6 @@ These map to **12 primary use cases** we see in the wild:
 7. **Architecture & Design** — Understanding module dependencies
 8. **Incident Response & Forensics** — Analyzing code related to incidents
 9. **Onboarding & Knowledge** — Helping new developers understand code
-10. **Operational/DevOps** — Integrating with CI/CD pipelines
 11. **Regulatory & Audit** — Meeting compliance requirements
 12. **Multi-repo / Enterprise Scale** — Managing code across teams
 
