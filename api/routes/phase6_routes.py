@@ -15,7 +15,6 @@ from services.agent_finetuner import get_agent_finetuner
 from services.predictive_analyzer import get_predictive_analyzer
 from services.continuous_learner import get_continuous_learner
 from services.github_integration import get_github_integration
-from services.cicd_integration import get_cicd_integration
 from services.git_hooks import get_git_hooks_manager
 from services.ide_plugins import get_ide_plugin_manager
 
@@ -374,54 +373,6 @@ def get_webhook_logs():
     return jsonify({'logs': logs, 'count': len(logs)})
 
 
-# ============ CI/CD Integration Endpoints ============
-
-@phase6_bp.route('/cicd/pipelines', methods=['GET'])
-def list_pipelines():
-    """List available pipelines"""
-    cicd = get_cicd_integration()
-    pipelines = cicd.get_pipeline_templates()
-    
-    return jsonify({
-        'pipelines': [
-            {
-                'type': p,
-                'template': cicd.generate_github_actions_workflow() if p == 'github_actions' else '',
-            }
-            for p in ['github_actions', 'gitlab_ci', 'jenkins']
-        ]
-    })
-
-
-@phase6_bp.route('/cicd/pipelines/<pipeline_type>', methods=['GET'])
-def get_pipeline_template(pipeline_type):
-    """Get pipeline template"""
-    cicd = get_cicd_integration()
-    
-    if pipeline_type == 'github_actions':
-        template = cicd.generate_github_actions_workflow()
-    elif pipeline_type == 'gitlab_ci':
-        template = cicd.generate_gitlab_ci_pipeline()
-    elif pipeline_type == 'jenkins':
-        template = cicd.generate_jenkins_pipeline()
-    else:
-        return jsonify({'error': 'Unknown pipeline type'}), 400
-    
-    return jsonify({'type': pipeline_type, 'template': template})
-
-
-@phase6_bp.route('/cicd/runs', methods=['GET'])
-def get_pipeline_runs():
-    """Get pipeline run history"""
-    cicd = get_cicd_integration()
-    runs = list(cicd.pipeline_runs.values())
-    
-    return jsonify({
-        'runs': [r.to_dict() if hasattr(r, 'to_dict') else r for r in runs[-20:]],
-        'total': len(runs)
-    })
-
-
 # ============ Git Hooks Endpoints ============
 
 @phase6_bp.route('/hooks/config', methods=['POST'])
@@ -583,7 +534,6 @@ def health_check():
             'predictive_analysis': 'available',
             'continuous_learning': 'available',
             'github_integration': 'available',
-            'cicd_integration': 'available',
             'git_hooks': 'available',
             'ide_plugins': 'available',
         }

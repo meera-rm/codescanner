@@ -219,10 +219,10 @@ const CodeScannerExplorer: React.FC = () => {
         <Button
           variant="outlined"
           size="small"
-          onClick={() => navigate('/ci-dashboard')}
+          onClick={() => navigate('/dashboard')}
           sx={{ height: 'fit-content' }}
         >
-          ← Back to CI Dashboard
+          ← Back to Dashboard
         </Button>
         <Box>
           <Typography variant="h4" sx={{ mb: 1 }}>

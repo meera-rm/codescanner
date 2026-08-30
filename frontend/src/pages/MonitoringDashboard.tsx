@@ -50,8 +50,8 @@ export function MonitoringDashboard() {
             <Typography variant="h5">
               System Monitoring & Management
             </Typography>
-            <Button variant="outlined" onClick={() => navigate('/ci-dashboard')}>
-              ← Back to CI Dashboard
+            <Button variant="outlined" onClick={() => navigate('/dashboard')}>
+              ← Back to Dashboard
             </Button>
           </Box>
           <Tabs value={activeTab} onChange={handleTabChange} aria-label="monitoring tabs">
