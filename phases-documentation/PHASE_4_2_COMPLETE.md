@@ -304,7 +304,6 @@ Ready to implement:
 - Create GitHub PRs from modifications
 - Link iterations to PRs
 - Track PR approval/merge status
-- Integrate with GitHub Actions
 
 **Estimated Effort:** 15 hours
 

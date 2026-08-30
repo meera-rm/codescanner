@@ -76,7 +76,7 @@
 **Priority:** MEDIUM | **Effort:** 3-4 days
 
 **Deliverables:**
-- Redis integration (Docker container)
+- Redis integration
 - Cache invalidation strategy
 - Cached endpoints
 

@@ -108,11 +108,6 @@ sudo apt-get install redis-server
 **Windows:**
 Download from: https://github.com/microsoftarchive/redis/releases
 
-**Docker:**
-```bash
-docker run -d -p 6379:6379 redis:latest
-```
-
 ### 2. Start Redis Server
 
 **macOS/Linux:**
@@ -123,11 +118,6 @@ redis-server
 **Windows:**
 ```cmd
 redis-server.exe
-```
-
-**Docker:**
-```bash
-docker run -p 6379:6379 redis:latest
 ```
 
 ### 3. Verify Connection

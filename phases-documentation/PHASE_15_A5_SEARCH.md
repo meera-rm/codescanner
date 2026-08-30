@@ -2,7 +2,7 @@
 
 ## Overview
 
-Comprehensive search and filtering system for CI/CD scan history with:
+Comprehensive search and filtering system for scan history with:
 - **Full-text search** across repository names, branches, and platforms
 - **Advanced filtering** by exact fields (platform, status, branch)
 - **Range filtering** for issue counts (critical, errors)
@@ -200,22 +200,9 @@ curl "http://localhost:8000/api/v1/search/suggestions?q=my&field=repository"
 
 ## Usage Workflow
 
-### From UI
-
-1. **Navigate to CI/CD Dashboard** at `/ci-dashboard`
-2. **Use Quick Search** - Type to search repositories
-3. **Click Advanced** to expand advanced filters
-4. **Set Filters:**
-   - Select repository, platform, status, branch
-   - Adjust critical/error count ranges
-   - Set time period and results per page
-5. **Click Apply Filters** to execute search
-6. **View Results** in the scan history table
-7. **Save Filter** - Name current filters for reuse
-8. **Click saved filter chip** to reload that filter
-9. **Clear All** to reset to default dashboard view
-
 ### From API
+
+No UI currently consumes this endpoint (the search filter component was only used by the deleted CI/CD dashboard page). Reachable directly via the API below.
 
 ```python
 import requests
