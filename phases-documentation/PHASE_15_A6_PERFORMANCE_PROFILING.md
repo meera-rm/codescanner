@@ -2,7 +2,7 @@
 
 ## Overview
 
-Comprehensive performance monitoring and profiling system for the CI/CD dashboard. Automatically tracks all API requests, identifies bottlenecks, and provides optimization recommendations.
+Comprehensive performance monitoring and profiling system for the Dashboard. Automatically tracks all API requests, identifies bottlenecks, and provides optimization recommendations.
 
 **Status:** ✅ Complete  
 **Implementation Date:** July 6, 2026  

@@ -372,7 +372,7 @@ SearchFilters (container)
 
 1. **Open dashboard:**
    ```bash
-   http://localhost:3000/ci-dashboard
+   http://localhost:3000/dashboard
    ```
 
 2. **Try quick search:**
@@ -518,7 +518,7 @@ curl "http://localhost:8000/api/v1/search/suggestions?q=my&field=repository"
 3. Check network tab (F12 → Network) for request/response
 
 **No results:**
-1. Verify database has scans: `curl http://localhost:8000/api/v1/ci-dashboard/summary`
+1. Verify database has scans: `curl http://localhost:8000/api/v1/dashboard/summary`
 2. Try broader search (fewer filters)
 3. Check date range (default is 30 days)
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Live auto-refresh of CI/CD dashboard without page reloads using WebSocket connections. The dashboard automatically updates when:
+Live auto-refresh of Dashboard without page reloads using WebSocket connections. The dashboard automatically updates when:
 - New scans complete
 - Dashboard summary changes
 - Alerts are triggered
