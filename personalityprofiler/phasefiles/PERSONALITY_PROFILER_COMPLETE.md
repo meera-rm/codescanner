@@ -276,7 +276,6 @@ These are outside P1-P4 scope but could be added:
 3. **Share with team** — Email the HTML file or embed in reports
 4. **Act on tips** — Pick top 1-3 relationship tips to address
 5. **Measure progress** — Re-run personality scan after changes
-6. **Integrate to CI/CD** — Add personality check to PR workflow
 
 ---
 

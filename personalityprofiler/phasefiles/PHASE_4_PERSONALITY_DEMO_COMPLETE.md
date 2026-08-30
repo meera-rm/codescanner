@@ -346,7 +346,6 @@ print(shift["summary_line"])
 All 4 phases complete. 31 tests passing. Full documentation. Ready for:
 - Immediate production use
 - Team integration
-- CI/CD pipeline integration
 - Enterprise deployment
 
 ---
@@ -358,7 +357,6 @@ All 4 phases complete. 31 tests passing. Full documentation. Ready for:
 3. **Share with team** — Email the HTML card
 4. **Act on tips** — Pick top 1-3 relationship tips
 5. **Measure progress** — Re-scan after improvements
-6. **Integrate to CI/CD** — Add to PR workflows
 
 ---
 

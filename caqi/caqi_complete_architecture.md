@@ -186,7 +186,7 @@ primary_pollutant = "security"
 CAQI: 455 — Hazardous / Primary pollutant: security (insecure.py)
 ```
 
-**Purpose:** Headline for stakeholders, CI/CD logs, team Slack
+**Purpose:** Headline for stakeholders, team Slack
 
 ### HTML Gauge (Projector-Sized)
 
@@ -432,20 +432,6 @@ python -m scanner ./examples \
   <p>Primary pollutant: security (insecure.py)</p>
   <a href="caqi.html">View Gauge →</a>
 </div>
-```
-
-### GitHub Actions Example
-```yaml
-- name: Scan with CAQI
-  run: python -m scanner . --caqi --caqi-html caqi.html
-
-- name: Check CAQI
-  run: |
-    CAQI=$(grep "\"score\":" report.json | grep -o "[0-9]*")
-    if [ $CAQI -gt 300 ]; then
-      echo "CAQI Hazardous ($CAQI). Fix before merging."
-      exit 1
-    fi
 ```
 
 ---

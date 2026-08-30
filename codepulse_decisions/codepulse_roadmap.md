@@ -325,7 +325,7 @@ PRIORITY 8: Async + Streaming (20h)
 ### 🎯 Recommendation
 **MVP**: Keep simple
 - SQLite (no migration overhead)
-- Local file storage (docker volumes)
+- Local file storage
 - No auth (internal demo)
 - Sync orchestrator (easier debugging)
 
@@ -381,7 +381,7 @@ TechnicalDebtPredictor (ML)              | Advanced
 | **Backend 2** | Dev 2 | Reports, Scoring, Validation | 25 |
 | **Frontend Lead** | Dev 3 | Dashboard, Upload UI, styling | 35 |
 | **Frontend 2** | Dev 4 | Report downloads, responsive design | 20 |
-| **DevOps/CLI** | Dev 5 | CLI, pre-commit, Docker, deployment | 25 |
+| **CLI Lead** | Dev 5 | CLI, pre-commit, deployment | 25 |
 | | | **TOTAL MVP** | **135 hours** |
 | | | **Per person** | **~27 hours (4 days)** |
 
@@ -390,7 +390,6 @@ TechnicalDebtPredictor (ML)              | Advanced
 ## DEPLOYMENT CHECKLIST
 
 ### MVP (Day 7)
-- [ ] Docker image builds + runs locally
 - [ ] `.env` configuration (no hardcoded secrets)
 - [ ] README with install instructions
 - [ ] GitHub repo public (or shared)
@@ -398,7 +397,6 @@ TechnicalDebtPredictor (ML)              | Advanced
 
 ### v1.1 (Next phase)
 - [ ] Deploy to Heroku / Vercel / AWS
-- [ ] CI/CD pipeline (GitHub Actions)
 - [ ] Monitoring (Sentry for errors, basic analytics)
 - [ ] Performance benchmarks (scan time, memory usage)
 
@@ -441,7 +439,7 @@ TechnicalDebtPredictor (ML)              | Advanced
 
 1. **Team size & experience**? (5 devs? all full-stack?)
 2. **Target language/tech?** (Project specific?)
-3. **Deployment target?** (Docker? Cloud-ready?)
+3. **Deployment target?** (Cloud-ready?)
 4. **LLM integration?** (Claude API key available?)
 5. **Repo size limit?** (Max 10K files? 100K?)
 6. **Test vs. production?** (Sample repos or real?)**

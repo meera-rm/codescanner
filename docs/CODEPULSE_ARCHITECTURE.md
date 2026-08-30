@@ -158,43 +158,6 @@ Success Response
     └─ Lint Services
 ```
 
-### Kubernetes Deployment
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: codepulse-api
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: codepulse-api
-  template:
-    metadata:
-      labels:
-        app: codepulse-api
-    spec:
-      containers:
-      - name: api
-        image: codepulse:1.0.0
-        ports:
-        - containerPort: 8000
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "500m"
-          limits:
-            memory: "1Gi"
-            cpu: "1000m"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8000
-          initialDelaySeconds: 10
-          periodSeconds: 10
-```
-
 ---
 
 ## Performance Characteristics
@@ -325,7 +288,7 @@ codepulse_pr_creation_count
 
 ### Horizontal Scaling
 
-- **API servers:** Add Kubernetes replicas
+- **API servers:** Add horizontal replicas
 - **Celery workers:** Scale based on queue depth
 - **Redis:** Add shards for distributed cache
 - **PostgreSQL:** Read replicas for queries
@@ -379,9 +342,8 @@ codepulse_pr_creation_count
 ### Deployment
 
 - [ ] Tag release in git
-- [ ] Build Docker image
+- [ ] Build release artifact
 - [ ] Push to registry
-- [ ] Update Kubernetes manifests
 - [ ] Deploy to staging
 - [ ] Run smoke tests
 - [ ] Deploy to production

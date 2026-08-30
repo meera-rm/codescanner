@@ -1,4 +1,4 @@
-"""CodePulse CLI scanner for CI/CD integration."""
+"""CodePulse CLI scanner for repository scanning."""
 import argparse
 import json
 import sys
@@ -180,7 +180,7 @@ class RepositoryScanner:
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
-        description='CodePulse CLI Scanner for CI/CD Integration'
+        description='CodePulse CLI Scanner'
     )
     parser.add_argument(
         '--repository',

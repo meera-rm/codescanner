@@ -160,7 +160,7 @@ async def websocket_dashboard(
     WebSocket endpoint for dashboard real-time updates.
 
     Receives dashboard summary updates, scan completions, and alerts.
-    Auto-refreshes the CI/CD dashboard without page reload.
+    Auto-refreshes the dashboard without page reload.
 
     **Connection:**
     ```javascript

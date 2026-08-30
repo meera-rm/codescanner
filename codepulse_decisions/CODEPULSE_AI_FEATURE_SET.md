@@ -12,7 +12,7 @@ CodePulse AI is a client-server code intelligence platform that lets developers 
 
 **One-Line Story:**
 
-CodePulse AI lets developers upload code, choose analysis features, detect quality/security/architecture risks, generate AI refactors, validate fixes, repeat until clean, enforce pre-commit quality gates, and download reports for developers, managers, and CI/CD.
+CodePulse AI lets developers upload code, choose analysis features, detect quality/security/architecture risks, generate AI refactors, validate fixes, repeat until clean, enforce pre-commit quality gates, and download reports for developers and managers.
 
 ---
 
@@ -38,7 +38,7 @@ Report Generator
 Download Center
 ```
 
-**Key Design Principle:** Pure scanner core independent of web framework. Reusable by Web App, CLI, MCP Server, Pre-Commit Hook, and CI/CD.
+**Key Design Principle:** Pure scanner core independent of web framework. Reusable by Web App, CLI, MCP Server, and Pre-Commit Hook.
 
 ---
 
@@ -602,30 +602,6 @@ Report Agent
 
 **Status:** ⏳ Deferred (requires business impact scoring)
 
-### 11.3 CI/CD Report
-
-Machine-readable output:
-
-```json
-{
-  "repository": "my-repo",
-  "scan_date": "2026-06-05T10:30:00Z",
-  "quality_gate": "PASS",
-  "grade": "A-",
-  "score": 91,
-  "issues": {
-    "critical": 0,
-    "high": 1,
-    "medium": 5,
-    "low": 8
-  },
-  "fail_on_severity": "critical",
-  "result": "PASS"
-}
-```
-
-**Status:** ✅ Partial (JSON output in MVP)
-
 ---
 
 ## Part 12: Pre-Commit Workflow
@@ -710,7 +686,6 @@ Scanner core does NOT depend on Flask or FastAPI.
 - ✅ CLI (direct import)
 - ✅ Pre-Commit Hook (direct import)
 - ⏳ MCP Server (wrapper)
-- ⏳ CI/CD (CLI wrapper)
 
 **MVP Status:** ✅ Implemented (scanner.py is framework-agnostic)
 
@@ -873,18 +848,6 @@ PDF contains:
 
 **MVP:** ✅ JSON output ready, PDF formatting deferred
 
-### 9. CI/CD uses JSON report as quality gate
-
-```
-Run: codepulse scan . --json --fail-on high
-  ↓
-If result == FAIL → CI pipeline fails
-  ↓
-Developer must fix before merging PR
-```
-
-**MVP:** ✅ Works with exit codes
-
 ### 10. Claude/Cursor uses MCP tools to scan and refactor code
 
 ```
@@ -977,11 +940,10 @@ MCP calls scanner, gets results, applies fixes
 - Rate limiting
 - User authentication
 - Performance optimization
-- Docker deployment
 - Monitoring & logging
 
 **Effort:** 40-50 hours  
-**Dependencies:** Docker, monitoring tools
+**Dependencies:** monitoring tools
 
 ---
 
@@ -1030,7 +992,7 @@ Validation Framework
   ↓ (reported via)
 Report Generator
   ↓ (deployed as)
-Docker Container + MCP Server
+MCP Server
 ```
 
 **Key Point:** We don't rewrite the scanner. We wrap it, extend it, and integrate it.
@@ -1070,8 +1032,6 @@ codepulse-ai/
 │   │       └── ArchitectureGraph.tsx
 ├── mcp/
 │   └── codepulse_mcp.py            # MCP server (new)
-├── docker/
-│   └── Dockerfile
 └── .pre-commit-hooks.yaml          # (reuse from MVP)
 ```
 
@@ -1088,7 +1048,7 @@ codepulse-ai/
 | Build Time | 2-3 hrs | 40-50 hrs (Phase 2) |
 | Dependencies | 0 | 5-10 |
 | Users | Solo dev | Teams |
-| Deployment | CLI/Hook | Cloud + Docker |
+| Deployment | CLI/Hook | Cloud |
 
 ---
 
