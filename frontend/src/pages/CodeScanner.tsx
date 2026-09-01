@@ -19,7 +19,7 @@ interface ScannedFile {
   loc: number;
   functions: number;
   classes: number;
-  complexity: number;
+  complexity: number | null;
   grade: string;
   severity: string;
 }
@@ -27,6 +27,7 @@ interface ScannedFile {
 interface ScanResponse {
   job_id: string;
   status: string;
+  duration_ms?: number;
   findings: Array<{
     file: string;
     line: number;
@@ -38,6 +39,7 @@ interface ScanResponse {
     name: string;
     path: string;
     language: string;
+    loc?: number;
   }>;
   metrics?: {
     quality_score: number;
@@ -101,14 +103,23 @@ export const CodeScanner: React.FC = () => {
   const [refactoredCode, setRefactoredCode] = useState<{original: string; refactored: string} | null>(null);
   const [refactorLoading, setRefactorLoading] = useState(false);
   const [functionMetrics, setFunctionMetrics] = useState<any[]>([]);
+  const [scanDurationMs, setScanDurationMs] = useState<number | null>(null);
   const [hoveredFunction, setHoveredFunction] = useState<string | null>(null);
-  const [metrics, setMetrics] = useState({
+  const [metrics, setMetrics] = useState<{
+    grade: string;
+    loc: number;
+    totalFindings: number;
+    criticalCount: number;
+    documented: string | null;
+    depCycles: number | null;
+    qualityScore: number;
+  }>({
     grade: 'B',
     loc: 0,
     totalFindings: 0,
     criticalCount: 0,
-    documented: '100%',
-    depCycles: 0,
+    documented: null,
+    depCycles: null,
     qualityScore: 100
   });
 
@@ -212,9 +223,19 @@ export const CodeScanner: React.FC = () => {
 
       // Process findings
       setAllFindings(data.findings || []);
+      setScanDurationMs(typeof data.duration_ms === 'number' ? data.duration_ms : null);
 
       // Use scanned_files from backend or derive from findings
       let files: ScannedFile[] = [];
+
+      const severityRank: Record<string, number> = { CRITICAL: 3, ERROR: 2, WARNING: 1 };
+      const severityPenalty: Record<string, number> = { CRITICAL: 10, ERROR: 5, WARNING: 2 };
+      const scoreForFindings = (findings: Array<{ severity: string }>): number =>
+        Math.max(0, 100 - findings.reduce((sum, f) => sum + (severityPenalty[f.severity] || 2), 0));
+      const gradeForScore = (score: number): string =>
+        score >= 80 ? 'A' : score >= 60 ? 'B' : 'C';
+      const gradeForFindings = (findings: Array<{ severity: string }>): string =>
+        gradeForScore(scoreForFindings(findings));
 
       if (data.scanned_files && data.scanned_files.length > 0) {
         // Use files returned by backend
@@ -228,20 +249,32 @@ export const CodeScanner: React.FC = () => {
             'rust': 'rust'
           };
           const displayLang = langMap[f.language?.toLowerCase()] || f.language || 'py';
+
+          const fileFindings = (data.findings || []).filter(fn => fn.file.includes(f.name));
+          const fileFunctions = (data.function_metrics || []).filter(fn => fn.file.includes(f.name));
+          const worstSeverity = fileFindings.reduce<string | null>((worst, cur) => {
+            if (!worst || (severityRank[cur.severity] || 0) > (severityRank[worst] || 0)) return cur.severity;
+            return worst;
+          }, null);
+          const avgComplexity = fileFunctions.length > 0
+            ? fileFunctions.reduce((sum, fn) => sum + fn.complexity, 0) / fileFunctions.length
+            : null;
+
           return {
             name: f.name,
             path: f.path,
             language: displayLang,
-            loc: f.loc || 200,
-            functions: 3,
+            loc: f.loc || 0,
+            functions: fileFunctions.length,
             classes: 0,
-            complexity: 8.2,
-            grade: 'A',
-            severity: '—'
+            complexity: avgComplexity,
+            grade: gradeForFindings(fileFindings),
+            severity: worstSeverity || '—'
           };
         });
       } else {
-        // Fallback: derive files from findings
+        // Fallback: derive files from findings (backend gave no scanned_files listing,
+        // so per-file loc is genuinely unknown here -- no source to compute it from)
         const fileMap = new Map<string, ScannedFile>();
         data.findings?.forEach((finding) => {
           if (!fileMap.has(finding.file)) {
@@ -257,15 +290,20 @@ export const CodeScanner: React.FC = () => {
               if (name.endsWith('.rs')) return 'rust';
               return 'py';
             };
+            const fileFindingsForGrade = (data.findings || []).filter(fn => fn.file === finding.file);
+            const fileFunctions = (data.function_metrics || []).filter(fn => fn.file === finding.file);
+            const avgComplexity = fileFunctions.length > 0
+              ? fileFunctions.reduce((sum, fn) => sum + fn.complexity, 0) / fileFunctions.length
+              : null;
             fileMap.set(finding.file, {
               name: fileName,
               path: finding.file,
               language: detectLanguage(fileName),
-              loc: 200,
-              functions: 3,
+              loc: 0,
+              functions: fileFunctions.length,
               classes: 0,
-              complexity: 8.2,
-              grade: 'B',
+              complexity: avgComplexity,
+              grade: gradeForFindings(fileFindingsForGrade),
               severity: finding.severity
             });
           }
@@ -282,15 +320,15 @@ export const CodeScanner: React.FC = () => {
       });
 
       // Update metrics
-      const qualityScore = Math.max(0, 100 - (data.findings?.length || 0) * 2);
+      const qualityScore = scoreForFindings(data.findings || []);
       const totalLoc = files.reduce((sum, f) => sum + f.loc, 0);
       setMetrics({
-        grade: qualityScore >= 80 ? 'A' : qualityScore >= 60 ? 'B' : 'C',
+        grade: gradeForScore(qualityScore),
         loc: totalLoc,
         totalFindings: data.findings?.length || 0,
         criticalCount: criticalCount,
-        documented: '95%',
-        depCycles: 0,
+        documented: null, // not computed by the backend for this scan type
+        depCycles: null, // not computed by the backend for this scan type
         qualityScore: Math.round(qualityScore)
       });
 
@@ -429,8 +467,8 @@ export const CodeScanner: React.FC = () => {
         <div class="metric-card"><div class="value">${metrics.loc}</div><div class="label">Lines of Code</div></div>
         <div class="metric-card"><div class="value">${metrics.totalFindings}</div><div class="label">Total Issues</div></div>
         <div class="metric-card"><div class="value">${metrics.criticalCount}</div><div class="label">Critical</div></div>
-        <div class="metric-card"><div class="value">${metrics.documented}</div><div class="label">Documented</div></div>
-        <div class="metric-card"><div class="value">${metrics.depCycles}</div><div class="label">Cycles</div></div>
+        <div class="metric-card"><div class="value">${metrics.documented ?? 'N/A'}</div><div class="label">Documented</div></div>
+        <div class="metric-card"><div class="value">${metrics.depCycles ?? 'N/A'}</div><div class="label">Cycles</div></div>
       </div>
 
       <h2>📁 Files Scanned (${scannedFiles.length})</h2>
@@ -475,8 +513,8 @@ export const CodeScanner: React.FC = () => {
 | Lines of Code | ${metrics.loc} |
 | Total Findings | ${metrics.totalFindings} |
 | Critical Issues | ${metrics.criticalCount} |
-| Documented | ${metrics.documented} |
-| Dependency Cycles | ${metrics.depCycles} |
+| Documented | ${metrics.documented ?? 'N/A'} |
+| Dependency Cycles | ${metrics.depCycles ?? 'N/A'} |
 
 ---
 
@@ -925,7 +963,9 @@ ${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
         <div style={ts.tbStatus}>
           <div style={{...ts.pdot, ...(loading ? ts.pdotAmber : {})}}></div>
           <span style={ts.sw}>{loading ? 'Scanning...' : 'Scan complete'}</span>
-          <span style={ts.duration}>· 0.24s</span>
+          {!loading && scanDurationMs !== null && (
+            <span style={ts.duration}>· {(scanDurationMs / 1000).toFixed(2)}s</span>
+          )}
         </div>
         <div style={ts.tbSpacer}></div>
         <div style={ts.tbActs}>
@@ -1164,7 +1204,12 @@ ${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
             <div style={ts.mc}>
               <div style={ts.mcLbl}>Lines of Code</div>
               <div style={{...ts.mcVal, color: '#6eb5ff'}}>{metrics.loc}</div>
-              <div style={ts.mcSub}>4.61 avg / fn</div>
+              <div style={ts.mcSub}>
+                {(() => {
+                  const totalFunctions = scannedFiles.reduce((sum, f) => sum + f.functions, 0);
+                  return totalFunctions > 0 ? `${(metrics.loc / totalFunctions).toFixed(2)} avg / fn` : '—';
+                })()}
+              </div>
             </div>
             <div style={ts.mc}>
               <div style={ts.mcLbl}>Total Findings</div>
@@ -1178,13 +1223,13 @@ ${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
             </div>
             <div style={ts.mc}>
               <div style={ts.mcLbl}>Documented</div>
-              <div style={{...ts.mcVal, color: '#3ecfb2'}}>{metrics.documented}</div>
-              <div style={ts.mcSub}>coverage</div>
+              <div style={{...ts.mcVal, color: '#3ecfb2'}}>{metrics.documented ?? 'N/A'}</div>
+              <div style={ts.mcSub}>{metrics.documented === null ? 'not implemented' : 'coverage'}</div>
             </div>
             <div style={ts.mc}>
               <div style={ts.mcLbl}>Dep-Cycles</div>
-              <div style={{...ts.mcVal, color: '#b89eff'}}>{metrics.depCycles}</div>
-              <div style={ts.mcSub}>no circular deps</div>
+              <div style={{...ts.mcVal, color: '#b89eff'}}>{metrics.depCycles ?? 'N/A'}</div>
+              <div style={ts.mcSub}>{metrics.depCycles === null ? 'not implemented' : 'no circular deps'}</div>
             </div>
           </div>
 
@@ -1211,10 +1256,13 @@ ${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
                     const filesWithIssues = scannedFiles.filter(file =>
                       allFindings.some(f => f.file.includes(file.name))
                     );
+                    const languages = Array.from(new Set(scannedFiles.map(f => getLanguageLabel(f.language))));
+                    const languageLabel = languages.length > 0 ? `${languages.join('/')} analysis` : 'analysis';
+                    const durationLabel = scanDurationMs !== null ? `${(scanDurationMs / 1000).toFixed(2)}s` : null;
                     return <>
                       <strong>{filesWithIssues.length > 0 ? filesWithIssues.length : 0} files with issues</strong>
                       {filesWithIssues.length !== scannedFiles.length && ` of ${scannedFiles.length} total`}
-                      · Python analysis · 0.24s
+                      · {languageLabel}{durationLabel && ` · ${durationLabel}`}
                     </>;
                   })()}
                 </div>
@@ -1270,14 +1318,18 @@ ${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
                           </td>
                           <td style={{...ts.td, ...ts.tdNum}}>{file.loc}</td>
                           <td style={{...ts.td, ...ts.tdNum}}>{file.functions}</td>
-                          <td style={{...ts.td, ...ts.tdNum}}>{file.classes}</td>
+                          <td style={{...ts.td, ...ts.tdNum}} title="Class counting not implemented">—</td>
                           <td style={ts.td}>
-                            <div style={ts.cxw}>
-                              <div style={ts.cxt}>
-                                <div style={{...ts.cxf, width: `${file.complexity * 5}%`, ...(file.complexity > 10 ? ts.cxHi : file.complexity > 5 ? ts.cxMid : ts.cxLo)}}></div>
+                            {file.complexity === null ? (
+                              <span style={ts.cxN} title="No function-level data for this language">—</span>
+                            ) : (
+                              <div style={ts.cxw}>
+                                <div style={ts.cxt}>
+                                  <div style={{...ts.cxf, width: `${file.complexity * 5}%`, ...(file.complexity > 10 ? ts.cxHi : file.complexity > 5 ? ts.cxMid : ts.cxLo)}}></div>
+                                </div>
+                                <span style={ts.cxN}>{file.complexity.toFixed(1)}</span>
                               </div>
-                              <span style={ts.cxN}>{file.complexity.toFixed(1)}</span>
-                            </div>
+                            )}
                           </td>
                           <td style={ts.td}><span style={{...ts.gp, ...(file.grade === 'A' ? ts.gA : file.grade === 'B' ? ts.gB : ts.gC)}}>{file.grade}</span></td>
                           <td style={ts.td}><span style={file.severity === '—' ? ts.svNone : ts.svLo}>{file.severity}</span></td>
@@ -1755,7 +1807,7 @@ ${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
               ) : (
                 <>
                   <h2 style={{fontSize: '20px', marginBottom: '16px', color: theme === 'light' ? '#333' : '#fff'}}>📋 Duplication</h2>
-                  <p style={{color: theme === 'light' ? '#999' : '#666'}}>Analyzing duplicated code blocks...</p>
+                  <p style={{color: theme === 'light' ? '#999' : '#666'}}>Duplication detection is not yet implemented for this scan type.</p>
                 </>
               )}
             </div>
@@ -1801,7 +1853,7 @@ ${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
               ) : (
                 <>
                   <h2 style={{fontSize: '20px', marginBottom: '16px', color: theme === 'light' ? '#333' : '#fff'}}>📝 Documentation</h2>
-                  <p style={{color: theme === 'light' ? '#999' : '#666', marginBottom: '16px'}}>Coverage: {metrics.documented}</p>
+                  <p style={{color: theme === 'light' ? '#999' : '#666', marginBottom: '16px'}}>Documentation coverage analysis is not yet implemented for this scan type.</p>
                   <p style={{color: theme === 'light' ? '#666' : '#aaa', fontSize: '13px', lineHeight: '1.6'}}>Review functions for proper docstrings and inline comments. Well-documented code improves maintainability.</p>
                 </>
               )}
@@ -1820,8 +1872,7 @@ ${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
               ) : (
                 <>
                   <h2 style={{fontSize: '20px', marginBottom: '16px', color: theme === 'light' ? '#333' : '#fff'}}>🔗 Dependencies</h2>
-                  <p style={{color: theme === 'light' ? '#999' : '#666', marginBottom: '16px'}}>Circular Dependencies: {metrics.depCycles}</p>
-                  <p style={{color: theme === 'light' ? '#666' : '#aaa', fontSize: '13px', lineHeight: '1.6'}}>No problematic dependency cycles detected.</p>
+                  <p style={{color: theme === 'light' ? '#999' : '#666', marginBottom: '16px'}}>Dependency cycle detection is not yet implemented for this scan type.</p>
                 </>
               )}
             </div>
@@ -2050,26 +2101,6 @@ ${allFindings.length > 0 ? allFindings.map(f => `### ${f.type}
             </div>
           )}
 
-          {activeTab !== 'files' && activeTab !== 'refactor' && activeTab !== 'live' && (
-            <div style={{...ts.tabContent, ...ts.phPanel}}>
-              <div style={ts.phIc}>{
-                activeTab === 'overview' ? '📊' :
-                activeTab === 'complexity' ? '🔀' :
-                activeTab === 'smells' ? '👃' :
-                activeTab === 'duplication' ? '©' :
-                activeTab === 'security' ? '🔒' :
-                activeTab === 'docs' ? '📝' :
-                activeTab === 'dependencies' ? '🔗' : '📊'
-              }</div>
-              <div style={ts.phT}>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</div>
-              <div style={ts.phS}>
-                {allFindings.length === 0
-                  ? '✅ No issues found in ' + activeTab
-                  : `${allFindings.filter(f => f.type.includes(activeTab.toLowerCase())).length} findings in ${activeTab}`
-                }
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
