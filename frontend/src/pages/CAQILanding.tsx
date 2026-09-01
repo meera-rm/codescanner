@@ -79,7 +79,7 @@ export const CAQILanding: React.FC = () => {
             </button>
           </div>
 
-          {/* CAQI Dashboard Card */}
+          {/* CAQI Dashboard Card
           <div
             className="caqi-card"
             onClick={() => navigate('/caqi/dashboard')}
@@ -142,6 +142,7 @@ export const CAQILanding: React.FC = () => {
               View Dashboard →
             </button>
           </div>
+          */}
         </div>
 
         {/* Info Section */}
