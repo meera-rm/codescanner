@@ -1,18 +1,19 @@
-"""Celery tasks for Iteration Until Clean."""
+"""Background task for Iteration Until Clean.
+
+Runs via FastAPI's BackgroundTasks, not a task queue -- see
+api/routes/iteration.py's background_tasks.add_task() call site.
+"""
 
 import uuid
 import asyncio
 from datetime import datetime
-from api.tasks.celery_app import app
 from api.services.iteration_clean_service import IterationCleanService
 from api.services.scanner_service import ScannerService
 from api.db.database import SessionLocal
 from api.db.models import IterationJob, IterationHistory
 
 
-@app.task(bind=True, name="iteration.fix_until_clean")
-def fix_until_clean_task(self,
-                         job_id: str,
+def fix_until_clean_task(job_id: str,
                          directory_path: str,
                          target_grade: str = "A",
                          max_iterations: int = 10):

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """
-Test: Verify Celery task for iteration until clean.
-Tests the fix_until_clean_task without requiring Redis.
+Test: Verify the background task for iteration until clean.
+Tests fix_until_clean_task, which runs via FastAPI's BackgroundTasks
+(no task queue or broker involved).
 """
 
 import sys
@@ -65,10 +66,10 @@ def test_fix_until_clean_sync():
     return job_id, result
 
 
-def test_celery_task_with_db(job_id, sync_result):
-    """Test the Celery task including database updates."""
+def test_background_task_with_db(job_id, sync_result):
+    """Test the background task including database updates."""
     print("\n" + "="*80)
-    print("TEST 2: fix_until_clean_task (Celery Task + Database)")
+    print("TEST 2: fix_until_clean_task (Background Task + Database)")
     print("="*80)
 
     # Create a job record
@@ -86,8 +87,8 @@ def test_celery_task_with_db(job_id, sync_result):
         db.commit()
         print(f"\n✓ Created job in database: {job_id}")
 
-        # Call the task function directly (simulates what Celery would do)
-        print("\n📋 Running fix_until_clean_task (simulated)...")
+        # Call the task function directly, same as background_tasks.add_task() does
+        print("\n📋 Running fix_until_clean_task...")
         task_result = fix_until_clean_task(
             job_id=job_id,
             directory_path="api/routes",
@@ -176,21 +177,20 @@ if __name__ == "__main__":
         # Test 1: Sync function
         job_id, sync_result = test_fix_until_clean_sync()
 
-        # Test 2: Celery task with database
-        test_celery_task_with_db(job_id, sync_result)
+        # Test 2: Background task with database
+        test_background_task_with_db(job_id, sync_result)
 
         # Test 3: Result validation
         test_task_result_structure(sync_result)
 
         print("\n" + "="*80)
-        print("✅ ALL CELERY TASK TESTS PASSED")
+        print("✅ ALL BACKGROUND TASK TESTS PASSED")
         print("="*80)
         print("\nSummary:")
         print("  ✓ fix_until_clean_sync calls real IterationCleanService")
         print("  ✓ fix_until_clean_task updates database with results")
         print("  ✓ Iteration history is saved to database")
-        print("  ✓ Result has expected structure for API responses")
-        print("\nCelery integration is ready for production use with Redis broker.\n")
+        print("  ✓ Result has expected structure for API responses\n")
 
     except Exception as e:
         print(f"\n❌ Test failed: {e}")

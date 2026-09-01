@@ -7,7 +7,7 @@ Architecture:
 - Services: api/services/ (scanner, onboarding, auth, config, rate limiter, iteration)
 - Routes: api/routes/ (health, scanner, onboarding, auth, config, creative_suite, iteration)
 - Middleware: api/middleware/ (auth validation, rate limiting)
-- Tasks: api/tasks/ (celery tasks for async iteration jobs)
+- Tasks: api/tasks/ (background tasks for async iteration jobs)
 
 Phases:
 - Phase 1: Creative Suite (Personality, Letter, CAQI) ✅ Complete
@@ -34,7 +34,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 # Auth disabled for local development
-from api.routes import health, auth, creative_suite, config, caqi_enhanced, scanner, onboarding, iteration, dashboard, metrics, webhooks, analysis, advanced_analytics, github, jobs, alerts, search, websocket, cache, performance
+from api.routes import health, auth, creative_suite, config, caqi_enhanced, scanner, onboarding, iteration, dashboard, metrics, webhooks, analysis, advanced_analytics, github, jobs, alerts, search, websocket, performance
 from api.tasks import job_queue
 from api.db.database import engine, Base
 from api.middleware.performance_middleware import performance_monitoring_middleware
@@ -92,7 +92,6 @@ app.include_router(jobs.router)  # Phase 12.4: Job queue management
 app.include_router(alerts.router)  # Phase 15.A.1: Alerts & Notifications
 app.include_router(search.router)  # Phase 15.A.5: Search & Advanced Filtering
 app.include_router(websocket.router)  # Phase 15.A.3: Real-time WebSocket Updates
-app.include_router(cache.router)  # Phase 15.A.4: Redis Caching
 app.include_router(performance.router)  # Phase 15.A.6: Performance Profiling
 
 # ============================================================================

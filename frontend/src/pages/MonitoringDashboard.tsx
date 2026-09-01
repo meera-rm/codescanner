@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Tabs, Tab, Paper, Typography, Button } from '@mui/material';
 import PerformanceMonitoring from '../components/PerformanceMonitoring';
 import AlertConfiguration from '../components/AlertConfiguration';
-import CacheManagement from '../components/CacheManagement';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -57,7 +56,6 @@ export function MonitoringDashboard() {
           <Tabs value={activeTab} onChange={handleTabChange} aria-label="monitoring tabs">
             <Tab label="Performance Monitoring" {...a11yProps(0)} />
             <Tab label="Alert Configuration" {...a11yProps(1)} />
-            <Tab label="Cache Management" {...a11yProps(2)} />
           </Tabs>
         </Box>
       </Paper>
@@ -68,10 +66,6 @@ export function MonitoringDashboard() {
 
       <TabPanel value={activeTab} index={1}>
         <AlertConfiguration />
-      </TabPanel>
-
-      <TabPanel value={activeTab} index={2}>
-        <CacheManagement />
       </TabPanel>
     </Box>
   );

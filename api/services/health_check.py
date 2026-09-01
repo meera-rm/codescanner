@@ -219,7 +219,7 @@ async def check_cache() -> Dict[str, Any]:
 async def check_queue() -> Dict[str, Any]:
     """Check task queue"""
     try:
-        # Simulate queue check (Celery, etc.)
+        # Simulate queue check
         await asyncio.sleep(0.01)
         return {
             "status": HealthStatus.HEALTHY,
