@@ -2,8 +2,18 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/Home.css';
 
+interface HomePath {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  icon: string;
+  color: string;
+  featured?: boolean;
+}
+
 export const Home: React.FC = () => {
-  const paths = [
+  const paths: HomePath[] = [
     {
       id: 'personality',
       title: 'Personality Profiler',
@@ -44,15 +54,15 @@ export const Home: React.FC = () => {
       icon: '👥',
       color: '#f39c12'
     },
-    {
+    /* {
       id: 'ci-dashboard',
       title: 'CI/CD Dashboard',
       subtitle: 'Phase 14',
       description: 'Track CI/CD scan history, build status, and trends across platforms',
       icon: '🔄',
       color: '#16a085'
-    },
-    {
+    }, */
+    /* {
       id: 'dashboard',
       title: 'Analytics Dashboard',
       subtitle: 'Main Hub',
@@ -60,7 +70,7 @@ export const Home: React.FC = () => {
       icon: '📈',
       color: '#e74c3c',
       featured: true
-    }
+    } */
   ];
 
   return (
