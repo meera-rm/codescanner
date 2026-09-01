@@ -12,8 +12,8 @@ from api.services.file_modifier_service import FileModifierService, Modification
 from api.services.code_formatter import CodeFormatter
 from api.services.code_validator import CodeValidator
 from api.services.diff_generator import DiffGenerator
-from api.services.github_integration import (
-    GitHubIntegration,
+from api.services.github_pr_actions import (
+    GitHubPRActions as GitHubIntegration,
     GitHubConfig,
     PRResult,
 )
