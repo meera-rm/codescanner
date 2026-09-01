@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from api.db.database import get_db
 from api.db.models import CIScanHistory
 from api.services.search_service import SearchService
-from api.services.cache_service import CacheService
 
 router = APIRouter(prefix="/api/v1/search", tags=["search"])
 
@@ -115,7 +114,6 @@ async def search_scans(
 @router.get("/filters", response_model=FilterOptions)
 async def get_filter_options(
     db: Session = Depends(get_db),
-    force_refresh: bool = Query(False, description="Force cache refresh"),
 ) -> FilterOptions:
     """
     Get available filter options for UI dropdowns.
@@ -123,17 +121,12 @@ async def get_filter_options(
     **Response:**
     Lists of available repositories, platforms, branches, statuses, and ranges.
 
-    **Caching:**
-    - Cached for 1 hour
-    - Pass `force_refresh=true` to skip cache
-
     **Example:**
     ```bash
     curl "http://localhost:8000/api/v1/search/filters"
-    curl "http://localhost:8000/api/v1/search/filters?force_refresh=true"
     ```
     """
-    options = CacheService.get_filter_options(db, force_refresh=force_refresh)
+    options = SearchService.get_filter_options(db)
     return FilterOptions(**options)
 
 
@@ -142,7 +135,6 @@ async def get_suggestions(
     db: Session = Depends(get_db),
     q: str = Query(..., description="Search query prefix"),
     field: str = Query("repository", description="Field to search (repository, branch, platform)"),
-    force_refresh: bool = Query(False, description="Force cache refresh"),
 ) -> dict:
     """
     Get autocomplete suggestions for search fields.
@@ -150,22 +142,16 @@ async def get_suggestions(
     **Parameters:**
     - `q`: Partial search term
     - `field`: Which field to search (repository, branch, platform)
-    - `force_refresh`: Skip cache (default: false)
 
     **Response:**
     List of matching values for autocomplete.
 
-    **Caching:**
-    - Cached for 1 hour per query
-    - Pass `force_refresh=true` to skip cache
-
     **Example:**
     ```bash
     curl "http://localhost:8000/api/v1/search/suggestions?q=my&field=repository"
-    curl "http://localhost:8000/api/v1/search/suggestions?q=fea&field=branch&force_refresh=true"
     ```
     """
-    suggestions = CacheService.get_search_suggestions(db, q, field, force_refresh=force_refresh)
+    suggestions = SearchService.get_search_suggestions(db, q, field)
     return {
         'field': field,
         'query': q,
