@@ -216,14 +216,14 @@ const CodeScannerExplorer: React.FC = () => {
     <Box sx={{ p: 3, maxWidth: '1400px', mx: 'auto' }}>
       {/* Header */}
       <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Button
+        {/* <Button
           variant="outlined"
           size="small"
           onClick={() => navigate('/ci-dashboard')}
           sx={{ height: 'fit-content' }}
         >
           ← Back to CI Dashboard
-        </Button>
+        </Button> */}
         <Box>
           <Typography variant="h4" sx={{ mb: 1 }}>
             🔍 CodeScanner Explorer
