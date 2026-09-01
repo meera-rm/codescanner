@@ -14,7 +14,7 @@ from api.services.parallel_agent_executor import (
     AgentSuggestion,
 )
 from api.services.iteration_pr_manager import IterationPRManager
-from api.services.github_integration import GitHubConfig
+from api.services.github_pr_actions import GitHubConfig
 
 logger = logging.getLogger(__name__)
 
