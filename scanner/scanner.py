@@ -27,8 +27,7 @@ class PythonScanner:
     def __init__(self, ignore_patterns: List[str] = None):
         self.ignore_patterns = ignore_patterns or [
             "__pycache__", ".venv", "node_modules", "venv", ".git",
-            "site-packages", "/test/", "/tests/", "fixtures",
-            "agentic-ai", "claudeassisted", "MyVault", "Bronze_to_silver"
+            "site-packages", "/test/", "/tests/", "fixtures"
         ]
         self.findings: List[Finding] = []
 
@@ -114,9 +113,8 @@ class JavaScriptScanner:
     def __init__(self, ignore_patterns: List[str] = None):
         self.ignore_patterns = ignore_patterns or [
             "__pycache__", ".venv", "node_modules", "venv", ".git",
-            ".next", "dist", "build", "site-packages", "test", "tests",
-            "fixtures", "codescanner", "agentic-ai", "claudeassisted",
-            "MyVault", "Bronze_to_silver"
+            ".next", "dist", "build", "site-packages", "/test/", "/tests/",
+            "fixtures"
         ]
         self.findings: List[Finding] = []
 
@@ -207,8 +205,7 @@ class SQLScanner:
     def __init__(self, ignore_patterns: List[str] = None):
         self.ignore_patterns = ignore_patterns or [
             "__pycache__", ".venv", "node_modules", "venv", ".git",
-            "site-packages", "test", "tests", "fixtures", "migrations/old",
-            "codescanner", "agentic-ai", "claudeassisted", "MyVault", "Bronze_to_silver"
+            "site-packages", "/test/", "/tests/", "fixtures", "migrations/old"
         ]
         self.findings: List[Finding] = []
 
