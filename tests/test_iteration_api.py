@@ -8,7 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.db.database import SessionLocal, Base, engine
 from api.db.models import IterationJob, IterationHistory
 from api.routes import iteration, health
-from api.middleware.auth_middleware import AuthMiddleware
 from api.services.auth_service import AuthService
 
 # Create a minimal test app without circular imports
