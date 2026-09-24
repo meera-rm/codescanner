@@ -59,3 +59,6 @@ node_modules/
 *.db
 *.rdb
 
+# Runtime-generated config (written by ConfigService on first boot)
+api/config.json
+
