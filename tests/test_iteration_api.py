@@ -1,6 +1,7 @@
 """Tests for Phase 3.5C: Iteration API Routes."""
 
 import json
+import uuid
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -28,10 +29,23 @@ test_app.include_router(iteration.router)
 
 @pytest.fixture(autouse=True)
 def setup_db():
-    """Create fresh database for each test."""
+    """Ensure all tables exist, and that this file's tests start from a
+    clean slate for the tables they own.
+
+    Doesn't drop tables: Base is the app's single shared schema, so
+    dropping it here would also remove tables other test files (and
+    the running app) still need. Instead, each test's IterationJob/
+    IterationHistory rows (which use hardcoded ids like "test_job_2")
+    are cleared after every test so re-running the suite doesn't hit
+    UNIQUE constraint violations against leftover rows.
+    """
     Base.metadata.create_all(bind=engine)
     yield
-    Base.metadata.drop_all(bind=engine)
+    session = SessionLocal()
+    session.query(IterationHistory).delete()
+    session.query(IterationJob).delete()
+    session.commit()
+    session.close()
 
 
 @pytest.fixture
@@ -188,7 +202,7 @@ def test_get_iteration_status_with_history(client, db):
 
     # Add history record
     history = IterationHistory(
-        id="hist_1",
+        id=str(uuid.uuid4()),
         job_id="test_job_2",
         iteration_number=1,
         grade_before="C",
@@ -416,7 +430,7 @@ def test_delete_iteration_with_history(client, db):
 
     # Add history
     history = IterationHistory(
-        id="hist_1",
+        id=str(uuid.uuid4()),
         job_id="test_job_9",
         iteration_number=1,
         grade_before="C",

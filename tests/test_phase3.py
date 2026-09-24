@@ -250,10 +250,8 @@ class TestWebhooksEndpoints:
         """Test webhook registration endpoint."""
         response = client.post(
             "/api/v1/webhooks",
-            json={
-                "url": "https://example.com/webhook",
-                "event_types": ["scan.completed"],
-            }
+            params={"url": "https://example.com/webhook"},
+            json=["scan.completed"],
         )
         # Requires auth
         assert response.status_code in [400, 401]
@@ -274,7 +272,7 @@ class TestAnalysisEndpoints:
         """Test architecture analysis endpoint."""
         response = client.post(
             "/api/v1/analysis/architecture",
-            json={"directory_path": "."}
+            params={"directory_path": "."}
         )
         # May require auth
         assert response.status_code in [200, 400, 401]
@@ -283,7 +281,7 @@ class TestAnalysisEndpoints:
         """Test git history analysis endpoint."""
         response = client.post(
             "/api/v1/analysis/git-history",
-            json={"directory_path": "."}
+            params={"directory_path": "."}
         )
         # May require auth
         assert response.status_code in [200, 400, 401]
@@ -307,7 +305,7 @@ class TestAnalysisEndpoints:
         """Test fix validation endpoint."""
         response = client.post(
             "/api/v1/analysis/validate-fix",
-            json={
+            params={
                 "original_code": "x = 1",
                 "fixed_code": "x = 2",
             }

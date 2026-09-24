@@ -11,10 +11,15 @@ from api.db.models import TeamScore, CAQIHistory, TeamMember
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_db():
-    """Create all tables in test database."""
+    """Ensure all tables exist in the test database.
+
+    Doesn't drop tables on teardown: Base is the app's single shared
+    schema, so dropping it here would also remove tables other test
+    files (and the running app) still need. Test data is cleaned up
+    at the row level by the fixtures that create it.
+    """
     Base.metadata.create_all(bind=engine)
     yield
-    Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture
@@ -45,7 +50,9 @@ def sample_team(db_session: Session):
     )
     db_session.add(team)
     db_session.commit()
-    return team
+    yield team
+    db_session.query(TeamScore).filter(TeamScore.team_id == team.team_id).delete()
+    db_session.commit()
 
 
 @pytest.fixture
@@ -68,7 +75,9 @@ def sample_history(db_session: Session, sample_team: TeamScore):
         history.append(record)
     db_session.add_all(history)
     db_session.commit()
-    return history
+    yield history
+    db_session.query(CAQIHistory).filter(CAQIHistory.team_id == sample_team.team_id).delete()
+    db_session.commit()
 
 
 @pytest.fixture
@@ -84,7 +93,9 @@ def sample_members(db_session: Session, sample_team: TeamScore):
     ]
     db_session.add_all(members)
     db_session.commit()
-    return members
+    yield members
+    db_session.query(TeamMember).filter(TeamMember.team_id == sample_team.team_id).delete()
+    db_session.commit()
 
 
 class TestAdvancedAnalyticsAPI:
@@ -116,13 +127,14 @@ class TestAdvancedAnalyticsAPI:
 
     def test_get_team_trends(self, db_session: Session, sample_team: TeamScore, sample_history: list):
         """Test trends endpoint returns historical data."""
+        import asyncio
         from api.routes.advanced_analytics import get_team_trends
 
-        response = get_team_trends(
+        response = asyncio.run(get_team_trends(
             team_id=sample_team.team_id,
             days=30,
             db=db_session
-        )
+        ))
 
         assert response['team_id'] == sample_team.team_id
         assert response['period_days'] == 30
@@ -132,15 +144,16 @@ class TestAdvancedAnalyticsAPI:
 
     def test_get_developers(self, db_session: Session, sample_team: TeamScore, sample_members: list):
         """Test developer contributions endpoint."""
+        import asyncio
         from api.routes.advanced_analytics import get_developer_contributions
 
-        response = get_developer_contributions(
+        response = asyncio.run(get_developer_contributions(
             team_id=sample_team.team_id,
             days=30,
             page=1,
             per_page=20,
             db=db_session
-        )
+        ))
 
         assert response['team_id'] == sample_team.team_id
         assert response['developer_count'] == 3
@@ -150,13 +163,14 @@ class TestAdvancedAnalyticsAPI:
 
     def test_get_peer_comparison(self, db_session: Session, sample_team: TeamScore):
         """Test peer comparison endpoint."""
+        import asyncio
         from api.routes.advanced_analytics import get_peer_comparison
 
-        response = get_peer_comparison(
+        response = asyncio.run(get_peer_comparison(
             team_id=sample_team.team_id,
             dimension='security',
             db=db_session
-        )
+        ))
 
         assert response['team_id'] == sample_team.team_id
         assert response['dimension'] == 'security'
@@ -165,14 +179,15 @@ class TestAdvancedAnalyticsAPI:
 
     def test_get_anomalies(self, db_session: Session, sample_team: TeamScore):
         """Test anomalies endpoint with pagination."""
+        import asyncio
         from api.routes.advanced_analytics import get_team_anomalies
 
-        response = get_team_anomalies(
+        response = asyncio.run(get_team_anomalies(
             team_id=sample_team.team_id,
             page=1,
             per_page=20,
             db=db_session
-        )
+        ))
 
         assert response['team_id'] == sample_team.team_id
         assert 'pagination' in response
@@ -181,14 +196,15 @@ class TestAdvancedAnalyticsAPI:
 
     def test_get_alerts(self, db_session: Session, sample_team: TeamScore):
         """Test alerts endpoint with pagination."""
+        import asyncio
         from api.routes.advanced_analytics import get_team_alerts
 
-        response = get_team_alerts(
+        response = asyncio.run(get_team_alerts(
             team_id=sample_team.team_id,
             page=1,
             per_page=10,
             db=db_session
-        )
+        ))
 
         assert response['team_id'] == sample_team.team_id
         assert 'pagination' in response
@@ -196,13 +212,14 @@ class TestAdvancedAnalyticsAPI:
 
     def test_get_benchmarks(self, db_session: Session, sample_team: TeamScore):
         """Test benchmarks endpoint."""
+        import asyncio
         from api.routes.advanced_analytics import get_team_benchmarks
 
-        response = get_team_benchmarks(
+        response = asyncio.run(get_team_benchmarks(
             team_id=sample_team.team_id,
             benchmark_type='company',
             db=db_session
-        )
+        ))
 
         assert response['team_id'] == sample_team.team_id
         assert response['benchmark_type'] == 'company'
@@ -225,23 +242,24 @@ class TestAdvancedAnalyticsAPI:
 
     def test_pagination_parameters(self, db_session: Session, sample_team: TeamScore):
         """Test pagination parameters validation."""
+        import asyncio
         from api.routes.advanced_analytics import get_team_anomalies
 
         # Valid pagination
-        response = get_team_anomalies(
+        response = asyncio.run(get_team_anomalies(
             team_id=sample_team.team_id,
             page=1,
             per_page=20,
             db=db_session
-        )
+        ))
         assert response['pagination']['per_page'] == 20
 
         # Different page size
-        response = get_team_anomalies(
+        response = asyncio.run(get_team_anomalies(
             team_id=sample_team.team_id,
             page=2,
             per_page=50,
             db=db_session
-        )
+        ))
         assert response['pagination']['page'] == 2
         assert response['pagination']['per_page'] == 50

@@ -74,12 +74,9 @@ class TestGitHubRoutes:
     def test_repositories_endpoint(self, client):
         """Test getting repositories list."""
         # This requires a real access token, so it will fail
-        response = client.post(
-            '/api/v1/github/repositories',
-            params={
-                'installation_id': 'test-inst',
-                'access_token': 'invalid_token'
-            }
+        response = client.get(
+            '/api/v1/github/repositories/12345',
+            params={'access_token': 'invalid_token'}
         )
         # May return 400 or 401 depending on GitHub's response
         assert response.status_code in [400, 401, 404]
@@ -91,7 +88,8 @@ class TestJobQueueEndpoints:
     def test_create_job(self, client):
         """Test creating a new job."""
         response = client.post(
-            '/api/v1/jobs?job_type=test_job&data={}',
+            '/api/v1/jobs?job_type=test_job',
+            json={},
         )
         assert response.status_code == 200
         data = response.json()
@@ -103,7 +101,8 @@ class TestJobQueueEndpoints:
         """Test getting job status."""
         # First create a job
         create_response = client.post(
-            '/api/v1/jobs?job_type=test_job&data={}',
+            '/api/v1/jobs?job_type=test_job',
+            json={},
         )
         job_id = create_response.json()['job_id']
 
@@ -125,7 +124,8 @@ class TestJobQueueEndpoints:
         # Create a few jobs
         for i in range(3):
             client.post(
-                f'/api/v1/jobs?job_type=test_job&data={{"index": {i}}}'
+                '/api/v1/jobs?job_type=test_job',
+                json={"index": i},
             )
 
         # List all jobs
@@ -155,7 +155,8 @@ class TestJobQueueEndpoints:
         """Test cancelling a job."""
         # Create a job
         create_response = client.post(
-            '/api/v1/jobs?job_type=test_job&data={}',
+            '/api/v1/jobs?job_type=test_job',
+            json={},
         )
         job_id = create_response.json()['job_id']
 

@@ -11,10 +11,14 @@ from api.db.models import TeamScore, TeamMember, CAQIHistory
 
 @pytest.fixture
 def setup_db():
-    """Create test database."""
+    """Ensure all tables exist in the test database.
+
+    Doesn't drop tables on teardown: Base is the app's single shared
+    schema, so dropping it here would also remove tables other test
+    files (and the running app) still need.
+    """
     Base.metadata.create_all(bind=engine)
     yield
-    Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture

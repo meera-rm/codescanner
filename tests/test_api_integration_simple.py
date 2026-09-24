@@ -2,10 +2,86 @@
 Simplified integration tests for FastAPI endpoints.
 Tests the analytics routes directly without full app initialization.
 """
+import uuid
 import pytest
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
+from sqlalchemy.orm import Session
 from api.routes import advanced_analytics
+from datetime import datetime, timedelta
+from api.db.database import SessionLocal, engine, Base
+from api.db.models import TeamScore, CAQIHistory
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_db():
+    """Ensure all tables exist in the test database.
+
+    Doesn't drop tables on teardown: Base is the app's single shared
+    schema, so dropping it here would also remove tables other test
+    files (and the running app) still need. Test data is cleaned up
+    at the row level by the fixtures that create it.
+    """
+    Base.metadata.create_all(bind=engine)
+    yield
+
+
+@pytest.fixture
+def db_session():
+    """Create a new database session for each test."""
+    session = SessionLocal()
+    yield session
+    session.rollback()
+    session.close()
+
+
+@pytest.fixture
+def sample_team(db_session: Session):
+    """Create the 'backend-team' record these tests assume exists."""
+    team = TeamScore(
+        id=str(uuid.uuid4()),
+        team_id="backend-team",
+        team_name="Backend Team",
+        security_score=85.0,
+        complexity_score=72.0,
+        documentation_score=80.0,
+        testing_score=88.0,
+        dependencies_score=65.0,
+        maintainability_score=78.0,
+        overall_caqi=385,
+        personality_archetype="Pragmatic Engineer",
+        member_count=4,
+    )
+    db_session.add(team)
+    db_session.commit()
+    yield team
+    db_session.query(TeamScore).filter(TeamScore.team_id == team.team_id).delete()
+    db_session.commit()
+
+
+@pytest.fixture
+def sample_history(db_session: Session, sample_team: TeamScore):
+    """Create historical data so trends endpoints have something to return."""
+    history = [
+        CAQIHistory(
+            id=str(uuid.uuid4()),
+            team_id=sample_team.team_id,
+            security_score=85.0 - (i * 2),
+            complexity_score=72.0 + (i * 1),
+            documentation_score=80.0,
+            testing_score=88.0,
+            dependencies_score=65.0 + (i * 1),
+            maintainability_score=78.0 - (i * 0.5),
+            overall_caqi=385 - (i * 3),
+            recorded_at=datetime.utcnow() - timedelta(days=i * 7),
+        )
+        for i in range(5)
+    ]
+    db_session.add_all(history)
+    db_session.commit()
+    yield history
+    db_session.query(CAQIHistory).filter(CAQIHistory.team_id == sample_team.team_id).delete()
+    db_session.commit()
 
 
 @pytest.fixture
@@ -17,8 +93,8 @@ def app():
 
 
 @pytest.fixture
-def client(app):
-    """Create test client."""
+def client(app, sample_team, sample_history):
+    """Create test client with team + history data already in the DB."""
     return TestClient(app)
 
 
@@ -57,8 +133,8 @@ class TestCAQIEndpoint:
         ]
 
         for dim in required_dimensions:
-            assert dim in data
-            assert 0 <= data[dim] <= 100
+            assert dim in data["dimensions"]
+            assert 0 <= data["dimensions"][dim] <= 100
 
     def test_get_team_caqi_invalid_team_id(self, client):
         """Test CAQI with empty team_id."""
@@ -181,7 +257,7 @@ class TestPeerComparisonEndpoint:
                 data = response.json()
                 assert "team_id" in data
                 assert "dimension" in data
-                assert "score" in data
+                assert "team_score" in data
 
     def test_peer_comparison_missing_dimension(self, client):
         """Test peer comparison without dimension parameter."""

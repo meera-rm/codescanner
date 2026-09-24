@@ -10,7 +10,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "api"))
 sys.path.insert(0, str(Path(__file__).parent.parent / "scanner"))
 
 from fastapi.testclient import TestClient
-from api.main import app, auth_service
+from api.main import app
+from api.routes.auth import auth_service
 
 client = TestClient(app)
 
@@ -170,8 +171,11 @@ class TestScanner:
             "/api/v1/scan/sync",
             json={}
         )
-        # May fail due to auth middleware
-        assert response.status_code in [400, 401]
+        # code and directory_path are both optional in ScanRequest, so an
+        # empty body is valid input that produces an empty, successful scan.
+        assert response.status_code == 200
+        data = response.json()
+        assert data["findings"] == []
 
     def test_scan_sync_with_code(self):
         response = client.post(

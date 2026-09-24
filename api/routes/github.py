@@ -43,6 +43,8 @@ async def authorize_github(code: str = Query(...), state: str = Query(...)):
             },
             "access_token": access_token,
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -81,6 +83,8 @@ async def save_installation(
             "installation_id": installation_id,
             "message": "GitHub App installed successfully",
         }
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
@@ -108,6 +112,8 @@ async def get_installations(user_id: str, db: Session = Depends(get_db)):
                 for inst in installations
             ]
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -136,6 +142,8 @@ async def get_repositories(
                 for repo in repos
             ]
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -182,6 +190,8 @@ async def add_repository(
                 "enabled": repo.enabled,
             },
         }
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
@@ -207,6 +217,8 @@ async def get_repository(repo_id: str, db: Session = Depends(get_db)):
             "pr_scans": len(repo.pr_scans),
             "created_at": repo.created_at.isoformat(),
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -244,6 +256,8 @@ async def update_repository(
                 "enabled": repo.enabled,
             },
         }
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
@@ -407,5 +421,7 @@ async def handle_webhook(request: Request, db: Session = Depends(get_db)):
                     }
 
         return {"status": "acknowledged", "event": event}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

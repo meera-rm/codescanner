@@ -2,9 +2,16 @@
 
 # Testing
 pytest==9.0.3
+pytest-asyncio==1.4.0
 pytest-cov==4.1.0
 pytest-xdist==3.5.0
 pytest-timeout==2.2.0
+
+# pytest.ini uses fastapi.testclient.TestClient(app), which on the
+# starlette version fastapi==0.104.1 pulls in still passes the
+# deprecated app= kwarg to httpx.Client() - removed in httpx 0.28.
+# anthropic's own httpx constraint (>=0.23,<1) is fine with this pin.
+httpx==0.27.2
 
 # Code Quality
 black==26.3.1

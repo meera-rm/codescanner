@@ -10,16 +10,23 @@ from api.services.personality_mapping_service import PersonalityMappingService
 
 @pytest.fixture
 def setup_db():
-    """Create test database."""
+    """Ensure all tables exist in the test database.
+
+    Doesn't drop tables on teardown: Base is the app's single shared
+    schema, so dropping it here would also remove tables other test
+    files (and the running app) still need.
+    """
     Base.metadata.create_all(bind=engine)
     yield
-    Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture
 def db(setup_db):
     """Get database session."""
-    return SessionLocal()
+    session = SessionLocal()
+    yield session
+    session.rollback()
+    session.close()
 
 
 @pytest.fixture
@@ -43,7 +50,9 @@ def sample_team(db):
     db.add(team)
     db.commit()
     db.refresh(team)
-    return team
+    yield team
+    db.query(TeamScore).filter(TeamScore.team_id == team.team_id).delete()
+    db.commit()
 
 
 @pytest.fixture
@@ -90,7 +99,9 @@ def sample_trend_data(db, sample_team):
     for entry in history_entries:
         db.add(entry)
     db.commit()
-    return history_entries
+    yield history_entries
+    db.query(CAQIHistory).filter(CAQIHistory.team_id == sample_team.team_id).delete()
+    db.commit()
 
 
 class TestCAQIAPI:

@@ -2,6 +2,7 @@ import sys
 import os
 import uuid
 import ast
+import tempfile
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional, Any, List
@@ -17,6 +18,19 @@ class ScannerService:
         self.js_scanner = JavaScriptScanner()
         self.sql_scanner = SQLScanner()
         self.scan_jobs: Dict[str, Dict[str, Any]] = {}
+
+    def _scan_code(self, scanner, code: str, extension: str) -> list:
+        """Scan an in-memory code string by writing it to a temp file, since
+        the scanner classes only expose scan_file/scan_directory."""
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=extension, delete=False, encoding="utf-8"
+        ) as tmp:
+            tmp.write(code)
+            tmp_path = tmp.name
+        try:
+            return scanner.scan_file(tmp_path)
+        finally:
+            os.unlink(tmp_path)
 
     def _convert_findings(self, findings: list, language: str) -> list:
         """Convert Finding objects to dictionaries."""
@@ -133,7 +147,7 @@ class ScannerService:
 
             if language == "python" or language == "all":
                 if code:
-                    python_findings = self.python_scanner.scan_code(code)
+                    python_findings = self._scan_code(self.python_scanner, code, ".py")
                     findings.extend(self._convert_findings(python_findings, "python"))
                 elif directory_path:
                     python_findings = self.python_scanner.scan_directory(directory_path)
@@ -141,7 +155,7 @@ class ScannerService:
 
             if language == "javascript" or language == "all":
                 if code:
-                    js_findings = self.js_scanner.scan_code(code)
+                    js_findings = self._scan_code(self.js_scanner, code, ".js")
                     findings.extend(self._convert_findings(js_findings, "javascript"))
                 elif directory_path:
                     js_findings = self.js_scanner.scan_directory(directory_path)
@@ -149,7 +163,7 @@ class ScannerService:
 
             if language == "sql" or language == "all":
                 if code:
-                    sql_findings = self.sql_scanner.scan_code(code)
+                    sql_findings = self._scan_code(self.sql_scanner, code, ".sql")
                     findings.extend(self._convert_findings(sql_findings, "sql"))
                 elif directory_path:
                     sql_findings = self.sql_scanner.scan_directory(directory_path)
