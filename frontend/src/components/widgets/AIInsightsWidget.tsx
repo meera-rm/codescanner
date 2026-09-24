@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Paper, Typography, Box, List, ListItem } from '@mui/material';
-import { Brain, TrendingUp } from 'lucide-react';
+import { Brain } from 'lucide-react';
 
 const AIInsightsWidget: React.FC = () => {
   const [insights, setInsights] = useState({

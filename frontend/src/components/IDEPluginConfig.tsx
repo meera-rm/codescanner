@@ -9,7 +9,6 @@ interface IDEPluginConfigProps {
 }
 
 const IDEPluginConfig: React.FC<IDEPluginConfigProps> = ({
-  sessionId,
   onSave,
   onClose,
   isOpen = true,

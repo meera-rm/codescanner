@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Paper, Typography, Box, Grid } from '@mui/material';
-import { Activity, GitBranch, Zap } from 'lucide-react';
+import { Activity } from 'lucide-react';
 
 const ActivityWidget: React.FC = () => {
   const [activity, setActivity] = useState({

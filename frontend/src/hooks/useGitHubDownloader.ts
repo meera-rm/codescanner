@@ -75,9 +75,6 @@ export const useGitHubDownloader = () => {
     if (name.includes('node') || name.includes('react') || name.includes('js') || name.includes('frontend') || name.includes('typescript')) {
       return 'javascript';
     }
-    if (name.includes('sql') || name.includes('database') || name.includes('db')) {
-      return 'sql';
-    }
     return 'python'; // Default
   };
 

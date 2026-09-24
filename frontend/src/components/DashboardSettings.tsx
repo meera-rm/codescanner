@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Paper, Typography, Box, Slider, Switch, FormControlLabel, Button, Dialog, DialogTitle, DialogContent, DialogActions, Divider } from '@mui/material';
+import { Typography, Box, Slider, Switch, FormControlLabel, Button, Dialog, DialogTitle, DialogContent, DialogActions, Divider } from '@mui/material';
 import { Settings, Moon, Sun, Github } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
@@ -31,11 +31,11 @@ const DashboardSettings: React.FC<DashboardSettingsProps> = ({ config, onConfigC
     handleClose();
   };
 
-  const handleRefreshChange = (value: number | number[]) => {
+  const handleRefreshChange = (_event: Event, value: number | number[]) => {
     setLocalConfig({ ...localConfig, refreshInterval: value as number });
   };
 
-  const handleThresholdChange = (value: number | number[]) => {
+  const handleThresholdChange = (_event: Event, value: number | number[]) => {
     setLocalConfig({ ...localConfig, alertThreshold: value as number });
   };
 

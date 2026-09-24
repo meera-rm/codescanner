@@ -5,8 +5,6 @@ import { ArrowLeft, Shield } from 'lucide-react';
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,

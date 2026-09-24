@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Paper, Grid, Typography, Box } from '@mui/material';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 
 const AnalyticsPanel: React.FC = () => {

@@ -83,6 +83,8 @@ const SecurityDashboard: React.FC = () => {
         </div>
       </Box>
 
+      {loading && <LinearProgress sx={{ mb: 3 }} />}
+
       {/* Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>

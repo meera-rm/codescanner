@@ -32,8 +32,8 @@ const ExportReport: React.FC<ExportReportProps> = ({ data, filename = 'dashboard
     if (data.summary) {
       csv += 'Summary\n';
       csv += 'Key,Value\n';
-      Object.entries(data.summary).forEach(([key, val]) => {
-        if (typeof val === 'object') {
+      Object.entries(data.summary).forEach(([, val]) => {
+        if (val && typeof val === 'object') {
           Object.entries(val).forEach(([k, v]) => {
             csv += `${k},${v}\n`;
           });

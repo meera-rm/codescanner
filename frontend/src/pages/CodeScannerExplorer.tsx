@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Box, Button, TextField, Paper, Grid, Card, CardContent, Typography, List, ListItem, ListItemText, Chip, FormGroup, FormControlLabel, Checkbox, RadioGroup, FormControl, FormLabel, Radio } from '@mui/material';
+import { Box, Button, TextField, Paper, Grid, Card, CardContent, Typography, List, ListItem, Chip, FormGroup, FormControlLabel, Checkbox, RadioGroup, FormControl, Radio } from '@mui/material';
 
 interface Issue {
   file: string;
@@ -11,7 +10,6 @@ interface Issue {
 }
 
 const CodeScannerExplorer: React.FC = () => {
-  const navigate = useNavigate();
   const [issues, setIssues] = useState<Issue[]>([]);
   const [severity, setSeverity] = useState<'all' | 'warning' | 'error'>('all');
   const [selectedCategories, setSelectedCategories] = useState<string[]>(['unused_import', 'high_complexity']);
@@ -20,7 +18,6 @@ const CodeScannerExplorer: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [lastAttemptTime, setLastAttemptTime] = useState<number | null>(null);
 
   const defaultIssues: Issue[] = [
     { file: 'main.py', line: 38, type: 'unused_import', message: "Import 'job_queue' is unused", severity: 'WARNING' },
@@ -105,7 +102,6 @@ const CodeScannerExplorer: React.FC = () => {
 
     setLoading(true);
     setError(null);
-    setLastAttemptTime(Date.now());
 
     try {
       // Create abort controller for timeout
@@ -259,7 +255,7 @@ const CodeScannerExplorer: React.FC = () => {
               <Button
                 fullWidth
                 variant="contained"
-                onClick={fetchLiveData}
+                onClick={() => fetchLiveData()}
                 disabled={loading}
               >
                 {loading ? '⏳ Fetching...' : isLive ? '🔄 Refresh Data' : '🔄 Fetch Live Data'}

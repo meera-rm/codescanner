@@ -47,7 +47,7 @@ const IterationDashboard: React.FC = () => {
     return <div className="iteration-dashboard error">Job ID not found</div>;
   }
 
-  const { status, loading, error, isRunning, stop, resume } = useIterationPolling(jobId, {
+  const { status, loading, error, stop, resume } = useIterationPolling(jobId, {
     enabled: !isPaused,
     interval: 1000,
   });
@@ -91,6 +91,7 @@ const IterationDashboard: React.FC = () => {
 
   const isComplete = status.status !== 'processing';
   const statusColor = {
+    'queued': '#6b7280',
     'completed': '#22c55e',
     'processing': '#3b82f6',
     'failed': '#ef4444',

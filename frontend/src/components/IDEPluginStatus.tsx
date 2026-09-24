@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Activity, Wifi, WifiOff, Plus, X } from 'lucide-react';
 
 interface Session {
@@ -8,16 +8,6 @@ interface Session {
   is_active: boolean;
   analysis_count: number;
   uptime_seconds: number;
-}
-
-interface PluginConfig {
-  plugin_id: string;
-  ide_type: string;
-  enabled: boolean;
-  auto_analysis: boolean;
-  real_time_feedback: boolean;
-  analysis_type: 'quick' | 'comprehensive' | 'incremental';
-  debounce_ms: number;
 }
 
 interface IDEPluginStatusProps {
