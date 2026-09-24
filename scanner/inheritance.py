@@ -301,7 +301,7 @@ def build_first_week_tips(metrics_list: List[Dict[str, Any]], tone: str) -> List
             tips.append("Understand patterns in high-quality files before making changes")
 
         if has_smells:
-            tips.append(f"Fix {total_smells} code smells to improve quality")
+            tips.append(f"Refactor to fix {total_smells} code smells and improve quality")
         elif has_low_quality:
             tips.append("Incrementally improve code quality with small refactors")
         else:

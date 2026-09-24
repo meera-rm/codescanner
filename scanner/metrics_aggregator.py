@@ -89,16 +89,21 @@ class MetricsAggregator:
         print("🔄 Skipping duplication analysis (fast mode)...")
         duplication_pct = 25.0  # Default value
 
-        # Step 5: Skip coupling detector (slow) - use defaults
-        print("🔗 Skipping coupling analysis (fast mode)...")
-        coupling_metrics = {"avg_imports": 5.0, "has_circular": False}
+        # Step 5: Run coupling detector
+        print("🔗 Analyzing module coupling...")
+        coupling_result = self.coupling_detector.analyze_directory(directory)
+        coupling_metrics = {
+            "avg_imports": coupling_result.avg_imports_per_file,
+            "has_circular": coupling_result.has_circular_deps,
+            "circular_count": len(coupling_result.circular_deps),
+        }
 
         # Step 6: Count files and lines
         file_count, total_lines = self._count_files_and_lines(directory)
 
-        # Step 7: Build per-file metrics (simplified)
+        # Step 7: Build per-file metrics
         print("📋 Building per-file metrics...")
-        per_file = {}  # Skip detailed per-file metrics for speed
+        per_file = self._build_per_file_metrics(directory, scanner_findings)
 
         # Step 8: Extract logging and function metrics (for personality profiler)
         logging_metrics = self._extract_logging_metrics(directory)
@@ -118,7 +123,7 @@ class MetricsAggregator:
             duplication_percentage=duplication_pct,
             avg_imports_per_file=coupling_metrics["avg_imports"],
             has_circular_deps=coupling_metrics["has_circular"],
-            circular_dep_count=0,
+            circular_dep_count=coupling_metrics["circular_count"],
             avg_quality_score=quality_score,
             total_logging=logging_metrics["total"],
             error_handling_density=error_handling,

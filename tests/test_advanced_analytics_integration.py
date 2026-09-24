@@ -100,13 +100,14 @@ class TestAdvancedAnalyticsAPI:
 
     def test_get_team_caqi(self, db_session: Session, sample_team: TeamScore):
         """Test CAQI endpoint returns correct data."""
+        import asyncio
         from api.routes.advanced_analytics import get_team_caqi
 
         # Call endpoint directly
-        response = get_team_caqi(
+        response = asyncio.run(get_team_caqi(
             team_id=sample_team.team_id,
             db=db_session
-        )
+        ))
 
         assert response['team_id'] == sample_team.team_id
         assert response['overall_caqi'] == 385
@@ -210,14 +211,15 @@ class TestAdvancedAnalyticsAPI:
 
     def test_missing_team_404(self, db_session: Session):
         """Test that missing team returns 404."""
+        import asyncio
         from fastapi import HTTPException
         from api.routes.advanced_analytics import get_team_caqi
 
         with pytest.raises(HTTPException) as exc:
-            get_team_caqi(
+            asyncio.run(get_team_caqi(
                 team_id="nonexistent-team",
                 db=db_session
-            )
+            ))
 
         assert exc.value.status_code == 404
 
